@@ -22,12 +22,13 @@ class CreateUsersTable extends Migration
             $table->bigInteger('role_id')->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->enum('type',['admin','employee']);
             $table->rememberToken();
             $table->timestamps();
         });
 
         //insert the superadmin user
-        DB::insert('insert into users (name,email,password) values (?, ? , ?)', ['superadmin','admin@outcastsolutions.us','superadmin']);
+        DB::insert('insert into users (name,email,password) values (?, ? , ?)', ['superadmin','admin@outcastsolutions.us',bcrypt('superadmin')]);
     }
 
     /**
