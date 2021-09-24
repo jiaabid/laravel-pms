@@ -85,7 +85,8 @@ class UserController extends Controller
                     'name' => "required|min:3",
                     'email' => "required|email",
                     'password' => "required|min:5",
-                    'role_id' => 'required'
+                    'role_id' => 'required',
+                    'dept_id' => 'required_if:type,==,employee'
                 ]);
 
                 DB::beginTransaction();
@@ -126,7 +127,7 @@ class UserController extends Controller
         //
     }
 
-  
+
 
     /**
      * Update the specified resource in storage.
@@ -165,7 +166,7 @@ class UserController extends Controller
             ], 500);
         }
     }
- /**
+    /**
      * change the password in storage.
      *
      * @param  \Illuminate\Http\Request  $request
@@ -173,23 +174,24 @@ class UserController extends Controller
      * @return \Illuminate\Http\Response
      */
 
-     public function change_password(Request $request,$id){
-         try {
+    public function change_password(Request $request, $id)
+    {
+        try {
             if (auth()->user()->can('edit user')) {
 
-                $this->validate($request,[
-                    'oldpassowrd'=> "required",
-                    'password'=> "required|same:c_password",
-                    'c_password'=> "required"
+                $this->validate($request, [
+                    'oldpassowrd' => "required",
+                    'password' => "required|same:c_password",
+                    'c_password' => "required"
                 ]);
-                if(Hash::check($request->oldpassword,auth()->user()->password)){
-                  $user =  User::where('id',auth()->user()->id)
-                    ->update(['password',Hash::make($request->password)]);
+                if (Hash::check($request->oldpassword, auth()->user()->password)) {
+                    $user =  User::where('id', auth()->user()->id)
+                        ->update(['password', Hash::make($request->password)]);
                     return response()->json([
-                        'status'=>true,
-                        'payload'=>$user
+                        'status' => true,
+                        'payload' => $user
                     ]);
-                }else{
+                } else {
                     return response()->json([
                         'success' => false,
                         'error' => "Wrong password!"
@@ -207,7 +209,7 @@ class UserController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
-     }
+    }
 
 
     /**

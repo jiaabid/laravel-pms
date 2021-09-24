@@ -1,0 +1,20 @@
+  "email":"anbreen@gmail.com",
+     "password":"12345"
+
+     "email":"user@gmail.com",
+    "password":"12345"
+
+"email":"admin@outcastsolutions.us",
+    "password":"superadmin"
+
+"email":"wajiha@gmail.com",
+    "password":"12345"
+
+#change password
+https://blog.codehunger.in/change-password-in-laravel-8/
+
+#passport
+https://www.positronx.io/laravel-rest-api-with-passport-authentication-tutorial/
+
+#guard issue
+https://stackoverflow.com/questions/49026557/method-illuminate-auth-requestguardattempt-does-not-exist

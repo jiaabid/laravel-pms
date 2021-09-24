@@ -2,7 +2,9 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DepartmentController;
+use App\Http\Controllers\DocController;
 use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
 use App\Models\Permission;
@@ -20,9 +22,6 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -36,4 +35,6 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/assign/permission', [PermissionController::class, 'assign_permission']);
     Route::delete('/logout', [AuthController::class, 'logout']);
     Route::resource('user', UserController::class);
+    Route::resource('project', ProjectController::class);
+    Route::resource('docs', DocController::class);
 });

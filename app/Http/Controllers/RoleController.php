@@ -107,7 +107,8 @@ class RoleController extends Controller
     public function show($id)
     {
         try {
-            $role = Role::find($id);
+           
+            $role = Role::find(auth()->user()->role_id);
             if ($role) {
                 return response()->json([
                     'succuess' => true,

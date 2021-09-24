@@ -65,6 +65,26 @@ class PermissionSeeder extends Seeder
             [
                 'name'=>'delete permission',
                 'guard_name'=>'api'
+            ],
+            [
+                'name'=>'assign permission',
+                'guard_name'=>'api'
+            ],
+            [
+                'name'=>'create department',
+                'guard_name'=>'api'
+            ],
+            [
+                'name'=>'retrieve department',
+                'guard_name'=>'api'
+            ],
+            [
+                'name'=>'edit department',
+                'guard_name'=>'api'
+            ],
+            [
+                'name'=>'delete department',
+                'guard_name'=>'api'
             ]
             ]);
 

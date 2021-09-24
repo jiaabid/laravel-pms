@@ -8,11 +8,24 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Department extends Model
 {
-    use HasFactory,SoftDeletes;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'name',
         'description',
     ];
     protected $table = 'departments';
+
+
+    //relations
+    //user has department id
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function projects()
+    {
+        return $this->belongsTo(Department::class);
+    }
 }

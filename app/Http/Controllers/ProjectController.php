@@ -2,17 +2,21 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Department;
+use App\Models\Project;
+use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
-use Throwable;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
-class DepartmentController extends Controller
+class ProjectController extends Controller
 {
+
     public function __construct()
     {
         $this->middleware(['auth']);
     }
+
     /**
      * Display a listing of the resource.
      *
@@ -21,12 +25,19 @@ class DepartmentController extends Controller
     public function index()
     {
         try {
-            if (auth()->user()->can('retrieve department')) {
-                $departs = Department::all();
-                return response()->json([
-                    "success" => true,
-                    'payload' => $departs
-                ]);
+            if (auth()->user()->can('retrieve project')) {
+                $projects = Project::all();
+                if ($projects) {
+                    return response()->json([
+                        'status' => true,
+                        'payload' =>$projects
+                    ]);
+                } else {
+                    return response()->json([
+                        'status' => false,
+                        'error' => 'No project exist!'
+                    ], 404);
+                }
             } else {
                 return response()->json([
                     'success' => false,
@@ -40,6 +51,7 @@ class DepartmentController extends Controller
             ], 500);
         }
     }
+
 
     /**
      * Store a newly created resource in storage.
@@ -49,24 +61,32 @@ class DepartmentController extends Controller
      */
     public function store(Request $request)
     {
+
         try {
-            if (auth()->user()->can('create department')) {
+            if (auth()->user()->can('create project')) {
+            //    dd($request->input('start_date'));
                 $this->validate($request, [
-                    'name' => 'required'
+                    'name' => "required|min:3|string",
+                    'dept_id' => "required|numeric",
+                    'start_date' => "required|date",
+                    'end_date' => 'required|date'
                 ]);
-                $depart = new Department();
-                $depart->fill($request->all());
-                $depart['created_by'] = auth()->user()->id;
-                // $depart = Department::create([
-                //     'name' => $request->name,
-                //     'description' => $request->description,
-                //     'created_by' => auth()->user()->id
-                // ]);
-                $depart->save();
-                return response()->json([
-                    "success" => true,
-                    'payload' => $depart
-                ], 201);
+
+                $project = new Project();
+                $project = $project->fill($request->all());
+                $project['created_by'] = auth()->user()->id;
+
+                if ($project->save()) {
+                    return response()->json([
+                        'payload' => $project,
+                        'status' => true
+                    ], 201);
+                } else {
+                    return response()->json([
+                        'success' => false,
+                        'error' => "Error in saving"
+                    ], 400);
+                }
             } else {
                 return response()->json([
                     'success' => false,
@@ -79,11 +99,6 @@ class DepartmentController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
-
-        $this->validate($request, [
-            'name' => 'required',
-
-        ]);
     }
 
     /**
@@ -94,19 +109,19 @@ class DepartmentController extends Controller
      */
     public function show($id)
     {
-
         try {
-            if (auth()->user()->can('retrieve department')) {
-                $depart = Department::find($id);
-                if ($depart) {
+            if (auth()->user()->can('retrieve project')) {
+                // $project = Project::find($id);
+                $project = auth()->user()->project;
+                if ($project) {
                     return response()->json([
                         "success" => true,
-                        'payload' => $depart
+                        'payload' => $project
                     ]);
                 }
                 return response()->json([
                     "success" => false,
-                    "error" => "No such department exist!"
+                    "error" => "No such project exist!"
                 ], 404);
             } else {
                 return response()->json([
@@ -123,6 +138,7 @@ class DepartmentController extends Controller
     }
 
 
+
     /**
      * Update the specified resource in storage.
      *
@@ -133,19 +149,25 @@ class DepartmentController extends Controller
     public function update(Request $request, $id)
     {
         try {
-            if (auth()->user()->can('edit department')) {
-                $depart = Department::find($id);
-                if (!$depart) {
+            if (auth()->user()->can('edit project')) {
+                $project = Project::find($id);
+                if (!$project) {
                     return response()->json([
                         "success" => false,
                         'error' => 'No such department exist!'
                     ], 404);
                 }
-                $updatedDepart = $depart->fill($request->all());
-                if ($updatedDepart->save()) {
+                $this->validate($request, [
+                    'name' => "min:3|string",
+                    'dept_id' => "numeric",
+                    'start_date' => "date",
+                    'end_date' => 'date'
+                ]);
+                $updatedProject = $project->fill($request->all());
+                if ($updatedProject->save()) {
                     return response()->json([
                         "success" => true,
-                        'payload' => $depart
+                        'payload' => $updatedProject
                     ]);
                 } else {
                     return response()->json([
@@ -178,15 +200,15 @@ class DepartmentController extends Controller
         try {
 
             if (auth()->user()->can('delete department')) {
-                $depart = Department::find($id);
-                if (!$depart) {
+                $project = Project::find($id);
+                if (!$project) {
                     return response()->json([
                         "success" => false,
-                        'error' => 'No such department exist!'
+                        'error' => 'No such project exist!'
                     ], 404);
                 }
 
-                if ($depart->delete()) {
+                if ($project->delete()) {
                     return response()->json([
                         "success" => true
                     ]);
