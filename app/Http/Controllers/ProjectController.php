@@ -63,7 +63,7 @@ class ProjectController extends Controller
     {
 
         try {
-            if (auth()->user()->can('create project')) {
+            // if (auth()->user()->can('create project')) {
             //    dd($request->input('start_date'));
                 $this->validate($request, [
                     'name' => "required|min:3|string",
@@ -87,12 +87,12 @@ class ProjectController extends Controller
                         'error' => "Error in saving"
                     ], 400);
                 }
-            } else {
-                return response()->json([
-                    'success' => false,
-                    'payload' => "Unauthorized!"
-                ], 401);
-            }
+            // } else {
+            //     return response()->json([
+            //         'success' => false,
+            //         'payload' => "Unauthorized!"
+            //     ], 401);
+            // }
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,

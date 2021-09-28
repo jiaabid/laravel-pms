@@ -22,7 +22,9 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-
+Route::get('/',function(){
+ return response('hello');
+});
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
@@ -37,4 +39,5 @@ Route::middleware('auth:api')->group(function () {
     Route::resource('user', UserController::class);
     Route::resource('project', ProjectController::class);
     Route::resource('docs', DocController::class);
+    Route::post('/doc/download/$id',[DocController::class,'download_file']);
 });
