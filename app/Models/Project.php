@@ -22,20 +22,26 @@ class Project extends Model
 
     protected $table = "projects";
 
-    protected $casts = [
-        'docs' => 'array'
-    ];
-    
+
+
     //relations
     //project has department
     public function department()
     {
-        return $this->hasOne(Department::class);
+        return $this->belongsTo(Department::class,'dept_id');
+        // return $this->hasOne(Department::class);
     }
 
     //project has department
     public function user()
     {
-        return $this->hasOne(User::class);
+        return $this->belongsTo(User::class, 'created_by');
+        // return $this->hasOne(User::class);
+    }
+
+    //docs related to the single project
+    public function doc()
+    {
+        return $this->belongsToMany(Doc::class, 'project_docs', 'project_id', 'doc_id');
     }
 }

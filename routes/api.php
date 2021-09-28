@@ -5,7 +5,9 @@ use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\DocController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\ResourceController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\TaskController;
 use App\Http\Controllers\UserController;
 use App\Models\Permission;
 use Illuminate\Http\Request;
@@ -39,5 +41,7 @@ Route::middleware('auth:api')->group(function () {
     Route::resource('user', UserController::class);
     Route::resource('project', ProjectController::class);
     Route::resource('docs', DocController::class);
-    Route::post('/doc/download/$id',[DocController::class,'download_file']);
+    Route::get('/doc/download/{id}',[DocController::class,'download_file']);
+    Route::resource('tasks',TaskController::class);
+    Route::resource('resources',ResourceController::class);
 });

@@ -21,11 +21,11 @@ class Department extends Model
     //user has department id
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->hasMany(User::class,'dept_id');
     }
 
-    public function projects()
+    public function project()
     {
-        return $this->belongsTo(Department::class);
+        return $this->hasOne(Project::class);
     }
 }

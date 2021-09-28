@@ -6,14 +6,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class ProjectDocs extends Model
+class HResourcesTask extends Model
 {
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'project_id',
-        'doc_id'
+        'task_id',
+        'resource_id'
     ];
-
-    protected $table = 'project_docs';
+    protected $table = 'h_resources_tasks';
 }

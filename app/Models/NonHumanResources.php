@@ -6,14 +6,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class ProjectDocs extends Model
+class NonHumanResources extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory,SoftDeletes;
 
     protected $fillable = [
-        'project_id',
-        'doc_id'
+        'name',
+        'description',
+        'status'
     ];
 
-    protected $table = 'project_docs';
+    protected $table = 'non_human_resources';
 }

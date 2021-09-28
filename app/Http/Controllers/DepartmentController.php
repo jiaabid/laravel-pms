@@ -23,6 +23,9 @@ class DepartmentController extends Controller
         try {
             if (auth()->user()->can('retrieve department')) {
                 $departs = Department::all();
+                foreach ($departs as $depart) {
+                    $depart->user;
+                }
                 return response()->json([
                     "success" => true,
                     'payload' => $departs
@@ -80,10 +83,10 @@ class DepartmentController extends Controller
             ], 500);
         }
 
-        $this->validate($request, [
-            'name' => 'required',
+        // $this->validate($request, [
+        //     'name' => 'required',
 
-        ]);
+        // ]);
     }
 
     /**
@@ -142,6 +145,7 @@ class DepartmentController extends Controller
                     ], 404);
                 }
                 $updatedDepart = $depart->fill($request->all());
+                $updatedDepart["updated_by"] = auth()->user()->id;
                 if ($updatedDepart->save()) {
                     return response()->json([
                         "success" => true,

@@ -14,6 +14,11 @@ use Illuminate\Support\Facades\Storage;
 
 class DocController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(['auth']);
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -21,18 +26,35 @@ class DocController extends Controller
      */
     public function index()
     {
-        //
+
+        //retrieve all the documents created by the user
+        try {
+            if (auth()->user()->can('retrieve project')) {
+                //  dd(auth()->user()->project);
+                $projects = auth()->user()->project;
+                $payload = [];
+                foreach ($projects as $project) {
+                    $project->doc;
+                }
+                // dd($payload);
+                return response()->json([
+                    'status' => true,
+                    'payload' => $projects
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'payload' => "Unauthorized!"
+                ], 401);
+            }
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
 
     /**
      * Store a newly created resource in storage.
@@ -47,31 +69,51 @@ class DocController extends Controller
             // dd($request->hasFile('check'));
 
 
-            // if (auth()->user()->can('create project')) {
-            // $this->validate($request, [
-            //     'name' => 'required'
-            // ]);
-            $file = $request->file('file');
+            if (auth()->user()->can('create project')) {
+                $this->validate($request, [
+                    'name' => 'required'
+                ]);
+                $file = $request->file('file');
 
-            $path = $file->store('public/images');
-            $name = $file->getClientOriginalName();
+                $path = $file->store('public/files');
+                $name = $file->getClientOriginalName();
 
-            $doc = new Doc();
-            $doc['name'] = $request->name;
-            $doc['description'] = $request->description ? $request->description : null;
-            $doc['link'] = $path;
-            $doc['created_by'] = auth()->user()->id;
-            DB::beginTransaction();
-            $saved = $doc->save();
-            // dd($doc);
-            if ($saved) {
-                $this->insert_into_bridge_table($request->id, $doc->id);
-                DB::commit();
+                $doc = new Doc();
+                $doc['name'] = $request->name;
+                $doc['description'] = $request->description ? $request->description : null;
+                $doc['link'] = $path;
+                $doc['created_by'] = auth()->user()->id;
+                DB::beginTransaction();
+                $saved = $doc->save();
+                // dd($doc);
+                if ($saved) {
+                    $res = $this->insert_into_bridge_table($request->projectId, $doc->id);
+                    DB::commit();
+                    if ($res) {
+                        return response()->json([
+                            'status' => true,
+                            'payload' => [
+                                "msg" => "doc uploaded"
+                            ]
+                        ]);
+                    } else {
+                        return response()->json([
+                            'status' => false,
+                            'error' => 'error in uploading!'
+                        ], 400);
+                    }
+                } else {
+                    return response()->json([
+                        'status' => false,
+                        'error' => 'error in uploading!'
+                    ], 400);
+                }
             } else {
+                return response()->json([
+                    'success' => false,
+                    'payload' => "Unauthorized!"
+                ], 401);
             }
-
-            // } else {
-            // }
         } catch (Exception $e) {
             return response()->json([
                 'error' => $e->getMessage()
@@ -79,27 +121,26 @@ class DocController extends Controller
         }
     }
 
-    function insert_into_bridge_table($pId, $docId)
+    /**
+     * Insert the projectid and docid in bridge tabel.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    function insert_into_bridge_table($projectId, $docId)
     {
         $item = new ProjectDocs();
-        $item['project_id'] = $pId;
+        $item['project_id'] = $projectId;
         $item['doc_id'] = $docId;
-        if ($item->save()) {
-            return response()->json([
-                'status' => true,
-                'payload' => [
-                    "msg" => "doc uploaded"
-                ]
-            ]);
-        } else {
-            return response()->json([
-                'status' => false,
-                'error' => 'error in uploading!'
-            ]);
-        }
+        return $item->save();
     }
+
+
+    
     /**
      * Display the specified resource.
+     * return the file contents
      *
      * @param  int  $id
      * @return \Illuminate\Http\Response
@@ -110,9 +151,10 @@ class DocController extends Controller
             $exist = Doc::find($id);
             if ($exist) {
                 $content = Storage::get($exist->link);
+                // dd($content);
                 return response()->json([
                     'status' => true,
-                    'payload' => $content
+                    'payload' => utf8_encode($content)
                 ]);
             } else {
                 return response()->json([
@@ -128,15 +170,23 @@ class DocController extends Controller
         }
     }
 
+    /**
+     * download the file.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
     public function download_file(Request $request, $id)
     {
         try {
-            if (auth()->user()->can('download file')) {
+            if (auth()->user()->can('create project')) {
                 $exist = Doc::find($id);
+                // dd($exist);
                 $path = $exist->link;
                 if ($exist) {
-                    return Storage::download($exist->link);
-                    // return response()->download(storage_path($path));
+                    // return Storage::download($exist->link);
+                    return response()->download(storage_path("app/" . $path));
                 } else {
                     return response()->json([
                         'success' => false,
@@ -159,17 +209,6 @@ class DocController extends Controller
 
 
     /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        //
-    }
-
-    /**
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
@@ -178,7 +217,40 @@ class DocController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        try {
+            if (auth()->user()->can('edit project')) {
+                $doc = Doc::find($id);
+                if (!$doc) {
+                    return response()->json([
+                        "success" => false,
+                        'error' => 'No such document exist!'
+                    ], 404);
+                }
+                $updatedDoc = $doc->fill($request->all());
+                $updatedDoc["updated_by"] = auth()->user()->id;
+                if ($updatedDoc->save()) {
+                    return response()->json([
+                        "success" => true,
+                        'payload' => $doc
+                    ]);
+                } else {
+                    return response()->json([
+                        "success" => false,
+                        'error' => 'Error in update'
+                    ], 400);
+                }
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'payload' => "Unauthorized!"
+                ], 401);
+            }
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -189,6 +261,38 @@ class DocController extends Controller
      */
     public function destroy($id)
     {
-        //
+        try {
+
+            if (auth()->user()->can('delete project')) {
+                $doc = Doc::find($id);
+                if (!$doc) {
+                    return response()->json([
+                        "success" => false,
+                        'error' => 'No such document exist!'
+                    ], 404);
+                }
+
+                if ($doc->delete()) {
+                    return response()->json([
+                        "success" => true
+                    ]);
+                } else {
+                    return response()->json([
+                        "success" => false,
+                        'error' => 'Error in delete'
+                    ], 400);
+                }
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'payload' => "Unauthorized!"
+                ], 401);
+            }
+        } catch (Exception $e) {
+            echo $e;
+            return response()->json([
+                'error' => $e
+            ], 500);
+        }
     }
 }

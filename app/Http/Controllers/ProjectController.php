@@ -30,7 +30,7 @@ class ProjectController extends Controller
                 if ($projects) {
                     return response()->json([
                         'status' => true,
-                        'payload' =>$projects
+                        'payload' => $projects
                     ]);
                 } else {
                     return response()->json([
@@ -63,36 +63,36 @@ class ProjectController extends Controller
     {
 
         try {
-            // if (auth()->user()->can('create project')) {
+            if (auth()->user()->can('create project')) {
             //    dd($request->input('start_date'));
-                $this->validate($request, [
-                    'name' => "required|min:3|string",
-                    'dept_id' => "required|numeric",
-                    'start_date' => "required|date",
-                    'end_date' => 'required|date'
-                ]);
+            $this->validate($request, [
+                'name' => "required|min:3|string",
+                'dept_id' => "required|numeric",
+                'start_date' => "required|date",
+                'end_date' => 'required|date'
+            ]);
 
-                $project = new Project();
-                $project = $project->fill($request->all());
-                $project['created_by'] = auth()->user()->id;
+            $project = new Project();
+            $project = $project->fill($request->all());
+            $project['created_by'] = auth()->user()->id;
 
-                if ($project->save()) {
-                    return response()->json([
-                        'payload' => $project,
-                        'status' => true
-                    ], 201);
-                } else {
-                    return response()->json([
-                        'success' => false,
-                        'error' => "Error in saving"
-                    ], 400);
-                }
-            // } else {
-            //     return response()->json([
-            //         'success' => false,
-            //         'payload' => "Unauthorized!"
-            //     ], 401);
-            // }
+            if ($project->save()) {
+                return response()->json([
+                    'payload' => $project,
+                    'status' => true
+                ], 201);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'error' => "Error in saving"
+                ], 400);
+            }
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'payload' => "Unauthorized!"
+                ], 401);
+            }
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -111,12 +111,14 @@ class ProjectController extends Controller
     {
         try {
             if (auth()->user()->can('retrieve project')) {
-                // $project = Project::find($id);
-                $project = auth()->user()->project;
-                if ($project) {
+             
+                $projects = Project::find($id);
+                $projects->doc;
+                $projects->department;
+                if ($projects) {
                     return response()->json([
                         "success" => true,
-                        'payload' => $project
+                        'payload' => $projects
                     ]);
                 }
                 return response()->json([
@@ -199,7 +201,7 @@ class ProjectController extends Controller
     {
         try {
 
-            if (auth()->user()->can('delete department')) {
+            if (auth()->user()->can('delete project')) {
                 $project = Project::find($id);
                 if (!$project) {
                     return response()->json([
@@ -232,3 +234,14 @@ class ProjectController extends Controller
         }
     }
 }
+
+//for only my created projects
+   // $project = Project::find($id);
+                // if ($id !== null) {
+                   
+                // } else {
+                //     $projects = auth()->user()->project;
+                //     foreach ($projects as $project) {
+                //         $project->doc;
+                //     }
+                // }

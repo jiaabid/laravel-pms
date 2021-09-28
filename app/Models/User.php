@@ -22,7 +22,10 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'role_id'
+        'role_id',
+        'dept_id',
+        'status',
+        'type'
     ];
 
     /**
@@ -49,12 +52,17 @@ class User extends Authenticatable
     //relation with department
     public function department()
     {
-        return $this->hasOne(Department::class);
+        return $this->belongsTo(Department::class,'');
     }
 
     //relation with department
     public function project()
     {
-        return $this->belongsTo(Project::class);
+        return $this->hasMany(Project::class,'created_by');
+        // return $this->belongsTo(Project::class);
+    }
+
+    public function task(){
+        return $this->belongsToMany(Task::class,'h_resources_tasks','resource_id','task_id');
     }
 }
