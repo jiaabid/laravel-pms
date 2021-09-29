@@ -42,6 +42,9 @@ Route::middleware('auth:api')->group(function () {
     Route::resource('project', ProjectController::class);
     Route::resource('docs', DocController::class);
     Route::get('/doc/download/{id}',[DocController::class,'download_file']);
+    Route::get('tasks/my/',[TaskController::class,'my_tasks']);
     Route::resource('tasks',TaskController::class);
+    Route::post('tasks/status/{id}',[TaskController::class,'change_status']);
+    Route::post('tasks/resource/{id}',[TaskController::class,'assign_resource']);
     Route::resource('resources',ResourceController::class);
 });

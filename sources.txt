@@ -18,3 +18,6 @@ https://www.positronx.io/laravel-rest-api-with-passport-authentication-tutorial/
 
 #guard issue
 https://stackoverflow.com/questions/49026557/method-illuminate-auth-requestguardattempt-does-not-exist
+
+#belongsToMany
+https://medium.com/@afrazahmad090/laravel-many-to-many-relationship-explained-822b554c1973

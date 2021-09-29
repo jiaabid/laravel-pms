@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateHResourcesTasksTable extends Migration
+class CreateDbVariablesTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,13 +13,9 @@ class CreateHResourcesTasksTable extends Migration
      */
     public function up()
     {
-        Schema::create('h_resources_tasks', function (Blueprint $table) {
+        Schema::create('db_variables', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('task_id')->constrained('tasks');
-            $table->foreignId('resource_id')->constrained('users');
-            $table->string('sequence');
-            $table->string('tag');
-            $table->enum('status',['pending','complete','notAssign']);
+            $table->string('variable_type')->unique();
             $table->softDeletes();
             $table->timestamps();
         });
@@ -32,6 +28,6 @@ class CreateHResourcesTasksTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('h_resources_tasks');
+        Schema::dropIfExists('db_variables');
     }
 }

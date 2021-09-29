@@ -52,7 +52,7 @@ class User extends Authenticatable
     //relation with department
     public function department()
     {
-        return $this->belongsTo(Department::class,'');
+        return $this->belongsTo(Department::class,'dept_id');
     }
 
     //relation with department
@@ -64,5 +64,6 @@ class User extends Authenticatable
 
     public function task(){
         return $this->belongsToMany(Task::class,'h_resources_tasks','resource_id','task_id');
+        // return $this->belongsToMany(Task::class,'h_resources_tasks','task_id','resource_id');
     }
 }
