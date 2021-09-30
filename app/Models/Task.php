@@ -10,6 +10,8 @@ class Task extends Model
 {
     use HasFactory, SoftDeletes;
 
+    public $timestamps = true;
+
     protected $fillable = [
         'name',
         'decription',
@@ -19,8 +21,9 @@ class Task extends Model
         'project_id',
         'created_by',
         'updated_by',
-        'humanResources',
-        'nonhumanResources'
+        'updated_at',
+        'created_at'
+       
     ];
     protected $table = 'tasks';
 

@@ -15,11 +15,16 @@ class CreateHResourcesTasksTable extends Migration
     {
         Schema::create('h_resources_tasks', function (Blueprint $table) {
             $table->id();
+
+            // $table->integer('id',true);
             $table->foreignId('task_id')->constrained('tasks');
             $table->foreignId('resource_id')->constrained('users');
             $table->string('sequence');
             $table->string('tag');
-            $table->enum('status',['pending','complete','notAssign']);
+            $table->enum('status', ['pending', 'complete', 'notAssign']);
+            //composite key
+            // $table->unique(['task_id','resource_id']);
+            // $table->primary(['task_id', 'resource_id']);
             $table->softDeletes();
             $table->timestamps();
         });

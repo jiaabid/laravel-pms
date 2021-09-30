@@ -55,21 +55,21 @@ class TaskController extends Controller
                 //    dd($request->input('start_date'));
                 $this->validate($request, [
                     'name' => "required|min:3|string",
-                    'projectId' => "required|numeric",
-                    'startDate' => "required|date",
-                    'endDate' => 'required|date',
-                    'humanResources' => 'required|array',
-                    'nonhumanResources' => 'array',
+                    'project_id' => "required|numeric",
+                    'start_date' => "required|date",
+                    'end_date' => 'required|date',
+
 
                 ]);
 
-
+                // 'humanResources' => 'required|array',
+                // 'nonhumanResources' => 'array',
                 $task = new Task();
                 // dd($task);
                 $task['name'] = $request->name;
-                $task['start_date'] = $request->startDate;
-                $task['end_date'] = $request->endDate;
-                $task['project_id'] = $request->projectId;
+                $task['start_date'] = $request->start_date;
+                $task['end_date'] = $request->end_date;
+                $task['project_id'] = $request->project_id;
                 $task['description'] = $request->description ? $request->description : null;
                 $task['created_by'] = auth()->user()->id;
                 DB::beginTransaction();
@@ -78,31 +78,31 @@ class TaskController extends Controller
                 $taskId = $task->id;
                 if ($saved) {
                     //insert in human resource bridge tabel
-                    $this->responseBody = $this->human_resource_bridge_table($taskId, $request->humanResources);
+                    // $this->responseBody = $this->human_resource_bridge_table($taskId, $request->humanResources);
 
-                    if ($this->responseBody["status"]) {
+                    // if ($this->responseBody["status"]) {
 
-                        //if non human resources then insert in bridge table
-                        if ($request->nonhumanResources) {
-                            $this->responseBody = $this->nonhuman_resource_bridge_table($taskId, $request->nonhumanResources);
-                            if ($this->responseBody["status"]) {
-                                DB::commit();
-                                return response()->json([
-                                    'payload' => $task,
-                                    'status' => true
-                                ], 201);
-                            } else {
-                                return response()->json($this->responseBody, 400);
-                            }
-                        }
-                        DB::commit();
-                        return response()->json([
-                            'payload' => $task,
-                            'status' => true
-                        ], 201);
-                    } else {
-                        return response()->json($this->responseBody, 400);
-                    }
+                    //     //if non human resources then insert in bridge table
+                    //     if ($request->nonhumanResources) {
+                    //         $this->responseBody = $this->nonhuman_resource_bridge_table($taskId, $request->nonhumanResources);
+                    //         if ($this->responseBody["status"]) {
+                    //             DB::commit();
+                    //             return response()->json([
+                    //                 'payload' => $task,
+                    //                 'status' => true
+                    //             ], 201);
+                    //         } else {
+                    //             return response()->json($this->responseBody, 400);
+                    //         }
+                    //     }
+                    DB::commit();
+                    return response()->json([
+                        'payload' => $task,
+                        'status' => true
+                    ], 201);
+                    // } else {
+                    //     return response()->json($this->responseBody, 400);
+                    // }
 
                     // DB::commit();
                 } else {
@@ -124,6 +124,7 @@ class TaskController extends Controller
             ], 500);
         }
     }
+
 
     function human_resource_bridge_table($taskId, $users)
     {
@@ -209,6 +210,13 @@ class TaskController extends Controller
     public function my_tasks()
     {
         try {
+            $user = User::with('task')->where('id', auth()->user()->id)->get();
+            dd(auth()->user()->my_task);
+            // foreach ($user as $u) {
+            // // dd($u->task);
+            // $s = $u->task::with("check");
+            // dd($s);
+            // }
             return response()->json([
                 "payload" => auth()->user()->task
             ]);
@@ -310,71 +318,111 @@ class TaskController extends Controller
     function change_status(Request $request, $id)
     {
         try {
-            if (auth()->user()->can('edit task')) {
-                $this->validate($request, [
-                    'status' => "required|in:inProgress,inReview,bug,complete"
+            // if (auth()->user()->can('edit task')) {
+            $res = '';
+            $this->validate($request, [
+                'status' => "required|in:inProgress,inReview,bug,complete"
+            ]);
+            $exist = Task::find($id);
+            if (!$exist) {
+                return response()->json([
+                    "success" => false,
+                    "error" => "No such task exist!"
+                ], 404);
+            }
+            DB::beginTransaction();
+            $check = HResourcesTask::where('resource_id', 6)->where('task_id', 18)->get();
+            // dd(auth()->user()->id);
+            $taskResource = HResourcesTask::where("resource_id", auth()->user()->id)
+                ->where('task_id', $exist->id)->first();
+            // dd($taskResource);
+
+
+            switch ($request->status) {
+                case 'inReview':
+                    $res = HResourcesTask::where('sequence', $taskResource["sequence"] + 1)
+                        ->where('task_id', $exist->task_id)
+                        ->update(["status" => "pending"]);
+                    $taskResource["status"] = "complete";
+
+                    $taskResource->save();
+                    break;
+                case 'bug':
+                    $res = HResourcesTask::where('sequence', $taskResource["sequence"] - 1)
+                        ->where('task_id', $exist->task_id)
+                        ->update(["status" => "pending"]);
+                    $taskResource["status"] = "complete";
+
+                    $taskResource->save();
+                    break;
+                default:
+            }
+            $exist["status"] = $request->status;
+            $saved = $exist->save();
+            DB::commit();
+            if ($saved) {
+
+                return response()->json([
+                    "success" => true,
+                    'payload' => $exist
                 ]);
-                $exist = Task::find($id);
-                if (!$exist) {
-                    return response()->json([
-                        "success" => false,
-                        "error" => "No such task exist!"
-                    ], 404);
-                }
-             switch($request->status){
-                 case 'inProgress'
-             }
-
-
-
-
-                if ($request->status == 'inReview' || $request->status == 'complete') {
-                    $team = $exist->team;
-                    $resources = $exist->resources;
-                    if ($team) {
-                        $this->toggle_status('free', $team, User::class);
-                        // foreach ($team as $member) {
-                        //     User::where('id', $member->id)->update(['status' => 'free']);
-                        // }
-                    }
-                    if ($resources) {
-                        $this->toggle_status('free', $resources, NonHumanResources::class);
-
-                        // foreach ($resources as $item) {
-                        //     NonHumanResources::where('id', $item->id)->update(['status' => 'free']);
-
-                    }
-                }
-                if ($request->status == 'bug') {
-                    $team = $exist->team;
-                    $resources = $exist->resources;
-                    if ($team) {
-                        $this->toggle_status('busy', $team, User::class);
-                        // foreach ($team as $member) {
-                        //     User::where('id', $member->id)->update(['status' => 'free']);
-                        // }
-                    }
-                    if ($resources) {
-                        $this->toggle_status('busy', $resources, NonHumanResources::class);
-
-                        // foreach ($resources as $item) {
-                        //     NonHumanResources::where('id', $item->id)->update(['status' => 'free']);
-
-                    }
-                }
-                $exist['status'] = $request->status;
-                if ($exist->save()) {
-                    return response()->json([
-                        "success" => true,
-                        'payload' => $exist
-                    ]);
-                }
             } else {
                 return response()->json([
-                    'success' => false,
-                    'payload' => "Unauthorized!"
-                ], 401);
+                    "success" => false,
+                    'error' => 'Error in changing status'
+                ], 400);
             }
+
+
+
+
+            // if ($request->status == 'inReview' || $request->status == 'complete') {
+            //     $team = $exist->team;
+            //     $resources = $exist->resources;
+            //     if ($team) {
+            //         $this->toggle_status('free', $team, User::class);
+            //         // foreach ($team as $member) {
+            //         //     User::where('id', $member->id)->update(['status' => 'free']);
+            //         // }
+            //     }
+            //     if ($resources) {
+            //         $this->toggle_status('free', $resources, NonHumanResources::class);
+
+            //         // foreach ($resources as $item) {
+            //         //     NonHumanResources::where('id', $item->id)->update(['status' => 'free']);
+
+            //     }
+            // }
+            // if ($request->status == 'bug') {
+            //     $team = $exist->team;
+            //     $resources = $exist->resources;
+            //     if ($team) {
+            //         $this->toggle_status('busy', $team, User::class);
+            //         // foreach ($team as $member) {
+            //         //     User::where('id', $member->id)->update(['status' => 'free']);
+            //         // }
+            //     }
+            //     if ($resources) {
+            //         $this->toggle_status('busy', $resources, NonHumanResources::class);
+
+            //         // foreach ($resources as $item) {
+            //         //     NonHumanResources::where('id', $item->id)->update(['status' => 'free']);
+
+            //     }
+            // }
+            // $exist['status'] = $request->status;
+            // if ($exist->save()) {
+            //     return response()->json([
+            //         "success" => true,
+            //         'payload' => $exist
+            //     ]);
+            // }
+            // } else {
+            //     return response()->json([
+            //         'success' => false,
+            //         'payload' => "Unauthorized!"
+            //     ], 401);
+            // }
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -398,14 +446,60 @@ class TaskController extends Controller
 
 
 
-    public function assign_resoources(Request $request, $id)
+    public function assign_resources(Request $request, $id)
     {
         try {
             $this->validate($request, [
-                'humanResources' => 'array',
-                'nonHumanResources' => 'array'
+                'humanResources' => 'required|array'
             ]);
+
+            $task = Task::find($id);
+            $taskId = $task->id;
+            // dd($taskId);
+            if (!$task) {
+                return response()->json([
+                    "success" => false,
+                    'error' => 'No such task exist!'
+                ], 404);
+            }
+            if ($request->humanResources) {
+                // dd(gettype($request->humanResources));
+                $humanResourcesCollection = collect($request->humanResources)->map(function ($item) use ($taskId) {
+
+                    $exist = HResourcesTask::firstOrNew([
+                        "task_id"=>$taskId,
+                        "resource_id"=>$item["resource_id"]
+                    ]);
+                    //dd(gettype($item));
+                    if ($item["sequence"] > 1) {
+                        $item["status"] = "notAssign";
+                    } else {
+                        $item["status"] = "pending";
+                    }
+                    $item["task_id"] = $taskId;
+                    $item["created_at"] =  date('Y-m-d H:i:s');
+                    $item["updated_at"] =  date('Y-m-d H:i:s');
+                    $exist = $item;
+                    dd($exist);
+                    $exist->save();
+                    return $item;
+                });
+                // dd(gettype($humanResourcesCollection));
+                $snap = HResourcesTask::insert($humanResourcesCollection->toArray());
+                if ($snap) {
+                    return response()->json([
+                        "status" => true,
+                        "payload" => [
+                            "msg" => "Resource Assigned!"
+                        ]
+                    ]);
+                }
+            }
         } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
     /**

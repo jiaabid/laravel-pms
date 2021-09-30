@@ -34,6 +34,8 @@ Route::post('/login', [AuthController::class, 'login']);
 
 Route::middleware('auth:api')->group(function () {
     Route::resource('/department', DepartmentController::class);
+    Route::get('/roles', [RoleController::class,'get_roles']);
+    
     Route::resource('/role', RoleController::class);
     Route::resource('/permission', PermissionController::class);
     Route::post('/assign/permission', [PermissionController::class, 'assign_permission']);
@@ -45,6 +47,6 @@ Route::middleware('auth:api')->group(function () {
     Route::get('tasks/my/',[TaskController::class,'my_tasks']);
     Route::resource('tasks',TaskController::class);
     Route::post('tasks/status/{id}',[TaskController::class,'change_status']);
-    Route::post('tasks/resource/{id}',[TaskController::class,'assign_resource']);
+    Route::post('tasks/resource/{id}',[TaskController::class,'assign_resources']);
     Route::resource('resources',ResourceController::class);
 });

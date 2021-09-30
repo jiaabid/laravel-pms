@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 // use App\Models\Role;
 
+use App\Models\Roles;
 use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
@@ -16,7 +17,6 @@ class RoleController extends Controller
     public function __construct()
     {
         $this->middleware(['auth']);
- 
     }
     /**
      * Display a listing of the resource.
@@ -39,7 +39,7 @@ class RoleController extends Controller
                     return response()->json([
                         'status' => false,
                         'error' => 'No roles exist!'
-                    ],404);
+                    ], 404);
                 }
             } else {
                 return response()->json([
@@ -55,6 +55,14 @@ class RoleController extends Controller
         }
     }
 
+    public function get_roles()
+    {
+        // $children = Role::with('children')->get();
+        $children = Roles::where('parent', 1)->with('children')->get();
+        // dd($children);
+        // return $children;
+        return $children;
+    }
     /**
      * Store a newly created resource in storage.
      *
@@ -107,7 +115,7 @@ class RoleController extends Controller
     public function show($id)
     {
         try {
-           
+
             $role = Role::find(auth()->user()->role_id);
             if ($role) {
                 return response()->json([
