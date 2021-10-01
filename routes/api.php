@@ -42,6 +42,7 @@ Route::middleware('auth:api')->group(function () {
     Route::delete('/logout', [AuthController::class, 'logout']);
     Route::resource('user', UserController::class);
     Route::resource('project', ProjectController::class);
+    Route::post('project/resource/{id}', [ProjectController::class,'assign_resources']);
     Route::resource('docs', DocController::class);
     Route::get('/doc/download/{id}',[DocController::class,'download_file']);
     Route::get('tasks/my/',[TaskController::class,'my_tasks']);

@@ -10,10 +10,18 @@ class Project extends Model
 {
     use HasFactory, SoftDeletes;
 
+    public function __construct()
+    {
+        $id = DbVariables::where('variable_type', 'project_status')->first()->id;
+        $value = DbVariablesDetail::where('variable_id', $id)
+            ->where('value', 'pending')->first()->id;
+        $this->status = $value; //or fetch from db.
+    }
     protected $fillable = [
         'name',
         'description',
         'dept_id',
+        'status',
         'created_by',
         'updated_by',
         'start_date',
@@ -28,7 +36,7 @@ class Project extends Model
     //project has department
     public function department()
     {
-        return $this->belongsTo(Department::class,'dept_id');
+        return $this->belongsTo(Department::class, 'dept_id');
         // return $this->hasOne(Department::class);
     }
 

@@ -211,14 +211,14 @@ class TaskController extends Controller
     {
         try {
             $user = User::with('task')->where('id', auth()->user()->id)->get();
-            dd(auth()->user()->my_task);
+            // dd(auth()->user()->my_task);
             // foreach ($user as $u) {
             // // dd($u->task);
             // $s = $u->task::with("check");
             // dd($s);
             // }
             return response()->json([
-                "payload" => auth()->user()->task
+                "payload" => auth()->user()->my_task
             ]);
         } catch (Exception $e) {
             return response()->json([
@@ -330,6 +330,7 @@ class TaskController extends Controller
                     "error" => "No such task exist!"
                 ], 404);
             }
+            // dd($exist->id);
             DB::beginTransaction();
             $check = HResourcesTask::where('resource_id', 6)->where('task_id', 18)->get();
             // dd(auth()->user()->id);
@@ -340,8 +341,11 @@ class TaskController extends Controller
 
             switch ($request->status) {
                 case 'inReview':
+                    // dd($exist->id);
+                    // dd($taskResource["sequence"] + 1,$exist);
+
                     $res = HResourcesTask::where('sequence', $taskResource["sequence"] + 1)
-                        ->where('task_id', $exist->task_id)
+                        ->where('task_id', $exist->id)
                         ->update(["status" => "pending"]);
                     $taskResource["status"] = "complete";
 
@@ -372,9 +376,6 @@ class TaskController extends Controller
                     'error' => 'Error in changing status'
                 ], 400);
             }
-
-
-
 
             // if ($request->status == 'inReview' || $request->status == 'complete') {
             //     $team = $exist->team;
@@ -452,7 +453,7 @@ class TaskController extends Controller
             $this->validate($request, [
                 'humanResources' => 'required|array'
             ]);
-
+            $errorMesages = [];
             $task = Task::find($id);
             $taskId = $task->id;
             // dd($taskId);
@@ -463,30 +464,62 @@ class TaskController extends Controller
                 ], 404);
             }
             if ($request->humanResources) {
+
                 // dd(gettype($request->humanResources));
                 $humanResourcesCollection = collect($request->humanResources)->map(function ($item) use ($taskId) {
-
-                    $exist = HResourcesTask::firstOrNew([
-                        "task_id"=>$taskId,
-                        "resource_id"=>$item["resource_id"]
-                    ]);
-                    //dd(gettype($item));
-                    if ($item["sequence"] > 1) {
-                        $item["status"] = "notAssign";
-                    } else {
-                        $item["status"] = "pending";
+                    $existingResource = HResourcesTask::where('task_id', $taskId)
+                        ->where('resource_id', $item["resource_id"])
+                        ->first();
+                    if ($existingResource) {
+                        $errorMesages[] = "already exist";
                     }
-                    $item["task_id"] = $taskId;
-                    $item["created_at"] =  date('Y-m-d H:i:s');
-                    $item["updated_at"] =  date('Y-m-d H:i:s');
-                    $exist = $item;
-                    dd($exist);
-                    $exist->save();
-                    return $item;
+                    $resource = new HResourcesTask();
+                    $resource["status"] = $item["sequence"] > 1 ? "notAssign" : "pending";
+                    $resource["resource_id"] = $item["resource_id"];
+                    $resource["task_id"] = $taskId;
+                    $resource["created_at"] =  date('Y-m-d H:i:s');
+                    $resource["updated_at"] =  date('Y-m-d H:i:s');
+                    $resource["sequence"] =  $item["sequence"];
+                    $resource["tag"] =  $item["tag"];
+                    $resource->save();
+
+                    // $exist = HResourcesTask::firstOrNew([
+                    //     "task_id" => $taskId,
+                    //     "resource_id" => $item["resource_id"]
+                    // ]);
+                    // $exist->fill((object)$item->all());
+                    // dd($exist);
+                    // if ($item["sequence"] > 1) {
+                    //     // $item["status"] = "notAssign";
+                    //     $exist["status"] = "notAssign";
+                    // } else {
+                    //     // $item["status"] = "pending";
+                    //     $exist["status"] = "pending";
+                    // }
+                    // $item["task_id"] = $taskId;
+                    // $item["created_at"] =  date('Y-m-d H:i:s');
+                    // $item["updated_at"] =  date('Y-m-d H:i:s');
+                    // $exist["task_id"] = $taskId;
+                    // $exist["created_at"] =  date('Y-m-d H:i:s');
+                    // $exist["updated_at"] =  date('Y-m-d H:i:s');
+                    // $exist["sequence"] =  $item["sequence"];
+                    // $exist["tag"] =  $item["tag"];
+
+                    // $exist =(object) $item;
+                    // dd(gettype($exist));
+                    // return $item;
                 });
                 // dd(gettype($humanResourcesCollection));
-                $snap = HResourcesTask::insert($humanResourcesCollection->toArray());
-                if ($snap) {
+                // $snap = HResourcesTask::insert($humanResourcesCollection->toArray());   [
+                // "msg" => "Resource Assigned!"
+                // ]
+                if (count($errorMesages) > 0) {
+                    return response()->json([
+                        "status" => true,
+                        "payload" => $errorMesages
+
+                    ]);
+                } else {
                     return response()->json([
                         "status" => true,
                         "payload" => [
@@ -510,6 +543,38 @@ class TaskController extends Controller
      */
     public function destroy($id)
     {
-        //
+        try {
+
+            if (auth()->user()->can('delete task')) {
+                $task = Task::find($id);
+                if (!$task) {
+                    return response()->json([
+                        "success" => false,
+                        'error' => 'No such task exist!'
+                    ], 404);
+                }
+
+                if ($task->delete()) {
+                    return response()->json([
+                        "success" => true
+                    ]);
+                } else {
+                    return response()->json([
+                        "success" => false,
+                        'error' => 'Error in delete'
+                    ], 400);
+                }
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'payload' => "Unauthorized!"
+                ], 401);
+            }
+        } catch (Exception $e) {
+            // echo $e;
+            return response()->json([
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }

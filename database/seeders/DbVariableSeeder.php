@@ -26,6 +26,12 @@ class DbVariableSeeder extends Seeder
             ],
             [
                 'variable_type' => 'project_status'
+            ],
+            [
+                'variable_type' => 'tag'
+            ],
+            [
+                'variable_type' => 'resource_type'
             ]
         ]);
 
@@ -42,6 +48,20 @@ class DbVariableSeeder extends Seeder
                             [
                                 "variable_id" => $variable->id,
                                 "value" => "free"
+                            ]
+                        ]
+                    );
+                    break;
+                case 'resource_type':
+                    DbVariablesDetail::insert(
+                        [
+                            [
+                                "variable_id" => $variable->id,
+                                "value" => "human"
+                            ],
+                            [
+                                "variable_id" => $variable->id,
+                                "value" => "non-human"
                             ]
                         ]
                     );
@@ -90,6 +110,32 @@ class DbVariableSeeder extends Seeder
                             [
                                 "variable_id" => $variable->id,
                                 "value" => "late"
+                            ]
+                        ]
+                    );
+                    break;
+                case 'tag':
+                    DbVariablesDetail::insert(
+                        [
+                            [
+                                "variable_id" => $variable->id,
+                                "value" => "backend developer"
+                            ],
+                            [
+                                "variable_id" => $variable->id,
+                                "value" => "frontend developer"
+                            ],
+                            [
+                                "variable_id" => $variable->id,
+                                "value" => "QA"
+                            ],
+                            [
+                                "variable_id" => $variable->id,
+                                "value" => "team lead"
+                            ],
+                            [
+                                "variable_id" => $variable->id,
+                                "value" => "project manager"
                             ]
                         ]
                     );

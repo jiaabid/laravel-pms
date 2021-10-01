@@ -22,7 +22,8 @@ class CreateProjectsTable extends Migration
             $table->foreignId('updated_by')->nullable()->constrained('users');
             $table->dateTime('start_date');
             $table->dateTime('end_date');
-            $table->enum('status',['pending','done']);
+            $table->unsignedBigInteger('status');
+            // $table->foreign('status')->references('db_variables_id')->on('db_variables_details');
             $table->softDeletes();
             $table->timestamps();
         });

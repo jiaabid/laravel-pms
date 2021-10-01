@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\DbVariables;
 use App\Models\Project;
+use App\Models\ProjectResource;
 use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
@@ -64,29 +66,29 @@ class ProjectController extends Controller
 
         try {
             if (auth()->user()->can('create project')) {
-            //    dd($request->input('start_date'));
-            $this->validate($request, [
-                'name' => "required|min:3|string",
-                'dept_id' => "required|numeric",
-                'start_date' => "required|date",
-                'end_date' => 'required|date'
-            ]);
+                //    dd($request->input('start_date'));
+                $this->validate($request, [
+                    'name' => "required|min:3|string",
+                    'dept_id' => "required|numeric",
+                    'start_date' => "required|date",
+                    'end_date' => 'required|date',
+                    'status' =>     'numeric'
+                ]);
 
-            $project = new Project();
-            $project = $project->fill($request->all());
-            $project['created_by'] = auth()->user()->id;
-
-            if ($project->save()) {
-                return response()->json([
-                    'payload' => $project,
-                    'status' => true
-                ], 201);
-            } else {
-                return response()->json([
-                    'success' => false,
-                    'error' => "Error in saving"
-                ], 400);
-            }
+                $project = new Project();
+                $project = $project->fill($request->all());
+                $project['created_by'] = auth()->user()->id;
+                if ($project->save()) {
+                    return response()->json([
+                        'payload' => $project,
+                        'status' => true
+                    ], 201);
+                } else {
+                    return response()->json([
+                        'success' => false,
+                        'error' => "Error in saving"
+                    ], 400);
+                }
             } else {
                 return response()->json([
                     'success' => false,
@@ -111,7 +113,7 @@ class ProjectController extends Controller
     {
         try {
             if (auth()->user()->can('retrieve project')) {
-             
+
                 $projects = Project::find($id);
                 $projects->doc;
                 $projects->department;
@@ -139,7 +141,63 @@ class ProjectController extends Controller
         }
     }
 
+    public function assign_resources(Request $request, $id)
+    {
+        try {
+            $this->validate($request, [
+                'resources' => 'required|array'
+            ]);
+            $errorMesages = [];
+            $project = Project::find($id);
+            $projectId = $project->id;
+            // dd($taskId);
+            if (!$project) {
+                return response()->json([
+                    "success" => false,
+                    'error' => 'No such project exist!'
+                ], 404);
+            }
+            if ($request->resources) {
 
+                $humanResourcesCollection = collect($request->resources)->map(function ($item) use ($projectId) {
+                    $existingResource = ProjectResource::where('project_id', $projectId)
+                        ->where('resource_id', $item["resource_id"])
+                        ->where('type', $item["type"])
+                        ->first();
+                    if ($existingResource) {
+                        return  $errorMesages[] = "already exist";
+                    }
+                    $resource = new ProjectResource();
+                    $resource["resource_id"] = $item["resource_id"];
+                    $resource["project_id"] = $projectId;
+                    $resource["created_at"] =  date('Y-m-d H:i:s');
+                    $resource["updated_at"] =  date('Y-m-d H:i:s');
+                    $resource["type"] =  $item["type"];
+                    return $resource->save();
+                });
+                
+                if (count($errorMesages) > 0) {
+                    return response()->json([
+                        "status" => true,
+                        "payload" => $errorMesages
+
+                    ]);
+                } else {
+                    return response()->json([
+                        "status" => true,
+                        "payload" => [
+                            "msg" => "Resource Assigned!"
+                        ]
+                    ]);
+                }
+            }
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 
     /**
      * Update the specified resource in storage.

@@ -17,7 +17,8 @@ class CreateNonHumanResourcesTable extends Migration
             $table->id();
             $table->string('name')->unique();
             $table->text('description')->nullable();
-            $table->enum('status', ['free', 'busy']);
+            // $table->unsignedBigInteger('status');
+            // $table->enum('status', ['free', 'busy']);
             $table->foreignId('created_by')->nullable()->constrained('users');
             $table->foreignId('updated_by')->nullable()->constrained('users');
             $table->softDeletes();

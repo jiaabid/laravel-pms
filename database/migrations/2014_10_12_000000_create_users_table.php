@@ -26,7 +26,7 @@ class CreateUsersTable extends Migration
             $table->bigInteger('dept_id')->nullable();
             $table->foreignId('created_by')->nullable()->constrained('users');
             $table->foreignId('updated_by')->nullable()->constrained('users');
-            $table->enum('status', ['free', 'busy'])->nullable();
+            // $table->enum('status', ['free', 'busy'])->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

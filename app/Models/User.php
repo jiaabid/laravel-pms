@@ -64,13 +64,13 @@ class User extends Authenticatable
 
     public function task(){
         return $this->belongsToMany(Task::class,'h_resources_tasks','resource_id','task_id')
-        ->withPivot(['status','sequence'])
+        ->withPivot(['status','sequence','tag'])
         ->as('check');
         // return $this->belongsToMany(Task::class,'h_resources_tasks','task_id','resource_id');
     }
     public function my_task(){
         return $this->belongsToMany(Task::class,'h_resources_tasks','resource_id','task_id')
-        ->withPivot(['status','sequence'])
+        ->withPivot(['status','sequence','tag'])
         ->wherePivot('status','<>','notAssign');
         // return $this->belongsToMany(Task::class,'h_resources_tasks','task_id','resource_id');
     }

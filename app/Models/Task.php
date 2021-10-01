@@ -10,6 +10,16 @@ class Task extends Model
 {
     use HasFactory, SoftDeletes;
 
+
+    public function __construct()
+    {
+        $id = DbVariables::where('variable_type', 'task_status')->first()->id;
+        $value = DbVariablesDetail::where('variable_id', $id)
+            ->where('value', 'pending')->first()->id;
+        $this->status = $value; //or fetch from db.
+    }
+
+
     public $timestamps = true;
 
     protected $fillable = [
@@ -23,15 +33,17 @@ class Task extends Model
         'updated_by',
         'updated_at',
         'created_at'
-       
+
     ];
     protected $table = 'tasks';
 
-    protected function team(){
-        return $this->belongsToMany(User::class,'h_resources_tasks','task_id','resource_id');
+    protected function team()
+    {
+        return $this->belongsToMany(User::class, 'h_resources_tasks', 'task_id', 'resource_id');
     }
 
-    protected function resources(){
-        return $this->belongsToMany(NonHumanResources::class,'nh_resources_tasks','task_id','resource_id');
+    protected function resources()
+    {
+        return $this->belongsToMany(NonHumanResources::class, 'nh_resources_tasks', 'task_id', 'resource_id');
     }
 }

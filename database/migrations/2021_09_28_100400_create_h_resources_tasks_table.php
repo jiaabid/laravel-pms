@@ -21,7 +21,8 @@ class CreateHResourcesTasksTable extends Migration
             $table->foreignId('resource_id')->constrained('users');
             $table->string('sequence');
             $table->string('tag');
-            $table->enum('status', ['pending', 'complete', 'notAssign']);
+            $table->unsignedBigInteger('status');
+            // $table->enum('status', ['pending', 'complete', 'notAssign']);
             //composite key
             // $table->unique(['task_id','resource_id']);
             // $table->primary(['task_id', 'resource_id']);
