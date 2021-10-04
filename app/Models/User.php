@@ -75,7 +75,4 @@ class User extends Authenticatable
         // return $this->belongsToMany(Task::class,'h_resources_tasks','task_id','resource_id');
     }
 
-    public function my_task(){
-        return 
-    }
 }

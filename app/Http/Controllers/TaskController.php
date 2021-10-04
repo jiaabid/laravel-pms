@@ -106,26 +106,33 @@ class TaskController extends Controller
     }
 
 
-    
-       
-        // dd($payload);
+
+
+    // dd($payload);
 
 
     public function my_created_tasks(string $mode)
     {
         try {
-            dd($mode);
+            // dd($mode);
             $payload = "";
-            switch($mode){
+            switch ($mode) {
                 case "my":
+                    $type = DbVariablesDetail::id('task_type')->status('my')->first()->id;
+                    $payload = Task::where('created_by', auth()->user()->id)->where('type', $type)->get();
+                    // dd($type);
+                    break;
+                case "assign":
+                    $type = DbVariablesDetail::id('task_type')->status('project')->first()->id;
+                    $payload = Task::where('created_by', auth()->user()->id)->where('type', $type)->get();
                     break;
                 default:
-                $payload = auth()->user()->assigned_task
+                    $payload = auth()->user()->assigned_task;
             }
             $user = User::with('task')->where('id', auth()->user()->id)->first();
             // dd($user) ;
             return response()->json([
-                "payload" => 
+                "payload" => $payload
             ]);
         } catch (Exception $e) {
             return response()->json([
@@ -135,7 +142,7 @@ class TaskController extends Controller
         }
     }
 
-    
+
 
 
     /**
@@ -230,7 +237,7 @@ class TaskController extends Controller
             // if (auth()->user()->can('edit task')) {
             $res = '';
             $this->validate($request, [
-                'status' => "required|in:inProgress,inReview,bug,complete"
+                'status' => "required"
             ]);
             $exist = Task::find($id);
             if (!$exist) {
@@ -247,34 +254,35 @@ class TaskController extends Controller
                 ->where('task_id', $exist->id)->first();
             // dd($taskResource);
 
-
-            switch ($request->status) {
+            $status = DbVariablesDetail::statusById($request->status)->first();
+            //  dd($status);          
+            switch ($status->value) {
                 case 'completed':
                     // dd($exist->id);
                     // dd($taskResource["sequence"] + 1,$exist);
                     $res = HResourcesTask::where('sequence', $taskResource["sequence"] + 1)
                         ->where('task_id', $exist->id)
-                        ->update(["status" => "pending"]);
-                    $taskResource["status"] = "complete";
-                    $exist["status"] = $request->status;
+                        ->update(["status" => DbVariablesDetail::id('task_status')->status('pending')->first()->id]);
+                    $taskResource["status"] = $status->id;
+                    $exist["status"] = DbVariablesDetail::id('task_status')->status('inReview')->first()->id;
 
                     $taskResource->save();
                     break;
                 case 'bug':
                     $res = HResourcesTask::where('sequence', $taskResource["sequence"] - 1)
                         ->where('task_id', $exist->task_id)
-                        ->update(["status" => "pending"]);
-                    $taskResource["status"] = "complete";
-                    $exist["status"] = $request->status;
+                        ->update(["status" => DbVariablesDetail::id('task_status')->status('pending')->first()->id]);
+                    $taskResource["status"] = DbVariablesDetail::id('task_status')->status('completed')->first()->id;
+                    $exist["status"] = $status->id;
 
                     $taskResource->save();
                     break;
                 case 'approve':
-                    $exist["status"] = "completed";
+                    $exist["status"] = DbVariablesDetail::id('task_status')->status('completed')->first()->id;
 
                     break;
                 default:
-                    $exist["status"] = $request->status;
+                    $exist["status"] = $status->id;
                     break;
             }
             // $exist["status"] = $request->status;

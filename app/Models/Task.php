@@ -48,4 +48,8 @@ class Task extends Model
     {
         return $this->belongsToMany(NonHumanResources::class, 'nh_resources_tasks', 'task_id', 'resource_id');
     }
+
+    // public function scopeMyTask($query ,int $userId){
+    //     return $query->whereHas('user')
+    // }
 }

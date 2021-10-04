@@ -24,3 +24,7 @@ https://medium.com/@afrazahmad090/laravel-many-to-many-relationship-explained-82
 
 #stored procedure
 https://dev.mysql.com/doc/refman/8.0/en/with.html#common-table-expressions-recursive-examples
+
+#insert tag status
+INSERT INTO `tag_statuses`(`tag_id`, `task_status_id`) VALUES (14,3),(14,4),(14,5),(16,3),(16,4),(16,5),(16,6),(16,7),(15,9),(15,10);
+

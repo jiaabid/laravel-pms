@@ -26,7 +26,13 @@ class DbVariablesDetail extends Model
     //getting particular status
     public function scopeStatus($query, string $status)
     {
-        return $query->where('value', 'pending');
+        return $query->where('value', $status);
+    }
+
+    public function scopeStatusById($query, int $id){
+        // dd($id);
+        return $query->where('id', $id);
+
     }
     public function scopePending($query)
     {
