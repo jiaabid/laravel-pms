@@ -17,4 +17,8 @@ class NonHumanResources extends Model
     ];
 
     protected $table = 'non_human_resources';
+
+    public function projects(){
+        return $this->belongsToMany(Project::class,'project_resources','resource_id','project_id');
+    }
 }

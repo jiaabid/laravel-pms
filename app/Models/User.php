@@ -74,5 +74,7 @@ class User extends Authenticatable
         ->wherePivot('status','<>','notAssign');
         // return $this->belongsToMany(Task::class,'h_resources_tasks','task_id','resource_id');
     }
-
+    public function projects(){
+        return $this->belongsToMany(Project::class,'project_resources','resource_id','project_id');
+    }
 }

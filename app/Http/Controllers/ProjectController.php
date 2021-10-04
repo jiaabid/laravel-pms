@@ -125,6 +125,8 @@ class ProjectController extends Controller
                 $projects = Project::find($id);
                 $projects->doc;
                 $projects->department;
+                $projects->human_resource;
+                $projects->nonhuman_resource;
                 if ($projects) {
                     return response()->json([
                         "success" => true,

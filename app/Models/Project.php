@@ -52,4 +52,11 @@ class Project extends Model
     {
         return $this->belongsToMany(Doc::class, 'project_docs', 'project_id', 'doc_id');
     }
+
+    public function human_resource(){
+        return $this->belongsToMany(User::class,'project_resources','project_id','resource_id');
+    }
+    public function nonhuman_resource(){
+        return $this->belongsToMany(NonHumanResources::class,'project_resources','project_id','resource_id');
+    }
 }
