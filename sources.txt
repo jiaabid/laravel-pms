@@ -21,3 +21,6 @@ https://stackoverflow.com/questions/49026557/method-illuminate-auth-requestguard
 
 #belongsToMany
 https://medium.com/@afrazahmad090/laravel-many-to-many-relationship-explained-822b554c1973
+
+#stored procedure
+https://dev.mysql.com/doc/refman/8.0/en/with.html#common-table-expressions-recursive-examples

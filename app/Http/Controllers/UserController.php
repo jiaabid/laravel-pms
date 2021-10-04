@@ -25,7 +25,10 @@ class UserController extends Controller
         //
         try {
             if (auth()->user()->can('retrieve user')) {
-                $users = User::all();
+                $id = auth()->user()->role_id;
+                $roles = DB::select('call role_childs(?)', [$id]);
+                $roles = collect($roles);
+                $users = User::whereIn('role_id',$roles->pluck('id'))->get();
                 if ($users) {
                     return response()->json([
                         'status' => true,
@@ -216,7 +219,7 @@ class UserController extends Controller
         }
     }
 
-   
+
     /**
      * Remove the specified resource from storage.
      *

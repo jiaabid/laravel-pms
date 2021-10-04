@@ -32,6 +32,10 @@ class DbVariableSeeder extends Seeder
             ],
             [
                 'variable_type' => 'resource_type'
+            ],
+            [
+                'variable_type' => 'task_type'
+
             ]
         ]);
 
@@ -92,6 +96,14 @@ class DbVariableSeeder extends Seeder
                             [
                                 "variable_id" => $variable->id,
                                 "value" => "inReview"
+                            ],
+                            [
+                                "variable_id" => $variable->id,
+                                "value" => "approve"
+                            ],
+                            [
+                                "variable_id" => $variable->id,
+                                "value" => "reject"
                             ]
                         ]
                     );
@@ -119,27 +131,34 @@ class DbVariableSeeder extends Seeder
                         [
                             [
                                 "variable_id" => $variable->id,
-                                "value" => "backend developer"
+                                "value" => "developer"
                             ],
                             [
                                 "variable_id" => $variable->id,
-                                "value" => "frontend developer"
+                                "value" => "approver"
                             ],
                             [
                                 "variable_id" => $variable->id,
                                 "value" => "QA"
-                            ],
-                            [
-                                "variable_id" => $variable->id,
-                                "value" => "team lead"
-                            ],
-                            [
-                                "variable_id" => $variable->id,
-                                "value" => "project manager"
                             ]
                         ]
                     );
                     break;
+
+                    case 'task_type':
+                        DbVariablesDetail::insert(
+                            [
+                                [
+                                    "variable_id" => $variable->id,
+                                    "value" => "my"
+                                ],
+                                [
+                                    "variable_id" => $variable->id,
+                                    "value" => "project"
+                                ]
+                            ]
+                        );
+                        break;
             }
         }
     }

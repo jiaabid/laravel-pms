@@ -68,10 +68,14 @@ class User extends Authenticatable
         ->as('check');
         // return $this->belongsToMany(Task::class,'h_resources_tasks','task_id','resource_id');
     }
-    public function my_task(){
+    public function assigned_task(){
         return $this->belongsToMany(Task::class,'h_resources_tasks','resource_id','task_id')
         ->withPivot(['status','sequence','tag'])
         ->wherePivot('status','<>','notAssign');
         // return $this->belongsToMany(Task::class,'h_resources_tasks','task_id','resource_id');
+    }
+
+    public function my_task(){
+        return 
     }
 }

@@ -14,8 +14,10 @@ class Task extends Model
     public function __construct()
     {
         $id = DbVariables::where('variable_type', 'task_status')->first()->id;
+      
         $value = DbVariablesDetail::where('variable_id', $id)
             ->where('value', 'pending')->first()->id;
+            // dd($value);
         $this->status = $value; //or fetch from db.
     }
 

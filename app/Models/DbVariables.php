@@ -15,4 +15,8 @@ class DbVariables extends Model
     ];
 
     protected $table = 'db_variables';
+
+    public function detail(){
+        return $this->hasMany(DbVariablesDetail::class,'variable_id','id');
+    }
 }

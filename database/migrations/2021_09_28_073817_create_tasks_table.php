@@ -19,10 +19,11 @@ class CreateTasksTable extends Migration
             $table->text('description')->nullable();
             // $table->enum('status', ['pending', 'inProgress', 'inReview', 'bug', 'complete']);
             // $table->foreignId('assignTo')->constrained('users');
+            $table->unsignedBigInteger('type');
             $table->unsignedBigInteger('status');
             $table->foreignId('created_by')->constrained('users');
             $table->foreignId('updated_by')->nullable()->constrained('users');
-            $table->foreignId('project_id')->constrained('projects');
+            $table->foreignId('project_id')->nullable()->constrained('projects');
             $table->dateTime('start_date');
             $table->dateTime('end_date');
             $table->softDeletes();

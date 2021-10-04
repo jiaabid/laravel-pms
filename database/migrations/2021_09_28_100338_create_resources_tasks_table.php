@@ -13,7 +13,7 @@ class CreateNhResourcesTasksTable extends Migration
      */
     public function up()
     {
-        Schema::create('nh_resources_tasks', function (Blueprint $table) {
+        Schema::create('nh_resource_task', function (Blueprint $table) {
             $table->id();
             $table->foreignId('task_id')->constrained('tasks');
             $table->foreignId('resource_id')->constrained('non_human_resources');

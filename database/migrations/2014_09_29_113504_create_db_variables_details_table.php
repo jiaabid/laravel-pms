@@ -17,6 +17,7 @@ class CreateDbVariablesDetailsTable extends Migration
             $table->id();
             $table->foreignId('variable_id')->constrained('db_variables');
             $table->string('value');
+            $table->softDeletes();
             $table->timestamps();
         });
     }

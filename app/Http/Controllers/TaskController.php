@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\DbVariablesDetail;
 use App\Models\HResourcesTask;
 use App\Models\NhResourcesTask;
 use App\Models\NonHumanResources;
@@ -55,56 +56,35 @@ class TaskController extends Controller
                 //    dd($request->input('start_date'));
                 $this->validate($request, [
                     'name' => "required|min:3|string",
-                    'project_id' => "required|numeric",
+                    'project_id' => "numeric",
                     'start_date' => "required|date",
                     'end_date' => 'required|date',
+                    'type' => 'required'
 
 
                 ]);
 
-                // 'humanResources' => 'required|array',
-                // 'nonhumanResources' => 'array',
                 $task = new Task();
                 // dd($task);
                 $task['name'] = $request->name;
                 $task['start_date'] = $request->start_date;
                 $task['end_date'] = $request->end_date;
-                $task['project_id'] = $request->project_id;
-                $task['description'] = $request->description ? $request->description : null;
+                $task['project_id'] = $request->project_id ? $request->project_id : null;
+                $task['type'] = $request->type;
+                $task['description'] = $request->description ? $request->description : '';
                 $task['created_by'] = auth()->user()->id;
+                // dd($task);
                 DB::beginTransaction();
                 $saved = $task->save();
                 //   dd($task->id);
                 $taskId = $task->id;
                 if ($saved) {
-                    //insert in human resource bridge tabel
-                    // $this->responseBody = $this->human_resource_bridge_table($taskId, $request->humanResources);
 
-                    // if ($this->responseBody["status"]) {
-
-                    //     //if non human resources then insert in bridge table
-                    //     if ($request->nonhumanResources) {
-                    //         $this->responseBody = $this->nonhuman_resource_bridge_table($taskId, $request->nonhumanResources);
-                    //         if ($this->responseBody["status"]) {
-                    //             DB::commit();
-                    //             return response()->json([
-                    //                 'payload' => $task,
-                    //                 'status' => true
-                    //             ], 201);
-                    //         } else {
-                    //             return response()->json($this->responseBody, 400);
-                    //         }
-                    //     }
                     DB::commit();
                     return response()->json([
                         'payload' => $task,
                         'status' => true
                     ], 201);
-                    // } else {
-                    //     return response()->json($this->responseBody, 400);
-                    // }
-
-                    // DB::commit();
                 } else {
                     return response()->json([
                         'success' => false,
@@ -126,99 +106,26 @@ class TaskController extends Controller
     }
 
 
-    function human_resource_bridge_table($taskId, $users)
-    {
-        // dd($taskId);
-        $payload = [];
-        foreach ($users as $user) {
-            $temp = [];
-            $temp["task_id"] = $taskId;
-            $temp["resource_id"] = $user;
-            $payload[] = $temp;
-            $temp = [];
-            // $exist = User::find($user);
-            // if ($exist->status != 'busy') {
-
-            //     $exist['status'] = 'busy';
-            //     $exist->save();
-
-            // }
-        }
-        if (count($payload) > 0) {
-            $snap = HResourcesTask::insert($payload);
-            if ($snap) {
-                return [
-                    "status" => true
-                ];
-            } else {
-                return [
-                    "status" => false,
-                    "error" => "Error in inserting Resources!"
-                ];
-            }
-        } else {
-            return [
-                "status" => false,
-                "error" => "your specified human resources are busy!"
-            ];
-        }
+    
+       
         // dd($payload);
 
-    }
-    function nonhuman_resource_bridge_table($taskId, $resources)
-    {
-        $payload = [];
-        foreach ($resources as $resource) {
-            $temp = [];
-            $temp["task_id"] = $taskId;
-            $temp["resource_id"] = $resource;
-            $payload[] = $temp;
-            $temp = [];
-            // $exist = NonHumanResources::find($resource);
-            // if ($exist->status != 'busy') {
-            //     $temp = [];
-            //     $temp["task_id"] = $taskId;
-            //     $temp["resource_id"] = $resource;
-            //     $exist['status'] = 'busy';
-            //     $exist->save();
-            //     $payload[] = $temp;
-            //     $temp = [];
-            // }
-        }
-        if (count($payload) > 0) {
-            $snap = NhResourcesTask::insert($payload);
-            if ($snap) {
-                return [
-                    "status" => true
-                ];
-            } else {
-                return [
-                    "status" => false,
-                    "error" => "Error in inserting Resources!"
-                ];
-            }
-        } else {
-            return [
-                'status' => false,
-                'error' => "all non human resources are busy!"
-            ];
-        }
-        // dd($payload);
 
-    }
-
-    public function my_tasks()
+    public function my_created_tasks(string $mode)
     {
         try {
-            $user = User::with('task')->where('id', auth()->user()->id)->get();
-            // dd(auth()->user()->my_task);
-            // foreach ($user as $u) {
-            // // dd($u->task);
-            // $s = $u->task::with("check");
-            // dd($s);
-            // }
+            dd($mode);
+            $payload = "";
+            switch($mode){
+                case "my":
+                    break;
+                default:
+                $payload = auth()->user()->assigned_task
+            }
+            $user = User::with('task')->where('id', auth()->user()->id)->first();
+            // dd($user) ;
             return response()->json([
-                "payload" => auth()->user()->my_task
+                "payload" => 
             ]);
         } catch (Exception $e) {
             return response()->json([
@@ -227,6 +134,8 @@ class TaskController extends Controller
             ], 500);
         }
     }
+
+    
 
 
     /**
@@ -340,7 +249,7 @@ class TaskController extends Controller
 
 
             switch ($request->status) {
-                case 'complete':
+                case 'completed':
                     // dd($exist->id);
                     // dd($taskResource["sequence"] + 1,$exist);
                     $res = HResourcesTask::where('sequence', $taskResource["sequence"] + 1)
@@ -439,18 +348,7 @@ class TaskController extends Controller
         }
     }
 
-    function toggle_status($status, $list, $model)
-    {
-        if ($status == 'free') {
-            foreach ($list as $item) {
-                $model::where('id', $item->id)->update(["status" => $status]);
-            }
-        } else {
-            foreach ($list as $item) {
-                $model::where('id', $item->id)->where('status', 'free')->update(["status" => $status]);
-            }
-        }
-    }
+
 
 
 
@@ -461,7 +359,7 @@ class TaskController extends Controller
                 $this->validate($request, [
                     'humanResources' => 'required|array'
                 ]);
-                $errorMesages = [];
+                $errorMesages = collect([]);
                 $task = Task::find($id);
                 $taskId = $task->id;
                 // dd($taskId);
@@ -471,18 +369,24 @@ class TaskController extends Controller
                         'error' => 'No such task exist!'
                     ], 404);
                 }
+
+
+                // dd(DbVariablesDetail::id('task_status')->status('pending')->first()->id);
+
+                // dd(DbVariablesDetail::with('variable')->get());
                 if ($request->humanResources) {
 
                     // dd(gettype($request->humanResources));
-                    $humanResourcesCollection = collect($request->humanResources)->map(function ($item) use ($taskId) {
+                    $humanResourcesCollection = collect($request->humanResources)->map(function ($item) use ($taskId, $errorMesages) {
                         $existingResource = HResourcesTask::where('task_id', $taskId)
                             ->where('resource_id', $item["resource_id"])
                             ->first();
                         if ($existingResource) {
-                            $errorMesages[] = "already exist";
+                            return $errorMesages->push($existingResource->resource_id . " already exist");
+                            // $errorMesages[] = "already exist";
                         }
                         $resource = new HResourcesTask();
-                        $resource["status"] = $item["sequence"] > 1 ? "notAssign" : "pending";
+                        $resource["status"] = $item["sequence"] > 1 ? DbVariablesDetail::id('task_status')->status('notAssign')->first()->id : DbVariablesDetail::id('task_status')->status('pending')->first()->id;
                         $resource["resource_id"] = $item["resource_id"];
                         $resource["task_id"] = $taskId;
                         $resource["created_at"] =  date('Y-m-d H:i:s');
@@ -490,40 +394,11 @@ class TaskController extends Controller
                         $resource["sequence"] =  $item["sequence"];
                         $resource["tag"] =  $item["tag"];
                         $resource->save();
-
-                        // $exist = HResourcesTask::firstOrNew([
-                        //     "task_id" => $taskId,
-                        //     "resource_id" => $item["resource_id"]
-                        // ]);
-                        // $exist->fill((object)$item->all());
-                        // dd($exist);
-                        // if ($item["sequence"] > 1) {
-                        //     // $item["status"] = "notAssign";
-                        //     $exist["status"] = "notAssign";
-                        // } else {
-                        //     // $item["status"] = "pending";
-                        //     $exist["status"] = "pending";
-                        // }
-                        // $item["task_id"] = $taskId;
-                        // $item["created_at"] =  date('Y-m-d H:i:s');
-                        // $item["updated_at"] =  date('Y-m-d H:i:s');
-                        // $exist["task_id"] = $taskId;
-                        // $exist["created_at"] =  date('Y-m-d H:i:s');
-                        // $exist["updated_at"] =  date('Y-m-d H:i:s');
-                        // $exist["sequence"] =  $item["sequence"];
-                        // $exist["tag"] =  $item["tag"];
-
-                        // $exist =(object) $item;
-                        // dd(gettype($exist));
-                        // return $item;
                     });
-                    // dd(gettype($humanResourcesCollection));
-                    // $snap = HResourcesTask::insert($humanResourcesCollection->toArray());   [
-                    // "msg" => "Resource Assigned!"
-                    // ]
+
                     if (count($errorMesages) > 0) {
                         return response()->json([
-                            "status" => true,
+                            "status" => false,
                             "payload" => $errorMesages
 
                         ]);

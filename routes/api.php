@@ -11,6 +11,7 @@ use App\Http\Controllers\TaskController;
 use App\Http\Controllers\UserController;
 use App\Models\Permission;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -24,30 +25,35 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/',function(){
- return response('hello');
+Route::get('/', function () {
+    return response('hello');
 });
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
-
+Route::get('/check', function () {
+    $id = 2;
+    $roles = DB::select("CALL role_childs(".$id.")");
+    dd($roles);
+});
 // Route::resource('/department',DepartmentController::class)->middleware('auth');
 
 Route::middleware('auth:api')->group(function () {
     Route::resource('/department', DepartmentController::class);
-    Route::get('/roles', [RoleController::class,'get_roles']);
-    
+    Route::get('/roles', [RoleController::class, 'get_roles']);
+
     Route::resource('/role', RoleController::class);
     Route::resource('/permission', PermissionController::class);
     Route::post('/assign/permission', [PermissionController::class, 'assign_permission']);
     Route::delete('/logout', [AuthController::class, 'logout']);
     Route::resource('user', UserController::class);
     Route::resource('project', ProjectController::class);
-    Route::post('project/resource/{id}', [ProjectController::class,'assign_resources']);
+    Route::post('project/resource/{id}', [ProjectController::class, 'assign_resources']);
     Route::resource('docs', DocController::class);
-    Route::get('/doc/download/{id}',[DocController::class,'download_file']);
-    Route::get('tasks/my/',[TaskController::class,'my_tasks']);
-    Route::resource('tasks',TaskController::class);
-    Route::post('tasks/status/{id}',[TaskController::class,'change_status']);
-    Route::post('tasks/resource/{id}',[TaskController::class,'assign_resources']);
-    Route::resource('resources',ResourceController::class);
+    Route::get('/doc/download/{id}', [DocController::class, 'download_file']);
+    Route::get('/task/{mode}', [TaskController::class, 'my_created_tasks']);
+    Route::resource('tasks', TaskController::class);
+    Route::post('tasks/status/{id}', [TaskController::class, 'change_status']);
+    Route::post('tasks/resource/{id}', [TaskController::class, 'assign_resources']);
+    Route::resource('resources', ResourceController::class);
+  
 });
