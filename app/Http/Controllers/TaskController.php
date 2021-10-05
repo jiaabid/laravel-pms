@@ -10,10 +10,13 @@ use App\Models\Task;
 use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
+use App\Http\Traits\ReusableTrait;
+use App\Http\Traits\ResponseTrait;
 use Illuminate\Support\Facades\DB;
 
 class TaskController extends Controller
 {
+    use ResponseTrait;
     private $responseBody;
     /**
      * Display a listing of the resource.
@@ -22,9 +25,7 @@ class TaskController extends Controller
      */
     public function index()
     {
-        //
         try {
-
             // $tasks = Task::with('team')->with('resources')->get();
             $tasks = Task::all();
             foreach ($tasks as $task) {
@@ -32,12 +33,12 @@ class TaskController extends Controller
                 $task->resources;
             }
             if ($tasks) {
-                return response()->json([
-                    'payload' => $tasks
-                ]);
+                return $this->ok_response(true, $tasks, 200);
             } else {
+                return $this->error_response(false, "Not found!", 404);
             }
         } catch (Exception $e) {
+            return $this->error_response(false, "No user exist!", 404);
         }
     }
 
@@ -81,36 +82,19 @@ class TaskController extends Controller
                 if ($saved) {
 
                     DB::commit();
-                    return response()->json([
-                        'payload' => $task,
-                        'status' => true
-                    ], 201);
+                    return $this->ok_response(true, $task, 201);
                 } else {
-                    return response()->json([
-                        'success' => false,
-                        'error' => "Error in saving"
-                    ], 400);
+                    return $this->error_response(false, "Error in saving", 400);
                 }
             } else {
-                return response()->json([
-                    'success' => false,
-                    'payload' => "Unauthorized!"
-                ], 401);
+                return $this->error_response(false, "Unauthorized!", 401);
             }
         } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->error_response(false, $e->getMessage(), 500);
         }
     }
 
-
-
-
-    // dd($payload);
-
-
+    //retrieving tasks assigned ,created , assign to others
     public function my_created_tasks(string $mode)
     {
         try {
@@ -120,8 +104,9 @@ class TaskController extends Controller
                 case "my":
                     $type = DbVariablesDetail::id('task_type')->status('my')->first()->id;
                     $payload = Task::where('created_by', auth()->user()->id)->where('type', $type)->get();
-                    // dd($type);
                     break;
+
+                    //tasks assign by me
                 case "assign":
                     $type = DbVariablesDetail::id('task_type')->status('project')->first()->id;
                     $payload = Task::where('created_by', auth()->user()->id)->where('type', $type)->get();
@@ -129,16 +114,11 @@ class TaskController extends Controller
                 default:
                     $payload = auth()->user()->assigned_task;
             }
-            $user = User::with('task')->where('id', auth()->user()->id)->first();
+            // $user = User::with('task')->where('id', auth()->user()->id)->first();
             // dd($user) ;
-            return response()->json([
-                "payload" => $payload
-            ]);
+            return $this->ok_response(true, $payload, 200);
         } catch (Exception $e) {
-            return response()->json([
-                "status" => false,
-                "error" => $e->getMessage()
-            ], 500);
+            return $this->error_response(false, $e->getMessage(), 500);
         }
     }
 
@@ -158,27 +138,12 @@ class TaskController extends Controller
             $task = Task::find($id);
             $task->team;
             $task->resources;
-            return response()->json([
-                "payload" => $task
-            ]);
+            return $this->ok_response(true, $task, 200);
         } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->error_response(false, $e->getMessage(), 500);
         }
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        //
-    }
 
     /**
      * Update the specified resource in storage.
@@ -201,33 +166,18 @@ class TaskController extends Controller
                     ]);
                     $exist->fill($request->all());
                     if ($exist->save()) {
-                        return response()->json([
-                            "success" => true,
-                            'payload' => $exist
-                        ]);
+                        return $this->ok_response(true, $exist, 200);
                     } else {
-                        return response()->json([
-                            "success" => false,
-                            'error' => 'Error in update'
-                        ], 400);
+                        return $this->error_response(false, "Error in updating", 400);
                     }
                 } else {
-                    return response()->json([
-                        "success" => false,
-                        'error' => 'No such task exist!'
-                    ], 404);
+                    return $this->error_response(false, 'No such task exist!', 404);
                 }
             } else {
-                return response()->json([
-                    'success' => false,
-                    'payload' => "Unauthorized!"
-                ], 401);
+                return $this->error_response(false, "Unauthorized!", 401);
             }
         } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->error_response(false, $e->getMessage(), 500);
         }
     }
 
@@ -241,10 +191,7 @@ class TaskController extends Controller
             ]);
             $exist = Task::find($id);
             if (!$exist) {
-                return response()->json([
-                    "success" => false,
-                    "error" => "No such task exist!"
-                ], 404);
+                return $this->error_response(false, 'No such task exist!', 404);
             }
             // dd($exist->id);
             DB::beginTransaction();
@@ -289,70 +236,12 @@ class TaskController extends Controller
             $saved = $exist->save();
             DB::commit();
             if ($saved) {
-
-                return response()->json([
-                    "success" => true,
-                    'payload' => $exist
-                ]);
+                return $this->ok_response(true, $exist, 200);
             } else {
-                return response()->json([
-                    "success" => false,
-                    'error' => 'Error in changing status'
-                ], 400);
+                return $this->error_response(false, 'Error in changing status', 400);
             }
-
-            // if ($request->status == 'inReview' || $request->status == 'complete') {
-            //     $team = $exist->team;
-            //     $resources = $exist->resources;
-            //     if ($team) {
-            //         $this->toggle_status('free', $team, User::class);
-            //         // foreach ($team as $member) {
-            //         //     User::where('id', $member->id)->update(['status' => 'free']);
-            //         // }
-            //     }
-            //     if ($resources) {
-            //         $this->toggle_status('free', $resources, NonHumanResources::class);
-
-            //         // foreach ($resources as $item) {
-            //         //     NonHumanResources::where('id', $item->id)->update(['status' => 'free']);
-
-            //     }
-            // }
-            // if ($request->status == 'bug') {
-            //     $team = $exist->team;
-            //     $resources = $exist->resources;
-            //     if ($team) {
-            //         $this->toggle_status('busy', $team, User::class);
-            //         // foreach ($team as $member) {
-            //         //     User::where('id', $member->id)->update(['status' => 'free']);
-            //         // }
-            //     }
-            //     if ($resources) {
-            //         $this->toggle_status('busy', $resources, NonHumanResources::class);
-
-            //         // foreach ($resources as $item) {
-            //         //     NonHumanResources::where('id', $item->id)->update(['status' => 'free']);
-
-            //     }
-            // }
-            // $exist['status'] = $request->status;
-            // if ($exist->save()) {
-            //     return response()->json([
-            //         "success" => true,
-            //         'payload' => $exist
-            //     ]);
-            // }
-            // } else {
-            //     return response()->json([
-            //         'success' => false,
-            //         'payload' => "Unauthorized!"
-            //     ], 401);
-            // }
         } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->error_response(false, $e->getMessage(), 500);
         }
     }
 
@@ -370,28 +259,18 @@ class TaskController extends Controller
                 $errorMesages = collect([]);
                 $task = Task::find($id);
                 $taskId = $task->id;
-                // dd($taskId);
+
                 if (!$task) {
-                    return response()->json([
-                        "success" => false,
-                        'error' => 'No such task exist!'
-                    ], 404);
+                    return $this->error_response(false, 'No such task exist!', 404);
                 }
-
-
-                // dd(DbVariablesDetail::id('task_status')->status('pending')->first()->id);
-
-                // dd(DbVariablesDetail::with('variable')->get());
                 if ($request->humanResources) {
 
-                    // dd(gettype($request->humanResources));
                     $humanResourcesCollection = collect($request->humanResources)->map(function ($item) use ($taskId, $errorMesages) {
                         $existingResource = HResourcesTask::where('task_id', $taskId)
                             ->where('resource_id', $item["resource_id"])
                             ->first();
                         if ($existingResource) {
-                            return $errorMesages->push($existingResource->resource_id . " already exist");
-                            // $errorMesages[] = "already exist";
+                            return $errorMesages->push($existingResource->resource_id . " already exist");;
                         }
                         $resource = new HResourcesTask();
                         $resource["status"] = $item["sequence"] > 1 ? DbVariablesDetail::id('task_status')->status('notAssign')->first()->id : DbVariablesDetail::id('task_status')->status('pending')->first()->id;
@@ -405,31 +284,16 @@ class TaskController extends Controller
                     });
 
                     if (count($errorMesages) > 0) {
-                        return response()->json([
-                            "status" => false,
-                            "payload" => $errorMesages
-
-                        ]);
+                        return $this->error_response(false, $errorMesages, 400);
                     } else {
-                        return response()->json([
-                            "status" => true,
-                            "payload" => [
-                                "msg" => "Resource Assigned!"
-                            ]
-                        ]);
+                        return $this->ok_response(true, ["msg" => "resource assigned!"], 200);
                     }
                 }
             } else {
-                return response()->json([
-                    'success' => false,
-                    'payload' => "Unauthorized!"
-                ], 401);
+                return $this->error_response(false, "Unauthorized!", 401);
             }
         } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->error_response(false, $e->getMessage(), 500);
         }
     }
     /**
@@ -445,33 +309,20 @@ class TaskController extends Controller
             if (auth()->user()->can('delete task')) {
                 $task = Task::find($id);
                 if (!$task) {
-                    return response()->json([
-                        "success" => false,
-                        'error' => 'No such task exist!'
-                    ], 404);
+                    return $this->error_response(false, 'No such task exist!', 404);
                 }
 
                 if ($task->delete()) {
-                    return response()->json([
-                        "success" => true
-                    ]);
+                    return $this->ok_response(true, [], 200);
                 } else {
-                    return response()->json([
-                        "success" => false,
-                        'error' => 'Error in delete'
-                    ], 400);
+                    return $this->error_response(false, 'Error in delete', 400);
                 }
             } else {
-                return response()->json([
-                    'success' => false,
-                    'payload' => "Unauthorized!"
-                ], 401);
+                return $this->error_response(false, "Unauthorized!", 401);
             }
         } catch (Exception $e) {
             // echo $e;
-            return response()->json([
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->error_response(false, $e->getMessage(), 500);
         }
     }
 }

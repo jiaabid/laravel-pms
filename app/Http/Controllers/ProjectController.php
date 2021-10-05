@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Traits\ReusableTrait;
 use App\Models\DbVariables;
 use App\Models\Project;
 use App\Models\ProjectResource;
@@ -14,6 +15,7 @@ use Illuminate\Support\Facades\Hash;
 class ProjectController extends Controller
 {
 
+    use ReusableTrait;
     public function __construct()
     {
         $this->middleware(['auth']);
@@ -28,15 +30,16 @@ class ProjectController extends Controller
     {
         try {
             if (auth()->user()->can('retrieve project')) {
-                $id = auth()->user()->role_id;
-                $roles = DB::select('call role_childs(?)', [$id]);
-                $roles = collect($roles)->pluck('id');
-                $roles->push($id);
-                // $projects = Project::with('user')->get();
-                $projects  = Project::whereHas('user',function($query) use($roles){
-                     return $query->whereIn('role_id',$roles);
+
+                //retrieve child roles
+                $roles = $this->get_child_roles(auth()->user());
+                $roles->push(auth()->user()->id);
+                
+                //get my projects and my child projects
+                $projects  = Project::whereHas('user', function ($query) use ($roles) {
+                    return $query->whereIn('role_id', $roles);
                 })->with('user')->get();
-               
+
                 if ($projects) {
                     return response()->json([
                         'status' => true,
@@ -80,7 +83,7 @@ class ProjectController extends Controller
                     'dept_id' => "required|numeric",
                     'start_date' => "required|date",
                     'end_date' => 'required|date|after_or_equal:start_date',
-                    
+
                 ]);
 
                 $project = new Project();
@@ -185,7 +188,7 @@ class ProjectController extends Controller
                     $resource["type"] =  $item["type"];
                     return $resource->save();
                 });
-                
+
                 if (count($errorMesages) > 0) {
                     return response()->json([
                         "status" => true,

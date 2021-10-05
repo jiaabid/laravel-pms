@@ -8,11 +8,13 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use App\Traits\ResusableQueryTrait;
+use App\Http\Traits\ReusableTrait;
+use App\Http\Traits\ResponseTrait;
 
 class UserController extends Controller
 {
-    use ResusableQueryTrait;
+    use ReusableTrait, ResponseTrait;
+
     public function __construct()
     {
         $this->middleware(['auth']);
@@ -29,34 +31,19 @@ class UserController extends Controller
         //
         try {
             if (auth()->user()->can('retrieve user')) {
-                // $id = auth()->user()->role_id;
-                // $roles = DB::select('call role_childs(?)', [$id]);
-                // $roles = collect($roles);
+                //retrieve child roles
                 $roles = $this->get_child_roles(auth()->user());
-
-                $users = User::whereIn('role_id', $roles->pluck('id'))->get();
+                $users = User::whereIn('role_id', $roles)->get();
                 if ($users) {
-                    return response()->json([
-                        'status' => true,
-                        'payload' => $users
-                    ]);
+                    return $this->ok_response(true, $users, 200);
                 } else {
-                    return response()->json([
-                        'status' => false,
-                        'error' => 'No user exist!'
-                    ], 404);
+                    return $this->error_response(false, "No user exist!", 404);
                 }
             } else {
-                return response()->json([
-                    'success' => false,
-                    'payload' => "Unauthorized!"
-                ], 401);
+                return $this->error_response(false, "Unauthorized!", 401);
             }
         } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->error_response(false, $e->getMessage(), 500);
         }
     }
 
@@ -92,7 +79,6 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-
         try {
             if (auth()->user()->can('create user')) {
                 $this->validate($request, [
@@ -112,21 +98,13 @@ class UserController extends Controller
                 DB::commit();
 
                 // $token = $user->createToken('pmsToken')->accessToken;
-                return response()->json([
-                    'payload' => $user,
-                    'status' => true
-                ], 201);
+                return $this->ok_response(true, $user, 201);
             } else {
-                return response()->json([
-                    'success' => false,
-                    'payload' => "Unauthorized!"
-                ], 401);
+
+                return $this->error_response(false, "Unauthorized!", 401);
             }
         } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->error_response(false, $e->getMessage(), 500);
         }
     }
 
@@ -138,7 +116,19 @@ class UserController extends Controller
      */
     public function show($id)
     {
-        //
+        try {
+            if (auth()->user()->can('retrieve user')) {
+                $user = User::find($id);
+                if ($user) {
+                    return $this->ok_response(true, $user, 200);
+                }
+                return $this->error_response(false, "No such user exist!", 404);
+            } else {
+                return $this->error_response(false, "Unauthorized!", 401);
+            }
+        } catch (Exception $e) {
+            return $this->error_response(false, $e->getMessage(), 500);
+        }
     }
 
 
@@ -157,27 +147,15 @@ class UserController extends Controller
                 $user = User::find($id);
                 $user->fill($request->only('name', 'email', 'phone_number', 'role_id'));
                 if ($user->save()) {
-                    return response()->json([
-                        'success' => true,
-                        'payload' => $user
-                    ]);
+                    return $this->ok_response(true, $user, 201);
                 } else {
-                    return response()->json([
-                        'success' => false,
-                        'error' => "Error in updating"
-                    ], 400);
+                    return $this->error_response(false, "Error in updating", 400);
                 }
             } else {
-                return response()->json([
-                    'success' => false,
-                    'payload' => "Unauthorized!"
-                ], 401);
+                return $this->error_response(false, "Unauthorized!", 401);
             }
         } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->error_response(false, $e->getMessage(), 500);
         }
     }
     /**
@@ -201,27 +179,15 @@ class UserController extends Controller
                 if (Hash::check($request->oldpassword, auth()->user()->password)) {
                     $user =  User::where('id', auth()->user()->id)
                         ->update(['password', Hash::make($request->password)]);
-                    return response()->json([
-                        'status' => true,
-                        'payload' => $user
-                    ]);
+                    return $this->ok_response(true, $user, 201);
                 } else {
-                    return response()->json([
-                        'success' => false,
-                        'error' => "Wrong password!"
-                    ], 400);
+                    return $this->error_response(false, "Wrong password!", 400);
                 }
             } else {
-                return response()->json([
-                    'success' => false,
-                    'payload' => "Unauthorized!"
-                ], 401);
+                return $this->error_response(false, "Unauthorized!", 401);
             }
         } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->error_response(false, $e->getMessage(), 500);
         }
     }
 
@@ -238,32 +204,18 @@ class UserController extends Controller
             if (auth()->user()->can('delete user')) {
                 $user = User::find($id);
                 if (!$user) {
-                    return response()->json([
-                        'success' => false,
-                        'error' => "Not found"
-                    ], 404);
+                    return $this->error_response(false, "Not found", 404);
                 }
                 if ($user->delete()) {
-                    return response()->json([
-                        "success" => true
-                    ]);
+                    return $this->ok_response(true, [], 200);
                 } else {
-                    return response()->json([
-                        "success" => false,
-                        'error' => 'Error in delete'
-                    ], 400);
+                    return $this->error_response(false, "Error in deleting", 400);
                 }
             } else {
-                return response()->json([
-                    'success' => false,
-                    'payload' => "Unauthorized!"
-                ], 401);
+                return $this->error_response(false, "Unauthorized!", 401);
             }
         } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->error_response(false, $e->getMessage(), 500);
         }
     }
 }
