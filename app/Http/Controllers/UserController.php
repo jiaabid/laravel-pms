@@ -2,19 +2,23 @@
 
 namespace App\Http\Controllers;
 
+
 use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use App\Traits\ResusableQueryTrait;
 
 class UserController extends Controller
 {
+    use ResusableQueryTrait;
     public function __construct()
     {
         $this->middleware(['auth']);
     }
 
+    // private $reusable = ReusableQueries::class;
     /**
      * Display a listing of the resource.
      *
@@ -25,10 +29,12 @@ class UserController extends Controller
         //
         try {
             if (auth()->user()->can('retrieve user')) {
-                $id = auth()->user()->role_id;
-                $roles = DB::select('call role_childs(?)', [$id]);
-                $roles = collect($roles);
-                $users = User::whereIn('role_id',$roles->pluck('id'))->get();
+                // $id = auth()->user()->role_id;
+                // $roles = DB::select('call role_childs(?)', [$id]);
+                // $roles = collect($roles);
+                $roles = $this->get_child_roles(auth()->user());
+
+                $users = User::whereIn('role_id', $roles->pluck('id'))->get();
                 if ($users) {
                     return response()->json([
                         'status' => true,

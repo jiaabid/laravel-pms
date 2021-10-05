@@ -79,7 +79,7 @@ class ProjectController extends Controller
                     'name' => "required|min:3|string",
                     'dept_id' => "required|numeric",
                     'start_date' => "required|date",
-                    'end_date' => 'required|date',
+                    'end_date' => 'required|date|after_or_equal:start_date',
                     
                 ]);
 

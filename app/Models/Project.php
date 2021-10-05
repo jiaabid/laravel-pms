@@ -54,9 +54,9 @@ class Project extends Model
     }
 
     public function human_resource(){
-        return $this->belongsToMany(User::class,'project_resources','project_id','resource_id');
+        return $this->belongsToMany(User::class,'project_resources','project_id','resource_id')->wherePivot('type',DbVariablesDetail::id('resource_type')->status('human')->first()->id);
     }
     public function nonhuman_resource(){
-        return $this->belongsToMany(NonHumanResources::class,'project_resources','project_id','resource_id');
+        return $this->belongsToMany(NonHumanResources::class,'project_resources','project_id','resource_id')->wherePivot('type',DbVariablesDetail::id('resource_type')->status('non-human')->first()->id);
     }
 }
