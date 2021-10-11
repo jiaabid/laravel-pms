@@ -35,15 +35,15 @@ class UserController extends Controller
                 $roles = $this->get_child_roles(auth()->user());
                 $users = User::whereIn('role_id', $roles)->get();
                 if ($users) {
-                    return $this->ok_response(true, $users, 200);
+                    return $this->ok_response( $users, 200);
                 } else {
-                    return $this->error_response(false, "No user exist!", 404);
+                    return $this->error_response( "No user exist!", 404);
                 }
             } else {
-                return $this->error_response(false, "Unauthorized!", 401);
+                return $this->error_response( "Unauthorized!", 401);
             }
         } catch (Exception $e) {
-            return $this->error_response(false, $e->getMessage(), 500);
+            return $this->error_response( $e->getMessage(), 500);
         }
     }
 
@@ -56,18 +56,12 @@ class UserController extends Controller
     {
         //
         // try {
-        //     if (auth()->user()->can()) {
+        //     if (auth()->user()->can("create user")) {
         //     } else {
-        //         return response()->json([
-        //             'success' => false,
-        //             'payload' => "Unauthorized!"
-        //         ], 401);
+        //         return $this->error_response("Unauthorized!", 401);
         //     }
         // } catch (Exception $e) {
-        //     return response()->json([
-        //         'success' => false,
-        //         'error' => $e->getMessage()
-        //     ], 500);
+        //     return $this->error_response($e->getMessage(), 500);
         // }
     }
 
@@ -98,13 +92,13 @@ class UserController extends Controller
                 DB::commit();
 
                 // $token = $user->createToken('pmsToken')->accessToken;
-                return $this->ok_response(true, $user, 201);
+                return $this->ok_response( $user, 201);
             } else {
 
-                return $this->error_response(false, "Unauthorized!", 401);
+                return $this->error_response( "Unauthorized!", 401);
             }
         } catch (Exception $e) {
-            return $this->error_response(false, $e->getMessage(), 500);
+            return $this->error_response( $e->getMessage(), 500);
         }
     }
 
@@ -119,15 +113,16 @@ class UserController extends Controller
         try {
             if (auth()->user()->can('retrieve user')) {
                 $user = User::find($id);
+                $user->detail;
                 if ($user) {
-                    return $this->ok_response(true, $user, 200);
+                    return $this->ok_response($user, 200);
                 }
-                return $this->error_response(false, "No such user exist!", 404);
+                return $this->error_response( "No such user exist!", 404);
             } else {
-                return $this->error_response(false, "Unauthorized!", 401);
+                return $this->error_response( "Unauthorized!", 401);
             }
         } catch (Exception $e) {
-            return $this->error_response(false, $e->getMessage(), 500);
+            return $this->error_response( $e->getMessage(), 500);
         }
     }
 
@@ -147,15 +142,15 @@ class UserController extends Controller
                 $user = User::find($id);
                 $user->fill($request->only('name', 'email', 'phone_number', 'role_id'));
                 if ($user->save()) {
-                    return $this->ok_response(true, $user, 201);
+                    return $this->ok_response( $user, 201);
                 } else {
-                    return $this->error_response(false, "Error in updating", 400);
+                    return $this->error_response( "Error in updating", 400);
                 }
             } else {
-                return $this->error_response(false, "Unauthorized!", 401);
+                return $this->error_response( "Unauthorized!", 401);
             }
         } catch (Exception $e) {
-            return $this->error_response(false, $e->getMessage(), 500);
+            return $this->error_response( $e->getMessage(), 500);
         }
     }
     /**
@@ -179,15 +174,15 @@ class UserController extends Controller
                 if (Hash::check($request->oldpassword, auth()->user()->password)) {
                     $user =  User::where('id', auth()->user()->id)
                         ->update(['password', Hash::make($request->password)]);
-                    return $this->ok_response(true, $user, 201);
+                    return $this->ok_response( $user, 201);
                 } else {
-                    return $this->error_response(false, "Wrong password!", 400);
+                    return $this->error_response( "Wrong password!", 400);
                 }
             } else {
-                return $this->error_response(false, "Unauthorized!", 401);
+                return $this->error_response( "Unauthorized!", 401);
             }
         } catch (Exception $e) {
-            return $this->error_response(false, $e->getMessage(), 500);
+            return $this->error_response( $e->getMessage(), 500);
         }
     }
 
@@ -204,18 +199,18 @@ class UserController extends Controller
             if (auth()->user()->can('delete user')) {
                 $user = User::find($id);
                 if (!$user) {
-                    return $this->error_response(false, "Not found", 404);
+                    return $this->error_response( "Not found", 404);
                 }
                 if ($user->delete()) {
-                    return $this->ok_response(true, [], 200);
+                    return $this->ok_response( [], 200);
                 } else {
-                    return $this->error_response(false, "Error in deleting", 400);
+                    return $this->error_response( "Error in deleting", 400);
                 }
             } else {
-                return $this->error_response(false, "Unauthorized!", 401);
+                return $this->error_response( "Unauthorized!", 401);
             }
         } catch (Exception $e) {
-            return $this->error_response(false, $e->getMessage(), 500);
+            return $this->error_response( $e->getMessage(), 500);
         }
     }
 }

@@ -52,29 +52,37 @@ class User extends Authenticatable
     //relation with department
     public function department()
     {
-        return $this->belongsTo(Department::class,'dept_id');
+        return $this->belongsTo(Department::class, 'dept_id');
     }
 
     //relation with department
     public function project()
     {
-        return $this->hasMany(Project::class,'created_by');
+        return $this->hasMany(Project::class, 'created_by');
         // return $this->belongsTo(Project::class);
     }
 
-    public function task(){
-        return $this->belongsToMany(Task::class,'h_resources_tasks','resource_id','task_id')
-        ->withPivot(['status','sequence','tag'])
-        ->as('check');
+    public function task()
+    {
+        return $this->belongsToMany(Task::class, 'h_resources_tasks', 'resource_id', 'task_id')
+            ->withPivot(['status', 'sequence', 'tag'])
+            ->as('check');
         // return $this->belongsToMany(Task::class,'h_resources_tasks','task_id','resource_id');
     }
-    public function assigned_task(){
-        return $this->belongsToMany(Task::class,'h_resources_tasks','resource_id','task_id')
-        ->withPivot(['status','sequence','tag'])
-        ->wherePivot('status','<>','notAssign');
+    public function assigned_task()
+    {
+        return $this->belongsToMany(Task::class, 'h_resources_tasks', 'resource_id', 'task_id')
+            ->withPivot(['status', 'sequence', 'tag'])
+            ->wherePivot('status', '<>', 'notAssign');
         // return $this->belongsToMany(Task::class,'h_resources_tasks','task_id','resource_id');
     }
-    public function projects(){
-        return $this->belongsToMany(Project::class,'project_resources','resource_id','project_id');
+    public function projects()
+    {
+        return $this->belongsToMany(Project::class, 'project_resources', 'resource_id', 'project_id');
+    }
+
+    public function detail()
+    {
+        return $this->hasOne(Employee::class, "user_id");
     }
 }

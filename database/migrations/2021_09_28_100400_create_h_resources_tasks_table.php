@@ -13,7 +13,7 @@ class CreateHResourcesTasksTable extends Migration
      */
     public function up()
     {
-        Schema::create('h_resources_tasks', function (Blueprint $table) {
+        Schema::create('resources_tasks', function (Blueprint $table) {
             $table->id();
 
             // $table->integer('id',true);
@@ -22,10 +22,14 @@ class CreateHResourcesTasksTable extends Migration
             $table->string('sequence');
             $table->string('tag');
             $table->unsignedBigInteger('status');
-            // $table->enum('status', ['pending', 'complete', 'notAssign']);
-            //composite key
-            // $table->unique(['task_id','resource_id']);
-            // $table->primary(['task_id', 'resource_id']);
+            $table->float('estimated_effort');
+            $table->float('total_effort')->nullable();
+            $table->boolean('pause')->default(false);
+            $table->boolean('delay')->default(false);
+            $table->dateTime('start_at')->nullable();
+            $table->dateTime('end_at')->nullable();
+            $table->dateTime('start_date');
+            $table->dateTime('end_date');
             $table->softDeletes();
             $table->timestamps();
         });
@@ -38,6 +42,6 @@ class CreateHResourcesTasksTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('h_resources_tasks');
+        Schema::dropIfExists('resources_tasks');
     }
 }

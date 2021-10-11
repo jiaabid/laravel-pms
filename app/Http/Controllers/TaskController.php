@@ -12,6 +12,8 @@ use Exception;
 use Illuminate\Http\Request;
 use App\Http\Traits\ReusableTrait;
 use App\Http\Traits\ResponseTrait;
+use Carbon\Carbon;
+use DateTime;
 use Illuminate\Support\Facades\DB;
 
 class TaskController extends Controller
@@ -33,12 +35,12 @@ class TaskController extends Controller
                 $task->resources;
             }
             if ($tasks) {
-                return $this->ok_response(true, $tasks, 200);
+                return $this->ok_response($tasks, 200);
             } else {
-                return $this->error_response(false, "Not found!", 404);
+                return $this->error_response("Not found!", 404);
             }
         } catch (Exception $e) {
-            return $this->error_response(false, "No user exist!", 404);
+            return $this->error_response("No user exist!", 404);
         }
     }
 
@@ -82,15 +84,15 @@ class TaskController extends Controller
                 if ($saved) {
 
                     DB::commit();
-                    return $this->ok_response(true, $task, 201);
+                    return $this->ok_response($task, 201);
                 } else {
-                    return $this->error_response(false, "Error in saving", 400);
+                    return $this->error_response("Error in saving", 400);
                 }
             } else {
-                return $this->error_response(false, "Unauthorized!", 401);
+                return $this->error_response("Unauthorized!", 401);
             }
         } catch (Exception $e) {
-            return $this->error_response(false, $e->getMessage(), 500);
+            return $this->error_response($e->getMessage(), 500);
         }
     }
 
@@ -116,9 +118,9 @@ class TaskController extends Controller
             }
             // $user = User::with('task')->where('id', auth()->user()->id)->first();
             // dd($user) ;
-            return $this->ok_response(true, $payload, 200);
+            return $this->ok_response($payload, 200);
         } catch (Exception $e) {
-            return $this->error_response(false, $e->getMessage(), 500);
+            return $this->error_response($e->getMessage(), 500);
         }
     }
 
@@ -138,9 +140,9 @@ class TaskController extends Controller
             $task = Task::find($id);
             $task->team;
             $task->resources;
-            return $this->ok_response(true, $task, 200);
+            return $this->ok_response($task, 200);
         } catch (Exception $e) {
-            return $this->error_response(false, $e->getMessage(), 500);
+            return $this->error_response($e->getMessage(), 500);
         }
     }
 
@@ -166,21 +168,72 @@ class TaskController extends Controller
                     ]);
                     $exist->fill($request->all());
                     if ($exist->save()) {
-                        return $this->ok_response(true, $exist, 200);
+                        return $this->ok_response($exist, 200);
                     } else {
-                        return $this->error_response(false, "Error in updating", 400);
+                        return $this->error_response("Error in updating", 400);
                     }
                 } else {
-                    return $this->error_response(false, 'No such task exist!', 404);
+                    return $this->error_response('No such task exist!', 404);
                 }
             } else {
-                return $this->error_response(false, "Unauthorized!", 401);
+                return $this->error_response("Unauthorized!", 401);
             }
         } catch (Exception $e) {
-            return $this->error_response(false, $e->getMessage(), 500);
+            return $this->error_response($e->getMessage(), 500);
         }
     }
 
+    function task_action(Request $request, $id)
+    {
+        try {
+            // dd("in task action");
+            $this->validate($request, [
+                'mode' => 'required'
+            ]);
+            $exist = HResourcesTask::where('resource_id', 5)->where('task_id', $id)->first();
+            //   dd($exist);
+            if (!$exist) {
+                return $this->error_response("No such entry exist", 404);
+            }
+            switch ($request->mode) {
+                case 'start':
+                    $exist =  $this->start_task($exist);
+                    dd($exist);
+                    if ($exist->save()) {
+                        return $this->ok_response('task has been started', 200);
+                    }
+                    break;
+            }
+        } catch (Exception $e) {
+        }
+    }
+
+    function start_task($item)
+    {
+        try {
+            date_default_timezone_set('Asia/Karachi');
+            $date = date('m/d/Y h:i:s', time());
+            $item["start_at"] = $date;
+            // dd(DbVariablesDetail::id('task_status')->status('inProgress')->first()->id);
+            $item["status"] = DbVariablesDetail::id('task_status')->status('inProgress')->first()->id;
+            return $item;
+            if ($item->save()) {
+                return $this->ok_response('task started', 200);
+            } else {
+                return $this->error_response('error in changing the task status', 400);
+            }
+        } catch (Exception $e) {
+            return $this->error_response($e->getMessage(), 500);
+        }
+    }
+
+    function pause_task($item)
+    {
+    }
+
+    function resume_task()
+    {
+    }
     function change_status(Request $request, $id)
     {
         try {
@@ -189,9 +242,10 @@ class TaskController extends Controller
             $this->validate($request, [
                 'status' => "required"
             ]);
+
             $exist = Task::find($id);
             if (!$exist) {
-                return $this->error_response(false, 'No such task exist!', 404);
+                return $this->error_response('No such task exist!', 404);
             }
             // dd($exist->id);
             DB::beginTransaction();
@@ -236,12 +290,12 @@ class TaskController extends Controller
             $saved = $exist->save();
             DB::commit();
             if ($saved) {
-                return $this->ok_response(true, $exist, 200);
+                return $this->ok_response($exist, 200);
             } else {
-                return $this->error_response(false, 'Error in changing status', 400);
+                return $this->error_response('Error in changing status', 400);
             }
         } catch (Exception $e) {
-            return $this->error_response(false, $e->getMessage(), 500);
+            return $this->error_response($e->getMessage(), 500);
         }
     }
 
@@ -261,7 +315,7 @@ class TaskController extends Controller
                 $taskId = $task->id;
 
                 if (!$task) {
-                    return $this->error_response(false, 'No such task exist!', 404);
+                    return $this->error_response('No such task exist!', 404);
                 }
                 if ($request->humanResources) {
 
@@ -280,20 +334,23 @@ class TaskController extends Controller
                         $resource["updated_at"] =  date('Y-m-d H:i:s');
                         $resource["sequence"] =  $item["sequence"];
                         $resource["tag"] =  $item["tag"];
+                        $resource["estimated_effort"] =  $item["estimated_effort"];
+                        $resource["start_date"] =  $item["start_date"];
+                        $resource["end_date"] =  $item["end_date"];
                         $resource->save();
                     });
 
                     if (count($errorMesages) > 0) {
-                        return $this->error_response(false, $errorMesages, 400);
+                        return $this->error_response($errorMesages, 400);
                     } else {
-                        return $this->ok_response(true, ["msg" => "resource assigned!"], 200);
+                        return $this->ok_response(["msg" => "resource assigned!"], 200);
                     }
                 }
             } else {
-                return $this->error_response(false, "Unauthorized!", 401);
+                return $this->error_response("Unauthorized!", 401);
             }
         } catch (Exception $e) {
-            return $this->error_response(false, $e->getMessage(), 500);
+            return $this->error_response($e->getMessage(), 500);
         }
     }
     /**
@@ -309,20 +366,20 @@ class TaskController extends Controller
             if (auth()->user()->can('delete task')) {
                 $task = Task::find($id);
                 if (!$task) {
-                    return $this->error_response(false, 'No such task exist!', 404);
+                    return $this->error_response('No such task exist!', 404);
                 }
 
                 if ($task->delete()) {
-                    return $this->ok_response(true, [], 200);
+                    return $this->ok_response([], 200);
                 } else {
-                    return $this->error_response(false, 'Error in delete', 400);
+                    return $this->error_response('Error in delete', 400);
                 }
             } else {
-                return $this->error_response(false, "Unauthorized!", 401);
+                return $this->error_response("Unauthorized!", 401);
             }
         } catch (Exception $e) {
             // echo $e;
-            return $this->error_response(false, $e->getMessage(), 500);
+            return $this->error_response($e->getMessage(), 500);
         }
     }
 }

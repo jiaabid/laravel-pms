@@ -5,17 +5,17 @@ namespace App\Http\Traits;
 
 trait ResponseTrait
 {
-    public function ok_response($success, $payload, $code)
+    public function ok_response( $payload, $code)
     {
         return response()->json([
-            "success" => $success,
+            "success" => true,
             "payload" => $payload
         ], $code);
     }
 
-    public function error_response($success,$msg,$code){
+    public function error_response($msg,$code){
         return response()->json([
-            "success" => $success,
+            "success" =>false,
             "error" => $msg
         ], $code);
     }

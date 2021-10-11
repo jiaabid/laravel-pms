@@ -12,7 +12,15 @@ class HResourcesTask extends Model
 
     protected $fillable = [
         'task_id',
-        'resource_id'
+        'resource_id',
+        'sequence',
+        'start_at',
+        'end_at',
+        'status',
+        'estimated_effort',
+        'total_effort',
+        'start_date',
+        'end_date'
     ];
-    protected $table = 'h_resources_tasks';
+    protected $table = 'resources_tasks';
 }

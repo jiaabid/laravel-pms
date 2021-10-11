@@ -193,7 +193,7 @@ class RoleController extends Controller
         try {
 
             if (auth()->user()->can('delete role')) {
-                $exist = Role::find($id);
+                $exist = Roles::find($id);
                 if (!$exist) {
                     return response()->json([
                         'success' => false,

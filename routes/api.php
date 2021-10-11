@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\DocController;
+use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ResourceController;
@@ -32,7 +33,7 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/check', function () {
     $id = 2;
-    $roles = DB::select("CALL role_childs(".$id.")");
+    $roles = DB::select("CALL role_childs(" . $id . ")");
     dd($roles);
 });
 // Route::resource('/department',DepartmentController::class)->middleware('auth');
@@ -53,7 +54,8 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/task/{mode}', [TaskController::class, 'my_created_tasks']);
     Route::resource('tasks', TaskController::class);
     Route::post('tasks/status/{id}', [TaskController::class, 'change_status']);
+    Route::post('tasks/action/{id}', [TaskController::class, 'task_action']);
     Route::post('tasks/resource/{id}', [TaskController::class, 'assign_resources']);
     Route::resource('resources', ResourceController::class);
-  
+    Route::resource('employee', EmployeeController::class);
 });

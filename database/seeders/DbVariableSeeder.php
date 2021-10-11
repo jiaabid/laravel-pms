@@ -36,7 +36,11 @@ class DbVariableSeeder extends Seeder
             [
                 'variable_type' => 'task_type'
 
+            ],
+            [
+                'variable_type' => 'user_type'
             ]
+      
         ]);
 
         $variables = DbVariables::all();
@@ -145,20 +149,21 @@ class DbVariableSeeder extends Seeder
                     );
                     break;
 
-                    case 'task_type':
-                        DbVariablesDetail::insert(
+                case 'task_type':
+                    DbVariablesDetail::insert(
+                        [
                             [
-                                [
-                                    "variable_id" => $variable->id,
-                                    "value" => "my"
-                                ],
-                                [
-                                    "variable_id" => $variable->id,
-                                    "value" => "project"
-                                ]
+                                "variable_id" => $variable->id,
+                                "value" => "my"
+                            ],
+                            [
+                                "variable_id" => $variable->id,
+                                "value" => "project"
                             ]
-                        );
-                        break;
+                        ]
+                    );
+                    break;
+                
             }
         }
     }
