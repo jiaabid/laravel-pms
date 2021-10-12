@@ -6,16 +6,19 @@ use App\Http\Traits\ReusableTrait;
 use App\Models\DbVariables;
 use App\Models\Project;
 use App\Models\ProjectResource;
+use App\Models\Task;
 use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use App\Http\Traits\ResponseTrait;
+use App\Models\Employee;
 
 class ProjectController extends Controller
 {
 
-    use ReusableTrait;
+    use ReusableTrait, ResponseTrait;
     public function __construct()
     {
         $this->middleware(['auth']);
@@ -34,7 +37,7 @@ class ProjectController extends Controller
                 //retrieve child roles
                 $roles = $this->get_child_roles(auth()->user());
                 $roles->push(auth()->user()->id);
-                
+
                 //get my projects and my child projects
                 $projects  = Project::whereHas('user', function ($query) use ($roles) {
                     return $query->whereIn('role_id', $roles);
@@ -302,6 +305,53 @@ class ProjectController extends Controller
             return response()->json([
                 'error' => $e
             ], 500);
+        }
+    }
+
+    public function cost(Request $request, $id)
+    {
+        try {
+            $tasks = Project::find($id)->with('tasks')->first()->tasks;
+            $overallEstimatedCost = 0;
+            $overallTotalCost = 0;
+            $costExceed = 0;
+            $taskDetails = collect([]);
+            foreach ($tasks as $task) {
+                $task->team;
+                $taskDetail = [];
+                foreach ($task->team as $resource) {
+                    // dd($resource->id);
+
+                    $resourceDetail = $resource["pivot"];
+                    $detail = Employee::where('user_id', $resource->id)->first();
+                    // dd($detail);
+                    $salaryPerHr = $detail["salary"] / $detail["working_hrs"] / 22;
+                    $estimatedCost = $salaryPerHr * $resourceDetail["estimated_effort"];
+                    $totalCost = $resourceDetail["total_effort"] != null ? $salaryPerHr * $resourceDetail["total_effort"] : 0;
+                    $overallEstimatedCost += $estimatedCost;
+                    $overallTotalCost += $totalCost;
+                    $costExceed += $totalCost > $estimatedCost ? abs($totalCost - $estimatedCost) : 0;
+                    $taskDetail[] = [
+                        $resourceDetail->task_id => [
+                            "estimatedCost" => $estimatedCost,
+                            "totalCost" => $totalCost,
+                            "costExceed" => $totalCost > $estimatedCost ? abs($totalCost - $estimatedCost) : 0
+                        ]
+                    ];
+                    // dd($salaryPerHr * $resourceDetail["estimated_effort"]);
+                }
+                $taskDetails[] = [
+                    $task->id => $taskDetail
+                ];
+                $taskDetail = [];
+            }
+            // dd($overallTotalCost,$overallEstimatedCost,$costExceed);
+            return $this->ok_response([
+                "estimatedCost" => $overallEstimatedCost,
+                "totalCost" => $overallTotalCost, "exceededCost" => $costExceed,
+                "taskDetails"=>$taskDetails
+            ], 200);
+        } catch (Exception $e) {
         }
     }
 }

@@ -16,10 +16,13 @@ use Carbon\Carbon;
 use DateTime;
 use Illuminate\Support\Facades\DB;
 
+date_default_timezone_set('Asia/Karachi');
+
 class TaskController extends Controller
 {
     use ResponseTrait;
     private $responseBody;
+
     /**
      * Display a listing of the resource.
      *
@@ -190,17 +193,31 @@ class TaskController extends Controller
             $this->validate($request, [
                 'mode' => 'required'
             ]);
-            $exist = HResourcesTask::where('resource_id', 5)->where('task_id', $id)->first();
+            $exist = HResourcesTask::where('resource_id', auth()->user()->id)->where('task_id', $id)->first();
             //   dd($exist);
             if (!$exist) {
                 return $this->error_response("No such entry exist", 404);
             }
             switch ($request->mode) {
                 case 'start':
-                    $exist =  $this->start_task($exist);
-                    dd($exist);
-                    if ($exist->save()) {
-                        return $this->ok_response('task has been started', 200);
+                    if ($this->start_task($exist)) {
+                        return $this->ok_response("Task has been started", 200);
+                    } else {
+                        return $this->error_response('error in changing the task status', 400);
+                    }
+                    break;
+                case 'pause':
+                    if ($this->pause_task($exist)) {
+                        return $this->ok_response("Task has been paused", 200);
+                    } else {
+                        return $this->error_response('error in pausing the task status', 400);
+                    }
+                    break;
+                case 'resume':
+                    if ($this->resume_task($exist)) {
+                        return $this->ok_response("Task has been resumed", 200);
+                    } else {
+                        return $this->error_response('error in pausing the task status', 400);
                     }
                     break;
             }
@@ -211,16 +228,14 @@ class TaskController extends Controller
     function start_task($item)
     {
         try {
-            date_default_timezone_set('Asia/Karachi');
-            $date = date('m/d/Y h:i:s', time());
+            $date = Carbon::now("Asia/Karachi")->toDateTimeString();
             $item["start_at"] = $date;
-            // dd(DbVariablesDetail::id('task_status')->status('inProgress')->first()->id);
             $item["status"] = DbVariablesDetail::id('task_status')->status('inProgress')->first()->id;
-            return $item;
             if ($item->save()) {
-                return $this->ok_response('task started', 200);
+                // dd($item);
+                return true;
             } else {
-                return $this->error_response('error in changing the task status', 400);
+                return false;
             }
         } catch (Exception $e) {
             return $this->error_response($e->getMessage(), 500);
@@ -229,10 +244,35 @@ class TaskController extends Controller
 
     function pause_task($item)
     {
+        try {
+            $item["pause"] = true;
+            $item["end_at"] = Carbon::now("Asia/Karachi")->toDateTimeString();
+            $item["total_effort"] = $item["total_effort"] != null
+                ? abs($item["total_effort"] + abs(((strtotime($item["start_at"]) - strtotime($item["end_at"])) / 60 / 60)))
+                : abs(((strtotime($item["start_at"]) - strtotime($item["end_at"])) / 60 / 60));
+            if ($item->save()) {
+                return true;
+            } else {
+                return false;
+            }
+        } catch (Exception $e) {
+        }
     }
 
-    function resume_task()
+    function resume_task($item)
     {
+        $item["pause"] = false;
+        $item["start_at"] = Carbon::now("Asia/Karachi")->toDateTimeString();
+
+        $item["total_effort"] = $item["total_effort"] != null
+            ? abs($item["total_effort"] + abs(((strtotime($item["start_at"]) - strtotime($item["end_at"])) / 60 / 60)))
+            : abs(((strtotime($item["start_at"]) - strtotime($item["end_at"])) / 60 / 60));
+        $item["end_at"] = null;
+        if ($item->save()) {
+            return true;
+        } else {
+            return false;
+        }
     }
     function change_status(Request $request, $id)
     {
@@ -280,7 +320,6 @@ class TaskController extends Controller
                     break;
                 case 'approve':
                     $exist["status"] = DbVariablesDetail::id('task_status')->status('completed')->first()->id;
-
                     break;
                 default:
                     $exist["status"] = $status->id;

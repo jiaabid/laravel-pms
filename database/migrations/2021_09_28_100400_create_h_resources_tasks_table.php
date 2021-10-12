@@ -26,8 +26,8 @@ class CreateHResourcesTasksTable extends Migration
             $table->float('total_effort')->nullable();
             $table->boolean('pause')->default(false);
             $table->boolean('delay')->default(false);
-            $table->dateTime('start_at')->nullable();
-            $table->dateTime('end_at')->nullable();
+            $table->timestamp('start_at')->nullable();
+            $table->timestamp('end_at')->nullable();
             $table->dateTime('start_date');
             $table->dateTime('end_date');
             $table->softDeletes();

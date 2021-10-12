@@ -59,4 +59,7 @@ class Project extends Model
     public function nonhuman_resource(){
         return $this->belongsToMany(NonHumanResources::class,'project_resources','project_id','resource_id')->wherePivot('type',DbVariablesDetail::id('resource_type')->status('non-human')->first()->id);
     }
+    public function tasks(){
+        return $this->hasMany(Task::class);
+    }
 }

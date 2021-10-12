@@ -41,7 +41,8 @@ class Task extends Model
 
     protected function team()
     {
-        return $this->belongsToMany(User::class, 'h_resources_tasks', 'task_id', 'resource_id');
+        return $this->belongsToMany(User::class, 'resources_tasks', 'task_id', 'resource_id')
+        ->withPivot(['status', 'sequence', 'tag','estimated_effort','total_effort','delay']);
     }
 
     protected function resources()
@@ -49,6 +50,9 @@ class Task extends Model
         return $this->belongsToMany(NonHumanResources::class, 'nh_resources_tasks', 'task_id', 'resource_id');
     }
 
+    public function project(){
+        return $this->belongsTo(Project::class);
+    }
     // public function scopeMyTask($query ,int $userId){
     //     return $query->whereHas('user')
     // }
