@@ -44,27 +44,18 @@ class ProjectController extends Controller
                 })->with('user')->get();
 
                 if ($projects) {
-                    return response()->json([
-                        'status' => true,
-                        'payload' => $projects
-                    ]);
+                    return $this->success_response($projects, 200);
                 } else {
-                    return response()->json([
-                        'status' => false,
-                        'error' => 'No project exist!'
-                    ], 404);
+                    return $this->error_response( "Not Found", 404);
+
                 }
             } else {
-                return response()->json([
-                    'success' => false,
-                    'payload' => "Unauthorized!"
-                ], 401);
+                return $this->error_response( "Unauthorized!", 401);
+
             }
         } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->error_response( $e->getMessage(), 500);
+
         }
     }
 
@@ -93,27 +84,20 @@ class ProjectController extends Controller
                 $project = $project->fill($request->all());
                 $project['created_by'] = auth()->user()->id;
                 if ($project->save()) {
-                    return response()->json([
-                        'payload' => $project,
-                        'status' => true
-                    ], 201);
+                    return $this->success_response($project, 201);
+
                 } else {
-                    return response()->json([
-                        'success' => false,
-                        'error' => "Error in saving"
-                    ], 400);
+                return $this->error_response( "Error in saving", 400);
+
+                    
                 }
             } else {
-                return response()->json([
-                    'success' => false,
-                    'payload' => "Unauthorized!"
-                ], 401);
+                return $this->error_response( "Unauthorized!", 401);
+
             }
         } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->error_response( $e->getMessage(), 500);
+
         }
     }
 
@@ -135,26 +119,18 @@ class ProjectController extends Controller
                 $projects->nonhuman_resource;
                 $projects->tasks;
                 if ($projects) {
-                    return response()->json([
-                        "success" => true,
-                        'payload' => $projects
-                    ]);
+                    return $this->success_response($projects, 200);
+
                 }
-                return response()->json([
-                    "success" => false,
-                    "error" => "No such project exist!"
-                ], 404);
+                return $this->error_response( "Not Found!", 404);
+
             } else {
-                return response()->json([
-                    'success' => false,
-                    'payload' => "Unauthorized!"
-                ], 401);
+                return $this->error_response( "Unauthorized!", 401);
+
             }
         } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->error_response( $e->getMessage(), 500);
+
         }
     }
 
@@ -169,10 +145,8 @@ class ProjectController extends Controller
             $projectId = $project->id;
             // dd($taskId);
             if (!$project) {
-                return response()->json([
-                    "success" => false,
-                    'error' => 'No such project exist!'
-                ], 404);
+                return $this->error_response( "Not Found!", 404);
+                
             }
             if ($request->resources) {
 
@@ -194,25 +168,16 @@ class ProjectController extends Controller
                 });
 
                 if (count($errorMesages) > 0) {
-                    return response()->json([
-                        "status" => true,
-                        "payload" => $errorMesages
-
-                    ]);
+                return $this->error_response( $errorMesages, 400);
                 } else {
-                    return response()->json([
-                        "status" => true,
-                        "payload" => [
-                            "msg" => "Resource Assigned!"
-                        ]
-                    ]);
+                    return $this->success_response( [
+                        "msg" => "Resource Assigned!"
+                    ], 200);
                 }
             }
         } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->error_response( $e->getMessage(), 500);
+
         }
     }
 
@@ -229,10 +194,8 @@ class ProjectController extends Controller
             if (auth()->user()->can('edit project')) {
                 $project = Project::find($id);
                 if (!$project) {
-                    return response()->json([
-                        "success" => false,
-                        'error' => 'No such department exist!'
-                    ], 404);
+                    return $this->error_response("Not found",404);
+
                 }
                 $this->validate($request, [
                     'name' => "min:3|string",
@@ -242,27 +205,18 @@ class ProjectController extends Controller
                 ]);
                 $updatedProject = $project->fill($request->all());
                 if ($updatedProject->save()) {
-                    return response()->json([
-                        "success" => true,
-                        'payload' => $updatedProject
-                    ]);
+                    return $this->success_response( $updatedProject, 200);
                 } else {
-                    return response()->json([
-                        "success" => false,
-                        'error' => 'Error in update'
-                    ], 400);
+                    return $this->error_response( "Error in updating", 400);
+
                 }
             } else {
-                return response()->json([
-                    'success' => false,
-                    'payload' => "Unauthorized!"
-                ], 401);
+                return $this->error_response( "Unauthorized!", 401);
+
             }
         } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->error_response( $e->getMessage(), 500);
+
         }
     }
 

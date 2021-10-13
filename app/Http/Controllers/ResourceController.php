@@ -26,21 +26,16 @@ class ResourceController extends Controller
                 // foreach ($departs as $depart) {
                 //     $depart->user;
                 // }
-                return response()->json([
-                    "success" => true,
-                    'payload' => $resources
-                ]);
+                return $this->success_response($resources, 200);
+                
+                
             } else {
-                return response()->json([
-                    'success' => false,
-                    'payload' => "Unauthorized!"
-                ], 401);
+                return $this->error_response( "Unauthorized!", 401);
+
             }
         } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->error_response( $e->getMessage(), 500);
+
         }
     }
 
@@ -64,10 +59,8 @@ class ResourceController extends Controller
             $resource->fill($request->all());
             $resource['created_by'] = auth()->user()->id;
             $resource->save();
-            return response()->json([
-                "success" => true,
-                'payload' => $resource
-            ], 201);
+            return $this->success_response($resource, 201);
+
             // } else {
             //     return response()->json([
             //         'success' => false,
@@ -75,10 +68,8 @@ class ResourceController extends Controller
             //     ], 401);
             // }
         } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->error_response( $e->getMessage(), 500);
+
         }
     }
 
@@ -95,26 +86,19 @@ class ResourceController extends Controller
             if (auth()->user()->can('retrieve department')) {
                 $resource = NonHumanResources::find($id);
                 if ($resource) {
-                    return response()->json([
-                        "success" => true,
-                        'payload' => $resource
-                    ]);
+                    return $this->success_response($resource, 200);
+
+                  
                 }
-                return response()->json([
-                    "success" => false,
-                    "error" => "No such resource exist!"
-                ], 404);
+                return $this->error_response( "Not Found", 404);
+
             } else {
-                return response()->json([
-                    'success' => false,
-                    'payload' => "Unauthorized!"
-                ], 401);
+                return $this->error_response( "Unauthorized!", 401);
+
             }
         } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->error_response( $e->getMessage(), 500);
+
         }
     }
 
@@ -133,35 +117,25 @@ class ResourceController extends Controller
             if (auth()->user()->can('edit department')) {
                 $resource = NonHumanResources::find($id);
                 if (!$resource) {
-                    return response()->json([
-                        "success" => false,
-                        'error' => 'No such resource exist!'
-                    ], 404);
+                    return $this->error_response( "Not Found", 404);
+
                 }
                 $updatedResource = $resource->fill($request->all());
                 $updatedResource["updated_by"] = auth()->user()->id;
                 if ($updatedResource->save()) {
-                    return response()->json([
-                        "success" => true,
-                        'payload' => $updatedResource
-                    ]);
+                    return $this->success_response($updatedResource, 200);
+
                 } else {
-                    return response()->json([
-                        "success" => false,
-                        'error' => 'Error in update'
-                    ], 400);
+                    return $this->error_response( "Error in updating", 400);
+
                 }
             } else {
-                return response()->json([
-                    'success' => false,
-                    'payload' => "Unauthorized!"
-                ], 401);
+                return $this->error_response( "Unauthorized!", 401);
+
             }
         } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->error_response( $e->getMessage(), 500);
+
         }
     }
 
@@ -178,33 +152,24 @@ class ResourceController extends Controller
             if (auth()->user()->can('delete department')) {
                 $resource = NonHumanResources::find($id);
                 if (!$resource) {
-                    return response()->json([
-                        "success" => false,
-                        'error' => 'No such resource exist!'
-                    ], 404);
+                    return $this->error_response("Not found",404);
+
                 }
 
                 if ($resource->delete()) {
-                    return response()->json([
-                        "success" => true
-                    ]);
+                    return $this->success_response( [], 204);
+
                 } else {
-                    return response()->json([
-                        "success" => false,
-                        'error' => 'Error in delete'
-                    ], 400);
+                    return $this->error_response( "Error in deleting", 400);
+
                 }
             } else {
-                return response()->json([
-                    'success' => false,
-                    'payload' => "Unauthorized!"
-                ], 401);
+                return $this->error_response( "Unauthorized!", 401);
+
             }
         } catch (Exception $e) {
-            echo $e;
-            return response()->json([
-                'error' => $e
-            ], 500);
+            return $this->error_response( $e->getMessage(), 500);
+
         }
     }
 }

@@ -30,28 +30,22 @@ class RoleController extends Controller
             if (auth()->user()->can('retrieve role')) {
                 $roles = Role::all();
                 if ($roles) {
-                    return response()->json([
-                        'status' => true,
+                    return $this->success_response( [
+                        
                         'payload' => $roles->toArray(),
                         'user' => auth()->user()
-                    ]);
+                    ], 200);
                 } else {
-                    return response()->json([
-                        'status' => false,
-                        'error' => 'No roles exist!'
-                    ], 404);
+                    return $this->error_response("Not found",404);
+
                 }
             } else {
-                return response()->json([
-                    'success' => false,
-                    'payload' => "Unauthorized!"
-                ], 401);
+                return $this->error_response( "Unauthorized!", 401);
+
             }
         } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->error_response( $e->getMessage(), 500);
+
         }
     }
 
@@ -81,28 +75,20 @@ class RoleController extends Controller
                 $role->fill($request->all());
                 $role['created_by'] = auth()->user()->id;
                 if ($role->save()) {
-                    return response()->json([
-                        'success' => true,
-                        'payload' => $role
-                    ], 201);
+                    return $this->success_response( $role, 201);
+
                 } else {
-                    return response()->json([
-                        'success' => false,
-                        'payload' => "Error in saving the role"
-                    ], 400);
+                    return $this->error_response( "Error in saving the role", 400);
+
+                 
                 }
             } else {
-                // throw BadRequestHttpException();
-                return response()->json([
-                    'success' => false,
-                    'payload' => "Unauthorized!"
-                ], 401);
+                return $this->error_response( "Unauthorized!", 401);
+
             }
         } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->error_response( $e->getMessage(), 500);
+
         }
     }
 
@@ -118,21 +104,14 @@ class RoleController extends Controller
 
             $role = Role::find(auth()->user()->role_id);
             if ($role) {
-                return response()->json([
-                    'succuess' => true,
-                    'payload' => $role
-                ]);
+                return $this->success_response( $role, 200);
             } else {
-                return response()->json([
-                    'succuess' => false,
-                    'error' => "No such item found"
-                ], 404);
+                return $this->error_response( "Not found", 404);
+
             }
         } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->error_response( $e->getMessage(), 500);
+
         }
     }
 
@@ -149,36 +128,27 @@ class RoleController extends Controller
             if (auth()->user()->can('edit role')) {
                 $exist = Role::find($id);
                 if (!$exist) {
-                    return response()->json([
-                        'success' => false,
-                        'error' => "Not found"
-                    ], 404);
+                    return $this->error_response( "Not found", 404);
+
                 }
 
                 $exist = $exist->fill($request->all());
                 $exist['updated_by'] = auth()->user()->id;
                 if ($exist->save()) {
-                    return response()->json([
-                        'success' => true,
-                        'payload' => $exist
-                    ]);
+                    return $this->success_response( $exist, 200);
+
                 } else {
-                    return response()->json([
-                        'success' => false,
-                        'error' => "Error in saving ,bad request"
-                    ], 400);
+                    return $this->error_response( "Error in saving ,bad request", 400);
+
+                  
                 }
             } else {
-                return response()->json([
-                    'success' => false,
-                    'payload' => "Unauthorized!"
-                ], 401);
+                return $this->error_response( "Unauthorized!", 401);
+
             }
         } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->error_response( $e->getMessage(), 500);
+
         }
     }
 
@@ -195,32 +165,23 @@ class RoleController extends Controller
             if (auth()->user()->can('delete role')) {
                 $exist = Roles::find($id);
                 if (!$exist) {
-                    return response()->json([
-                        'success' => false,
-                        'error' => "Not found"
-                    ], 404);
+                    return $this->error_response( "Not found", 404);
+
                 }
                 if ($exist->delete()) {
-                    return response()->json([
-                        "success" => true
-                    ]);
+                    return $this->success_response( [], 204);
+
                 } else {
-                    return response()->json([
-                        "success" => false,
-                        'error' => 'Error in delete'
-                    ], 400);
+                    return $this->error_response( "Error in deleting", 400);
+
                 }
             } else {
-                return response()->json([
-                    'success' => false,
-                    'payload' => "Unauthorized!"
-                ], 401);
+                return $this->error_response( "Unauthorized!", 401);
+
             }
         } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->error_response( $e->getMessage(), 500);
+
         }
     }
 }

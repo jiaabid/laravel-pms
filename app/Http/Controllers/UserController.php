@@ -117,7 +117,7 @@ class UserController extends Controller
                 if ($user) {
                     return $this->success_response($user, 200);
                 }
-                return $this->error_response( "No such user exist!", 404);
+                return $this->error_response( "Not Found", 404);
             } else {
                 return $this->error_response( "Unauthorized!", 401);
             }
@@ -145,7 +145,7 @@ class UserController extends Controller
                 }
                 $user->fill($request->only('name', 'email', 'phone_number', 'role_id'));
                 if ($user->save()) {
-                    return $this->success_response( $user, 201);
+                    return $this->success_response( $user, 200);
                 } else {
                     return $this->error_response( "Error in updating", 400);
                 }
