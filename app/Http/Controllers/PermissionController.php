@@ -25,25 +25,20 @@ class PermissionController extends Controller
     {
         try {
             if (auth()->user()->can('retrieve permission')) {
-                return response()->json([
-                    'status' => true,
-                    'payload' => Permission::all()
-                ]);
+                $permissions = Permission::all();
+                if (!$permissions) {
+                    return $this->error_response("Not found", 404);
+                }
+                return $this->success_response($permissions, 200);
             } else {
-                return response()->json([
-                    'success' => false,
-                    'payload' => "Unauthorized!"
-                ], 401);
+                return $this->error_response("Unauthorized!", 401);
             }
         } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->error_response($e->getMessage(), 500);
         }
     }
 
-    
+
 
     /**
      * Store a newly created resource in storage.
@@ -66,27 +61,15 @@ class PermissionController extends Controller
                 ]);
 
                 if ($permission) {
-                    return response()->json([
-                        'success' => true,
-                        'payload' => $permission
-                    ],201);
+                    return $this->success_response($permission, 201);
                 } else {
-                    return response()->json([
-                        'success' => false,
-                        'error' => "Error in creating permission"
-                    ], 400);
+                    return $this->error_response("Error in creating permission", 400);
                 }
             } else {
-                return response()->json([
-                    'success' => false,
-                    'payload' => "Unauthorized!"
-                ], 401);
+                return $this->error_response("Unauthorized!", 401);
             }
         } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->error_response($e->getMessage(), 500);
         }
     }
 
@@ -125,27 +108,15 @@ class PermissionController extends Controller
                 $permission = Permission::find($id);
                 $permission->fill($request->all());
                 if ($permission->save()) {
-                    return response()->json([
-                        'success' => true,
-                        'payload' => $permission
-                    ]);
+                    return $this->success_response($permission, 200);
                 } else {
-                    return response()->json([
-                        'success' => false,
-                        'error' => "Error in updating permission"
-                    ], 400);
+                    return $this->error_response("Error in updating permission", 400);
                 }
             } else {
-                return response()->json([
-                    'success' => false,
-                    'payload' => "Unauthorized!"
-                ], 401);
+                return $this->error_response("Unauthorized!", 401);
             }
         } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->error_response($e->getMessage(), 500);
         }
     }
 
@@ -162,32 +133,18 @@ class PermissionController extends Controller
             if (auth()->user()->can('delete permission')) {
                 $exist = Permission::find($id);
                 if (!$exist) {
-                    return response()->json([
-                        'success' => false,
-                        'error' => "Not found"
-                    ], 404);
+                    return $this->error_response("Not found", 404);
                 }
                 if ($exist->delete()) {
-                    return response()->json([
-                        "success" => true
-                    ]);
+                    return $this->success_response([], 204);
                 } else {
-                    return response()->json([
-                        "success" => false,
-                        'error' => 'Error in delete'
-                    ], 400);
+                    return $this->error_response("Error in deleting", 400);
                 }
             } else {
-                return response()->json([
-                    'success' => false,
-                    'payload' => "Unauthorized!"
-                ], 401);
+                return $this->error_response("Unauthorized!", 401);
             }
         } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->error_response($e->getMessage(), 500);
         }
     }
 
@@ -210,21 +167,16 @@ class PermissionController extends Controller
                 foreach ($request->permissions as $permission) {
                     $role->givePermissionTo($permission);
                 }
-                return response()->json([
-                    'success' => true,
-                    'payload' => ['msg' => "permissions assigned"]
-                ]);
+                return $this->success_response(  ['msg' => "permissions assigned"], 200);
+
+               
             } else {
-                return response()->json([
-                    'success' => false,
-                    'payload' => "Unauthorized!"
-                ], 401);
+                return $this->error_response( "Unauthorized!", 401);
+
             }
         } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->error_response( $e->getMessage(), 500);
+
         }
     }
 }

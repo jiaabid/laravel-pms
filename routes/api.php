@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\DocController;
 use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\IssueController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ResourceController;
@@ -59,4 +60,5 @@ Route::middleware('auth:api')->group(function () {
     Route::post('tasks/resource/{id}', [TaskController::class, 'assign_resources']);
     Route::resource('resources', ResourceController::class);
     Route::resource('employee', EmployeeController::class);
+    Route::post('issue/status/{id}', [IssueController::class, 'change_status']);
 });

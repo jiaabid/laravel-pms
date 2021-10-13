@@ -37,21 +37,12 @@ class DocController extends Controller
                     $project->doc;
                 }
                 // dd($payload);
-                return response()->json([
-                    'status' => true,
-                    'payload' => $projects
-                ]);
+                return $this->success_response($projects, 200);
             } else {
-                return response()->json([
-                    'success' => false,
-                    'payload' => "Unauthorized!"
-                ], 401);
+                return $this->error_response("Unauthorized!", 401);
             }
         } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->error_response($e->getMessage(), 500);
         }
     }
 
@@ -90,34 +81,20 @@ class DocController extends Controller
                     $res = $this->insert_into_bridge_table($request->projectId, $doc->id);
                     DB::commit();
                     if ($res) {
-                        return response()->json([
-                            'status' => true,
-                            'payload' => [
-                                "msg" => "doc uploaded"
-                            ]
-                        ]);
+                        return $this->success_response([
+                            "msg" => "doc uploaded"
+                        ], 201);
                     } else {
-                        return response()->json([
-                            'status' => false,
-                            'error' => 'error in uploading!'
-                        ], 400);
+                        return $this->error_response('error in uploading!', 400);
                     }
                 } else {
-                    return response()->json([
-                        'status' => false,
-                        'error' => 'error in uploading!'
-                    ], 400);
+                    return $this->error_response('error in uploading!', 400);
                 }
             } else {
-                return response()->json([
-                    'success' => false,
-                    'payload' => "Unauthorized!"
-                ], 401);
+                return $this->error_response("Unauthorized!", 401);
             }
         } catch (Exception $e) {
-            return response()->json([
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->error_response($e->getMessage(), 500);
         }
     }
 
@@ -137,7 +114,7 @@ class DocController extends Controller
     }
 
 
-    
+
     /**
      * Display the specified resource.
      * return the file contents
@@ -152,21 +129,12 @@ class DocController extends Controller
             if ($exist) {
                 $content = Storage::get($exist->link);
                 // dd($content);
-                return response()->json([
-                    'status' => true,
-                    'payload' => utf8_encode($content)
-                ]);
+                return $this->success_response(utf8_encode($content), 200);
             } else {
-                return response()->json([
-                    'success' => false,
-                    'error' => 'No such file exist'
-                ], 404);
+                return $this->error_response("Not found", 404);
             }
         } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->error_response($e->getMessage(), 500);
         }
     }
 
@@ -188,22 +156,13 @@ class DocController extends Controller
                     // return Storage::download($exist->link);
                     return response()->download(storage_path("app/" . $path));
                 } else {
-                    return response()->json([
-                        'success' => false,
-                        'payload' => "Not Found"
-                    ], 404);
+                    return $this->error_response("Not found", 404);
                 }
             } else {
-                return response()->json([
-                    'success' => false,
-                    'payload' => "Unauthorized!"
-                ], 401);
+                return $this->error_response("Unauthorized!", 401);
             }
         } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->error_response($e->getMessage(), 500);
         }
     }
 
@@ -221,10 +180,7 @@ class DocController extends Controller
             if (auth()->user()->can('edit project')) {
                 $doc = Doc::find($id);
                 if (!$doc) {
-                    return response()->json([
-                        "success" => false,
-                        'error' => 'No such document exist!'
-                    ], 404);
+                    return $this->error_response("Not found", 404);
                 }
                 $updatedDoc = $doc->fill($request->all());
                 $updatedDoc["updated_by"] = auth()->user()->id;
@@ -234,22 +190,13 @@ class DocController extends Controller
                         'payload' => $doc
                     ]);
                 } else {
-                    return response()->json([
-                        "success" => false,
-                        'error' => 'Error in update'
-                    ], 400);
+                    return $this->error_response("Error in updating", 400);
                 }
             } else {
-                return response()->json([
-                    'success' => false,
-                    'payload' => "Unauthorized!"
-                ], 401);
+                return $this->error_response("Unauthorized!", 401);
             }
         } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->error_response($e->getMessage(), 500);
         }
     }
 
@@ -266,33 +213,19 @@ class DocController extends Controller
             if (auth()->user()->can('delete project')) {
                 $doc = Doc::find($id);
                 if (!$doc) {
-                    return response()->json([
-                        "success" => false,
-                        'error' => 'No such document exist!'
-                    ], 404);
+                    return $this->error_response("Not found", 404);
                 }
 
                 if ($doc->delete()) {
-                    return response()->json([
-                        "success" => true
-                    ]);
+                    return $this->success_response([], 204);
                 } else {
-                    return response()->json([
-                        "success" => false,
-                        'error' => 'Error in delete'
-                    ], 400);
+                    return $this->error_response("Error in deleting", 400);
                 }
             } else {
-                return response()->json([
-                    'success' => false,
-                    'payload' => "Unauthorized!"
-                ], 401);
+                return $this->error_response("Unauthorized!", 401);
             }
         } catch (Exception $e) {
-            echo $e;
-            return response()->json([
-                'error' => $e
-            ], 500);
+            return $this->error_response($e->getMessage(), 500);
         }
     }
 }

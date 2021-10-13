@@ -39,6 +39,9 @@ class DbVariableSeeder extends Seeder
             ],
             [
                 'variable_type' => 'user_type'
+            ],
+            [
+                'variable_type' => 'task_action_type'
             ]
       
         ]);
@@ -154,7 +157,7 @@ class DbVariableSeeder extends Seeder
                         [
                             [
                                 "variable_id" => $variable->id,
-                                "value" => "my"
+                                "value" => "individual"
                             ],
                             [
                                 "variable_id" => $variable->id,
@@ -163,6 +166,20 @@ class DbVariableSeeder extends Seeder
                         ]
                     );
                     break;
+                    case 'task_action_type':
+                        DbVariablesDetail::insert(
+                            [
+                                [
+                                    "variable_id" => $variable->id,
+                                    "value" => "pause"
+                                ],
+                                [
+                                    "variable_id" => $variable->id,
+                                    "value" => "resume"
+                                ]
+                            ]
+                        );
+                        break;
                 
             }
         }

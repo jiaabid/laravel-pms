@@ -6,39 +6,53 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Http\Traits\ResponseTrait;
+use Exception;
 
 class AuthController extends Controller
 {
-
+    use  ResponseTrait;
     public function login(Request $req)
     {
-        if (Auth::guard('web')->attempt($req->only('email', 'password'))) {
-            $user = User::where('email', $req->email)->first();
-            $token = $user->createToken('pmsToken')->accessToken;
-            return response()->json([
-                'token' => $token,
-                'msg' => "you have successfully logged in!",
+        try{
+            if (Auth::guard('web')->attempt($req->only('email', 'password'))) {
+                $user = User::where('email', $req->email)->first();
+                $token = $user->createToken('pmsToken')->accessToken;
+                return $this->success_response( [
+                    'token' => $token,
+                    'msg' => "you have successfully logged in!",
+    
+                ], 200);
+    ;
+            } else {
+                return $this->error_response( "Unauthorized!", 401);
+    
+            }
+        }catch(Exception $e){
+            return $this->error_response( $e->getMessage(), 500);
 
-            ], 200);
-        } else {
-            return response()->json([
-                'error' => "Unauthorized!"
-            ], 401);
         }
+      
     }
 
     public function logout(Request $req)
     {
-        $accessToken = Auth::user()->token();
-        DB::table('oauth_refresh_tokens')
-            ->where('access_token_id', $accessToken->id)
-            ->update([
-                'revoked' => true
-            ]);
+        try{
+            $accessToken = Auth::user()->token();
+            DB::table('oauth_refresh_tokens')
+                ->where('access_token_id', $accessToken->id)
+                ->update([
+                    'revoked' => true
+                ]);
+    
+            $accessToken->revoke();
+            //  echo auth()->user();
+            return $this->success_response(null, 204);
+        }catch(Exception $e){
+            return $this->error_response( $e->getMessage(), 500);
 
-        $accessToken->revoke();
-        //  echo auth()->user();
-        return response()->json(null, 204);
+        }
+      
     }
 }
 

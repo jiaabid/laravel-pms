@@ -11,6 +11,7 @@ class HResourcesTask extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'id',
         'task_id',
         'resource_id',
         'sequence',
@@ -20,7 +21,9 @@ class HResourcesTask extends Model
         'estimated_effort',
         'total_effort',
         'start_date',
-        'end_date'
+        'end_date',
+        'pause',
+        'delay'
     ];
     protected $table = 'resources_tasks';
 }

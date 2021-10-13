@@ -133,6 +133,7 @@ class ProjectController extends Controller
                 $projects->department;
                 $projects->human_resource;
                 $projects->nonhuman_resource;
+                $projects->tasks;
                 if ($projects) {
                     return response()->json([
                         "success" => true,
@@ -278,33 +279,23 @@ class ProjectController extends Controller
             if (auth()->user()->can('delete project')) {
                 $project = Project::find($id);
                 if (!$project) {
-                    return response()->json([
-                        "success" => false,
-                        'error' => 'No such project exist!'
-                    ], 404);
-                }
+                    return $this->error_response( "Not found", 404);
+
 
                 if ($project->delete()) {
-                    return response()->json([
-                        "success" => true
-                    ]);
+                    return $this->success_response( [], 204);
+
                 } else {
-                    return response()->json([
-                        "success" => false,
-                        'error' => 'Error in delete'
-                    ], 400);
+                    return $this->error_response( "Error in deleting", 400);
+
                 }
             } else {
-                return response()->json([
-                    'success' => false,
-                    'payload' => "Unauthorized!"
-                ], 401);
+                return $this->error_response( "Unauthorized!", 401);
+
             }
         } catch (Exception $e) {
-            echo $e;
-            return response()->json([
-                'error' => $e
-            ], 500);
+            return $this->error_response( $e->getMessage(), 500);
+
         }
     }
 

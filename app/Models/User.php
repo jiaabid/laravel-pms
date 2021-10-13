@@ -71,9 +71,11 @@ class User extends Authenticatable
     }
     public function assigned_task()
     {
+        $notAssignId = DbVariablesDetail::id('task_status')->status('notAssign')->first()->id;
         return $this->belongsToMany(Task::class, 'resources_tasks', 'resource_id', 'task_id')
             ->withPivot(['status', 'sequence', 'tag'])
-            ->wherePivot('status', '<>', 'notAssign');
+            ->wherePivot('status', '<>', $notAssignId);
+            
         // return $this->belongsToMany(Task::class,'h_resources_tasks','task_id','resource_id');
     }
     public function projects()

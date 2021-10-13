@@ -6,9 +6,11 @@ use App\Models\Department;
 use Exception;
 use Illuminate\Http\Request;
 use Throwable;
+use App\Http\Traits\ResponseTrait;
 
 class DepartmentController extends Controller
 {
+    use ResponseTrait;
     public function __construct()
     {
         $this->middleware(['auth']);
@@ -26,21 +28,12 @@ class DepartmentController extends Controller
                 foreach ($departs as $depart) {
                     $depart->user;
                 }
-                return response()->json([
-                    "success" => true,
-                    'payload' => $departs
-                ]);
+                return $this->success_response($departs, 200);
             } else {
-                return response()->json([
-                    'success' => false,
-                    'payload' => "Unauthorized!"
-                ], 401);
+                return $this->error_response("Unauthorized!", 401);;
             }
         } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->error_response($e->getMessage(), 500);
         }
     }
 
@@ -60,27 +53,13 @@ class DepartmentController extends Controller
                 $depart = new Department();
                 $depart->fill($request->all());
                 $depart['created_by'] = auth()->user()->id;
-                // $depart = Department::create([
-                //     'name' => $request->name,
-                //     'description' => $request->description,
-                //     'created_by' => auth()->user()->id
-                // ]);
                 $depart->save();
-                return response()->json([
-                    "success" => true,
-                    'payload' => $depart
-                ], 201);
+                return $this->success_response($depart, 201);
             } else {
-                return response()->json([
-                    'success' => false,
-                    'payload' => "Unauthorized!"
-                ], 401);
+                return $this->error_response("Unauthorized!", 401);
             }
         } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->error_response($e->getMessage(), 500);
         }
 
         // $this->validate($request, [
@@ -102,26 +81,14 @@ class DepartmentController extends Controller
             if (auth()->user()->can('retrieve department')) {
                 $depart = Department::find($id);
                 if ($depart) {
-                    return response()->json([
-                        "success" => true,
-                        'payload' => $depart
-                    ]);
+                    return $this->success_response($depart, 200);
                 }
-                return response()->json([
-                    "success" => false,
-                    "error" => "No such department exist!"
-                ], 404);
+                return $this->error_response("No such department exist!", 404);
             } else {
-                return response()->json([
-                    'success' => false,
-                    'payload' => "Unauthorized!"
-                ], 401);
+                return $this->error_response("Unauthorized!", 401);
             }
         } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->error_response($e->getMessage(), 500);
         }
     }
 
@@ -139,35 +106,20 @@ class DepartmentController extends Controller
             if (auth()->user()->can('edit department')) {
                 $depart = Department::find($id);
                 if (!$depart) {
-                    return response()->json([
-                        "success" => false,
-                        'error' => 'No such department exist!'
-                    ], 404);
+                    return $this->error_response("Not found", 404);
                 }
                 $updatedDepart = $depart->fill($request->all());
                 $updatedDepart["updated_by"] = auth()->user()->id;
                 if ($updatedDepart->save()) {
-                    return response()->json([
-                        "success" => true,
-                        'payload' => $depart
-                    ]);
+                    return $this->success_response($depart, 200);
                 } else {
-                    return response()->json([
-                        "success" => false,
-                        'error' => 'Error in update'
-                    ], 400);
+                    return $this->error_response("Error in updating", 400);
                 }
             } else {
-                return response()->json([
-                    'success' => false,
-                    'payload' => "Unauthorized!"
-                ], 401);
+                return $this->error_response("Unauthorized!", 401);
             }
         } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->error_response($e->getMessage(), 500);
         }
     }
 
@@ -184,33 +136,19 @@ class DepartmentController extends Controller
             if (auth()->user()->can('delete department')) {
                 $depart = Department::find($id);
                 if (!$depart) {
-                    return response()->json([
-                        "success" => false,
-                        'error' => 'No such department exist!'
-                    ], 404);
+                    return $this->error_response("Not found", 404);
                 }
 
                 if ($depart->delete()) {
-                    return response()->json([
-                        "success" => true
-                    ]);
+                    return $this->success_response([], 204);
                 } else {
-                    return response()->json([
-                        "success" => false,
-                        'error' => 'Error in delete'
-                    ], 400);
+                    return $this->error_response("Error in deleting", 400);
                 }
             } else {
-                return response()->json([
-                    'success' => false,
-                    'payload' => "Unauthorized!"
-                ], 401);
+                return $this->error_response("Unauthorized!", 401);
             }
         } catch (Exception $e) {
-            echo $e;
-            return response()->json([
-                'error' => $e
-            ], 500);
+            return $this->error_response($e->getMessage(), 500);
         }
     }
 }

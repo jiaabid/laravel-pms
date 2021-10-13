@@ -14,10 +14,10 @@ class Task extends Model
     public function __construct()
     {
         $id = DbVariables::where('variable_type', 'task_status')->first()->id;
-      
+
         $value = DbVariablesDetail::where('variable_id', $id)
             ->where('value', 'pending')->first()->id;
-            // dd($value);
+        // dd($value);
         $this->status = $value; //or fetch from db.
     }
 
@@ -42,16 +42,22 @@ class Task extends Model
     protected function team()
     {
         return $this->belongsToMany(User::class, 'resources_tasks', 'task_id', 'resource_id')
-        ->withPivot(['status', 'sequence', 'tag','estimated_effort','total_effort','delay']);
+            ->withPivot(['status', 'sequence', 'tag', 'estimated_effort', 'total_effort', 'delay']);
     }
+   
+    // protected function resources()
+    // {
+    //     return $this->belongsToMany(NonHumanResources::class, 'nh_resources_tasks', 'task_id', 'resource_id');
+    // }
 
-    protected function resources()
+    public function project()
     {
-        return $this->belongsToMany(NonHumanResources::class, 'nh_resources_tasks', 'task_id', 'resource_id');
+        return $this->belongsTo(Project::class);
     }
 
-    public function project(){
-        return $this->belongsTo(Project::class);
+    public function issues()
+    {
+        return $this->hasMany(Issue::class);
     }
     // public function scopeMyTask($query ,int $userId){
     //     return $query->whereHas('user')
