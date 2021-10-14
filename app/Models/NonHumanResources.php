@@ -8,17 +8,35 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class NonHumanResources extends Model
 {
-    use HasFactory,SoftDeletes;
+    use HasFactory, SoftDeletes;
 
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
     protected $fillable = [
         'name',
         'description',
         'status'
     ];
 
+    /**
+     * table
+     *
+     * @var string
+     */
     protected $table = 'non_human_resources';
 
-    public function projects(){
-        return $this->belongsToMany(Project::class,'project_resources','resource_id','project_id');
+    //relations
+
+    /**
+     * projects
+     *
+     * @return void
+     */
+    public function projects()
+    {
+        return $this->belongsToMany(Project::class, 'project_resources', 'resource_id', 'project_id');
     }
 }

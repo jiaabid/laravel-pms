@@ -1,0 +1,12 @@
+NAMING CONVENTIONS
+
+Functions = snake case e.g: snake_case()
+Variables = camel case e.g: camelCase
+Database tables = snake case if more than 1 work
+Query functions in models = camel case
+
+RESPONSE
+[
+    payload:[],
+    status:true/false
+]

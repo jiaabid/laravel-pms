@@ -9,7 +9,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class HResourcesTask extends Model
 {
     use HasFactory, SoftDeletes;
-
+    
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
     protected $fillable = [
         'id',
         'task_id',
@@ -25,5 +30,12 @@ class HResourcesTask extends Model
         'pause',
         'delay'
     ];
+
+        
+    /**
+     * table
+     *
+     * @var string
+     */
     protected $table = 'resources_tasks';
 }

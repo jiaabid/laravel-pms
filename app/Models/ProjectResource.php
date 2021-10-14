@@ -10,10 +10,22 @@ class ProjectResource extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $table = 'project_resources';
+    /**
+     * The attributes that are mass assignable
+     *
+     * @var array
+     */
     protected $fillable = [
         'project_id',
         'resource_id',
         'type'
     ];
+
+        
+    /**
+     * table
+     *
+     * @var string
+     */
+    protected $table = 'project_resources';    
 }

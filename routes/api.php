@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BasicController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\DocController;
 use App\Http\Controllers\EmployeeController;
@@ -53,12 +54,17 @@ Route::middleware('auth:api')->group(function () {
     Route::get('project/cost/{id}', [ProjectController::class, 'cost']);
     Route::resource('docs', DocController::class);
     Route::get('/doc/download/{id}', [DocController::class, 'download_file']);
-    Route::get('/task/{mode}', [TaskController::class, 'my_created_tasks']);
+    Route::get('/task/{id}', [TaskController::class, 'my_tasks']);
     Route::resource('tasks', TaskController::class);
     Route::post('tasks/status/{id}', [TaskController::class, 'change_status']);
     Route::post('tasks/action/{id}', [TaskController::class, 'task_action']);
     Route::post('tasks/resource/{id}', [TaskController::class, 'assign_resources']);
     Route::resource('resources', ResourceController::class);
-    Route::resource('employee', EmployeeController::class);
+    Route::post('employee',[ EmployeeController::class,'store']);
+    Route::put('employee/{id}', [EmployeeController::class,'update']);
     Route::post('issue/status/{id}', [IssueController::class, 'change_status']);
+    Route::put('issue/{id}', [IssueController::class, 'update']);
+    Route::delete('issue/{id}', [IssueController::class, 'destroy']);
+    Route::get('/variables',[BasicController::class,'get_variables']);
+    Route::get('/variables/detail/{id}',[BasicController::class,'get_variable_values']);
 });

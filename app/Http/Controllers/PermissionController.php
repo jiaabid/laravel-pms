@@ -82,10 +82,10 @@ class PermissionController extends Controller
     public function show($id)
     {
         //
-        // $user = User::find($id);
-        // return response()->json([
-        //     'permissions'=>$user->getAllPermissions()
-        // ]);
+        $user = User::find($id);
+        return response()->json([
+            'permissions'=>$user->getAllPermissions()
+        ]);
 
     }
 
@@ -148,7 +148,13 @@ class PermissionController extends Controller
         }
     }
 
-
+    
+    /**
+     * assign_permissions to the specified roles 
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
     public function assign_permission(Request $request)
     {
         try {

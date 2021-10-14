@@ -11,7 +11,14 @@ use Exception;
 
 class AuthController extends Controller
 {
-    use  ResponseTrait;
+    use  ResponseTrait;   
+
+    /**
+     * login
+     *
+     * @param  mixed $req
+     * @return \Illuminate\Http\Response
+     */
     public function login(Request $req)
     {
         try{
@@ -34,7 +41,13 @@ class AuthController extends Controller
         }
       
     }
-
+    
+    /**
+     * logout
+     *
+     * @param  mixed $req
+     *@return \Illuminate\Http\Response
+     */
     public function logout(Request $req)
     {
         try{

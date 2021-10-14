@@ -48,15 +48,8 @@ class RoleController extends Controller
 
         }
     }
-
-    public function get_roles()
-    {
-        // $children = Role::with('children')->get();
-        $children = Roles::where('parent', 1)->with('children')->get();
-        // dd($children);
-        // return $children;
-        return $children;
-    }
+    
+  
     /**
      * Store a newly created resource in storage.
      *
@@ -185,3 +178,17 @@ class RoleController extends Controller
         }
     }
 }
+
+//   /**
+//      * get_roles
+//      *
+//      * @return void
+//      */
+//     public function get_roles()
+//     {
+//         // $children = Role::with('children')->get();
+//         $children = Roles::where('parent', 1)->with('children')->get();
+//         // dd($children);
+//         // return $children;
+//         return $children;
+//     }

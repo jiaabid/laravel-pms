@@ -6,8 +6,11 @@ use Illuminate\Http\Request;
 use App\Http\Traits\ReusableTrait;
 use App\Http\Traits\ResponseTrait;
 use App\Models\Employee;
+use Carbon\Carbon;
 use DateTime;
 use Exception;
+
+date_default_timezone_set('Asia/Karachi');
 
 class EmployeeController extends Controller
 {
@@ -27,7 +30,7 @@ class EmployeeController extends Controller
             if (auth()->user()->can("retrieve user")) {
                 $employees = Employee::all();
                 if ($employees) {
-                    return $this->ok_response($employees, 200);
+                    return $this->success_response($employees, 200);
                 } else {
                 }
             } else {
@@ -57,22 +60,23 @@ class EmployeeController extends Controller
                     'duty_end' => ' required|after:start_date',
                     'user_id' => 'required'
                 ]);
-    
-                $startTime = strtotime($request->duty_start);
-                $endTime = strtotime($request->duty_end);
+
+                $startTime = Carbon::createFromTimeString($request->duty_start, 'Asia/Karachi');
+                $endTime = Carbon::createFromTimeString($request->duty_end, 'Asia/Karachi');
+
 
                 $employee = new Employee();
                 $employee["joining_date"] = $request->joining_date;
                 $employee["designation"] = $request->designation ? $request->designation : null;
-                $employee["duty_start"] = date("h:i:s", strtotime($request->duty_start));
-                $employee["duty_end"] = date("h:i:s", strtotime($request->duty_end));
-                $employee["working_hrs"] = abs(($endTime - $startTime) / 60 / 60);
+                $employee["duty_start"] = $startTime->format("H:i:s");
+                $employee["duty_end"] =  $endTime->format("H:i:s");
+                $employee["working_hrs"] = abs((strtotime($endTime) - strtotime($startTime)) / 60 / 60);
                 $employee["created_by"] = auth()->user()->id;
                 $employee["user_id"] = $request->user_id;
                 $employee["salary"] = $request->salary;
-                
+
                 if ($employee->save()) {
-                    return $this->ok_response($employee, 201);
+                    return $this->success_response($employee, 201);
                 } else {
                     return $this->error_response("Error in creating new employee", 400);
                 }
@@ -93,18 +97,11 @@ class EmployeeController extends Controller
     public function show($id)
     {
         //
+        $employe = Employee::find($id);
+        return $this->success_response($employe, 200);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        //
-    }
+
 
     /**
      * Update the specified resource in storage.
@@ -115,17 +112,50 @@ class EmployeeController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
-    }
+        try {
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
-    {
-        //
+            if (auth()->user()->can("edit user")) {
+
+                $this->validate($request, [
+                    'joining_date' => 'date',
+                    'designation' => 'string',
+                    'salary' => 'float',
+                    'break' => 'boolean'
+
+                ]);
+                $startTime = "";
+                $endTime = "";
+                $employeeExist = Employee::find($id);
+             
+                if (!$employeeExist) {
+                    return $this->error_response("Not Found", 404);
+                }
+                $employeeExist->fill($request->except('user_id', 'duty_start', 'duty_end'));
+              
+
+                if ($request->duty_start) {
+                    $startTime = Carbon::createFromTimeString($request->duty_start, 'Asia/Karachi');
+                    $employeeExist["duty_start"] = $startTime->format('H:i:s');
+                 
+                }
+                if ($request->duty_end) {
+                    $endTime = Carbon::createFromTimeString($request->duty_end, 'Asia/Karachi');
+                    $employeeExist["duty_end"] = $endTime->format('H:i:s');
+                }
+                $startTime = strtotime($employeeExist["duty_start"]);
+                $endTime = strtotime($employeeExist["duty_end"]);
+                $employeeExist["working_hrs"] =  abs(($endTime - $startTime) / 60 / 60);
+          
+                if ($employeeExist->save()) {
+                    return $this->success_response($employeeExist, 200);
+                } else {
+                    return $this->error_response("Bad Request", 400);
+                }
+            } else {
+                return $this->error_response('Forbidden', 403);
+            }
+        } catch (Exception $e) {
+            return $this->error_response($e->getMessage(), 500);
+        }
     }
 }

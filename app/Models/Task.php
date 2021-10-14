@@ -10,7 +10,12 @@ class Task extends Model
 {
     use HasFactory, SoftDeletes;
 
-
+    
+    /**
+     * initialy assign the pending status to the Task object
+     *
+     * @return void
+     */
     public function __construct()
     {
         $id = DbVariables::where('variable_type', 'task_status')->first()->id;
@@ -21,9 +26,13 @@ class Task extends Model
         $this->status = $value; //or fetch from db.
     }
 
-
-    public $timestamps = true;
-
+    
+    
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
     protected $fillable = [
         'name',
         'decription',
@@ -36,30 +45,49 @@ class Task extends Model
         'updated_at',
         'created_at'
 
-    ];
+    ]; 
+    
+    
+    /**
+     * table
+     *
+     * @var string
+     */
     protected $table = 'tasks';
-
+    
+    //relations
+    
+    /**
+     * team
+     *
+     * @return void
+     */
     protected function team()
     {
         return $this->belongsToMany(User::class, 'resources_tasks', 'task_id', 'resource_id')
             ->withPivot(['status', 'sequence', 'tag', 'estimated_effort', 'total_effort', 'delay']);
     }
    
-    // protected function resources()
-    // {
-    //     return $this->belongsToMany(NonHumanResources::class, 'nh_resources_tasks', 'task_id', 'resource_id');
-    // }
-
+    
+    /**
+     * project
+     *
+     * @return void
+     */
     public function project()
     {
         return $this->belongsTo(Project::class);
     }
 
+        
+    /**
+     * issues
+     *
+     * @return void
+     */
     public function issues()
     {
         return $this->hasMany(Issue::class);
     }
-    // public function scopeMyTask($query ,int $userId){
-    //     return $query->whereHas('user')
-    // }
+   
 }

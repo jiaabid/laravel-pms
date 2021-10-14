@@ -10,31 +10,52 @@ class DbVariablesDetail extends Model
 {
     use HasFactory, SoftDeletes;
 
+    //Relations
+
     public function variable()
     {
         return $this->belongsTo(DbVariables::class, 'variable_id');
     }
 
-    //getting  variable type
-    public function scopeId($query, string $type)
+    //Queries  
+
+    /**
+     * retrieving the Dbvariable type object with type name
+     *
+     * @param  mixed $query
+     * @param  string $type
+     * @return DbVariable object
+     */
+    public function scopeVariableType($query, string $type)
     {
-        $query->whereHas('variable',function ($inner_query) use($type){
-            return $inner_query->where('variable_type',$type);
+        $query->whereHas('variable', function ($inner_query) use ($type) {
+            return $inner_query->where('variable_type', $type);
         });
     }
 
-    //getting particular status
-    public function scopeStatus($query, string $status)
+
+    /**
+     * retrieving the DbVariableDetail object by passing the value
+     *
+     * @param  mixed $query
+     * @param  string $value
+     * @return DbVariableDetail object
+     */
+    public function scopeValue($query, string $value)
     {
-        return $query->where('value', $status);
+        return $query->where('value', $value);
     }
 
-    public function scopeStatusById($query, int $id){
+    /**
+     * retrieving the DbVariableDetail object by passing the id
+     *
+     * @param  mixed $query
+     * @param  int $id
+     * @return DbVariableDetail object
+     */
+    public function scopeStatusById($query, int $id)
+    {
         // dd($id);
         return $query->where('id', $id);
-
-    }
-    public function scopePending($query)
-    {
     }
 }

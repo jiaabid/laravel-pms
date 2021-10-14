@@ -61,11 +61,6 @@ class DepartmentController extends Controller
         } catch (Exception $e) {
             return $this->error_response($e->getMessage(), 500);
         }
-
-        // $this->validate($request, [
-        //     'name' => 'required',
-
-        // ]);
     }
 
     /**

@@ -133,7 +133,14 @@ class ProjectController extends Controller
 
         }
     }
-
+    
+    /**
+     * assign resources (human/nonhuman) to the specified project
+     *
+     *@param  \Illuminate\Http\Request  $request
+     * @param  int $id
+     * @return void
+     */
     public function assign_resources(Request $request, $id)
     {
         try {
@@ -243,7 +250,8 @@ class ProjectController extends Controller
                     return $this->error_response( "Error in deleting", 400);
 
                 }
-            } else {
+            }
+        } else {
                 return $this->error_response( "Unauthorized!", 401);
 
             }
@@ -251,8 +259,16 @@ class ProjectController extends Controller
             return $this->error_response( $e->getMessage(), 500);
 
         }
-    }
-
+    
+}
+    
+    /**
+     * calculate cost of specified project
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int $id
+     * @return void
+     */
     public function cost(Request $request, $id)
     {
         try {
@@ -277,7 +293,8 @@ class ProjectController extends Controller
                     $overallTotalCost += $totalCost;
                     $costExceed += $totalCost > $estimatedCost ? abs($totalCost - $estimatedCost) : 0;
                     $taskDetail[] = [
-                        $resourceDetail->task_id => [
+                       [
+                           "resource_id"=> $resourceDetail["resource_id"],
                             "estimatedCost" => $estimatedCost,
                             "totalCost" => $totalCost,
                             "costExceed" => $totalCost > $estimatedCost ? abs($totalCost - $estimatedCost) : 0
@@ -291,23 +308,15 @@ class ProjectController extends Controller
                 $taskDetail = [];
             }
             // dd($overallTotalCost,$overallEstimatedCost,$costExceed);
-            return $this->ok_response([
+            return $this->success_response([
                 "estimatedCost" => $overallEstimatedCost,
                 "totalCost" => $overallTotalCost, "exceededCost" => $costExceed,
                 "taskDetails"=>$taskDetails
             ], 200);
         } catch (Exception $e) {
+            return $this->error_response( $e->getMessage(), 500);
+
         }
     }
 }
 
-//for only my created projects
-   // $project = Project::find($id);
-                // if ($id !== null) {
-                   
-                // } else {
-                //     $projects = auth()->user()->project;
-                //     foreach ($projects as $project) {
-                //         $project->doc;
-                //     }
-                // }

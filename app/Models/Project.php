@@ -9,7 +9,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Project extends Model
 {
     use HasFactory, SoftDeletes;
-
+    
+    /**
+     * initially assign pending status to the object
+     *
+     * @return void
+     */
     public function __construct()
     {
         $id = DbVariables::where('variable_type', 'project_status')->first()->id;
@@ -17,6 +22,13 @@ class Project extends Model
             ->where('value', 'pending')->first()->id;
         $this->status = $value; //or fetch from db.
     }
+
+        
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
     protected $fillable = [
         'name',
         'description',
@@ -27,38 +39,79 @@ class Project extends Model
         'start_date',
         'end_date'
     ];
-
+    
+    /**
+     * table
+     *
+     * @var string
+     */
     protected $table = "projects";
 
 
 
     //relations
-    //project has department
+    
+   
+    /**
+     * department
+     *
+     * @return void
+     */
     public function department()
     {
         return $this->belongsTo(Department::class, 'dept_id');
         // return $this->hasOne(Department::class);
     }
 
-    //project has department
+      
+    /**
+     * user
+     *
+     * @return void
+     */
     public function user()
     {
         return $this->belongsTo(User::class, 'created_by');
         // return $this->hasOne(User::class);
     }
 
-    //docs related to the single project
+   
+    /**
+     * relation with doc via bridge table project_docs table
+     *
+     * @return void
+     */
     public function doc()
     {
         return $this->belongsToMany(Doc::class, 'project_docs', 'project_id', 'doc_id');
     }
 
+        
+    /**
+     * relation with users via bridge table project_resources table
+     *
+     * @return void
+     */
     public function human_resource(){
         return $this->belongsToMany(User::class,'project_resources','project_id','resource_id')->wherePivot('type',DbVariablesDetail::id('resource_type')->status('human')->first()->id);
     }
+
+        
+    /**
+     * relation with non-man resources via bridge table project_resources table
+     *
+     * @return void
+     */
     public function nonhuman_resource(){
         return $this->belongsToMany(NonHumanResources::class,'project_resources','project_id','resource_id')->wherePivot('type',DbVariablesDetail::id('resource_type')->status('non-human')->first()->id);
     }
+
+        
+    /**
+     * tasks
+     *
+     * @return void
+     */
     public function tasks(){
         return $this->hasMany(Task::class);
     }

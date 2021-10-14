@@ -9,7 +9,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Employee extends Model
 {
     use HasFactory, SoftDeletes;
-
+    
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
     protected $fillable = [
         "joining_date",
         "designation",
@@ -20,9 +25,21 @@ class Employee extends Model
         "break",
         "user_id"
     ];
-
-    protected $table = "employees";
     
+    /**
+     * table
+     *
+     * @var string
+     */
+    protected $table = "employees";
+
+    //relations
+        
+    /**
+     * user
+     *
+     * @return void
+     */
     public function user()
     {
         return $this->belongsTo(User::class);

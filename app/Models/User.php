@@ -49,19 +49,33 @@ class User extends Authenticatable
 
     //relations
 
-    //relation with department
+    /**
+     * relation with department 
+     *
+     * @return void
+     */
     public function department()
     {
         return $this->belongsTo(Department::class, 'dept_id');
     }
 
-    //relation with department
+
+    /**
+     * relation with project table , foreign key :created_by
+     *
+     * @return void
+     */
     public function project()
     {
         return $this->hasMany(Project::class, 'created_by');
         // return $this->belongsTo(Project::class);
     }
 
+    /**
+     *relation with task
+     *
+     * @return void
+     */
     public function task()
     {
         return $this->belongsToMany(Task::class, 'resources_tasks', 'resource_id', 'task_id')
@@ -69,20 +83,35 @@ class User extends Authenticatable
             ->as('check');
         // return $this->belongsToMany(Task::class,'h_resources_tasks','task_id','resource_id');
     }
+
+    /**
+     *relation with task via resources_tasks table
+     *
+     * @return void
+     */
     public function assigned_task()
     {
-        $notAssignId = DbVariablesDetail::id('task_status')->status('notAssign')->first()->id;
+        $notAssignId = DbVariablesDetail::variableType('task_status')->value('notAssign')->first()->id;
         return $this->belongsToMany(Task::class, 'resources_tasks', 'resource_id', 'task_id')
             ->withPivot(['status', 'sequence', 'tag'])
             ->wherePivot('status', '<>', $notAssignId);
-            
-        // return $this->belongsToMany(Task::class,'h_resources_tasks','task_id','resource_id');
     }
+
+    /**
+     *relation with projects via bridge table project_resources
+     *
+     * @return void
+     */
     public function projects()
     {
         return $this->belongsToMany(Project::class, 'project_resources', 'resource_id', 'project_id');
     }
 
+    /**
+     *relation with employee 
+     *
+     * @return void
+     */
     public function detail()
     {
         return $this->hasOne(Employee::class, "user_id");
