@@ -91,9 +91,11 @@ class User extends Authenticatable
      */
     public function assigned_task()
     {
-        $notAssignId = DbVariablesDetail::variableType('task_status')->value('notAssign')->first()->id;
+        $notAssignId = DbVariablesDetail::variableType('task_status')->variableValue('notAssign')->first()->id;
+
         return $this->belongsToMany(Task::class, 'resources_tasks', 'resource_id', 'task_id')
-            ->withPivot(['status', 'sequence', 'tag'])
+            ->withPivot(['status', 'sequence', 'tag','estimated_effort', 'total_effort', 'delay'])
+            ->as('detail')
             ->wherePivot('status', '<>', $notAssignId);
     }
 

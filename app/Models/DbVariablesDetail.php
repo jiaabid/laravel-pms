@@ -41,7 +41,7 @@ class DbVariablesDetail extends Model
      * @param  string $value
      * @return DbVariableDetail object
      */
-    public function scopeValue($query, string $value)
+    public function scopeVariableValue($query, string $value)
     {
         return $query->where('value', $value);
     }

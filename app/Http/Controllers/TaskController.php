@@ -112,29 +112,42 @@ class TaskController extends Controller
     {
         try {
             // dd($mode);
-            $payload = "";
+            $payload = [];
             switch ($id) {
                     //individual tasks
                 case 19:
-                    $type = DbVariablesDetail::variableType('task_type')->value('individual')->first()->id;
-                    $payload = Task::where('created_by', auth()->user()->id)->where('type', $type)->get();
+                    // $type = DbVariablesDetail::variableType('task_type')->variableValue('individual')->first()->id;
+                    $myTasks = Task::where('created_by', auth()->user()->id)->where('type', $id)->get();
+                    $payload["myTasks"] = $myTasks;
                     break;
                     //particular task project assigned to the user
+                    // case 22:
+                    //     $type = DbVariablesDetail::variableType('task_type')->variableValue('project')->first()->id;
+                    //     // $payload = Task::where('project_id', 1)->where('type', 20)->user(auth()->user()->id)->get();
+                    //     $payload = Task::with('team')->wherePivot('resource_id', auth()->user()->id)->where('project_id', 1)->where('type', 20)->get();
+                    //     break;
+                    //tasks assign by me and assignTo me
                 case 20:
-                    $type = DbVariablesDetail::variableType('task_type')->value('project')->first()->id;
-                    // $payload = Task::where('project_id', 1)->where('type', 20)->user(auth()->user()->id)->get();
-                    $payload = Task::with('team')->wherePivot('resource_id', auth()->user()->id)->where('project_id', 1)->where('type', 20)->get();
-                    break;
-                    //tasks assign by me
-                case "assign":
-                    $type = DbVariablesDetail::variableType('task_type')->value('project')->first()->id;
-                    $payload = Task::where('created_by', auth()->user()->id)->where('type', $type)->get();
+
+                    $assignByMe = Task::where('created_by', auth()->user()->id)->where('type', $id)->where('project_id', 1)->get();
+                    $assignToMe = auth()->user()->assigned_task()->where('project_id', 1)->get();
+                    foreach ($assignByMe as $item) {
+                        $item->issues;
+                        $item->team;
+                        
+                    }
+                    foreach ($assignToMe as $item) {
+                        $item->issues;
+                    }
+                    $payload["assignedToMe"] = $assignToMe;
+                    $payload["assignedByMe"] = $assignByMe;
                     break;
                 default:
-                    $payload = auth()->user()->assigned_task()->where('project_id', 2)->get();
-                    foreach ($payload as $i) {
-                        $i->issues;
-                    }
+                    // $assignToMe = auth()->user()->assigned_task()->where('project_id', 1)->get();
+                    // $assign = auth()->user()->assigned_task()->where('project_id', 1)->where('created_by',auth()->user()->id)->get();
+                    // foreach ($payload as $i) {
+                    //     $i->issues;
+                    // }
             }
             return $this->success_response($payload, 200);
         } catch (Exception $e) {
@@ -263,14 +276,14 @@ class TaskController extends Controller
             if (!$exist) {
                 return $this->error_response('No such task exist!', 404);
             }
-           
+
             DB::beginTransaction();
             $taskResource = HResourcesTask::where("resource_id", auth()->user()->id)
                 ->where('task_id', $exist->id)->first();
-          
+
 
             $status = DbVariablesDetail::statusById($request->status)->first();
-                      
+
             switch ($request->status) {
 
                     //inProgress
@@ -285,12 +298,12 @@ class TaskController extends Controller
                 case 5:
                     HResourcesTask::where('sequence', $taskResource["sequence"] + 1)
                         ->where('task_id', $exist->id)
-                        ->update(["status" => DbVariablesDetail::variableType('task_status')->value('pending')->first()->id]);
+                        ->update(["status" => DbVariablesDetail::variableType('task_status')->variableValue('pending')->first()->id]);
                     $taskResource["status"] = $status->id;
-                    $exist["status"] = DbVariablesDetail::variableType('task_status')->value('inReview')->first()->id;
+                    $exist["status"] = DbVariablesDetail::variableType('task_status')->variableValue('inReview')->first()->id;
                     $taskResource["end_at"] = Carbon::now("Asia/Karachi")->toDateTimeString();
                     $taskResource["total_effort"] =  $this->calculate_effort($taskResource);
-                    if ($taskResource["total_effort"] > $taskResource["estimated_effort"]){
+                    if ($taskResource["total_effort"] > $taskResource["estimated_effort"]) {
                         $taskResource["delay"] = true;
                     }
                     $taskResource->save();
@@ -301,31 +314,31 @@ class TaskController extends Controller
                     for ($i = $taskResource["sequence"] - 1; $i > 0; $i--) {
                         HResourcesTask::where('sequence', $i)
                             ->where('task_id', $exist->id)
-                            ->update(["status" => DbVariablesDetail::variableType('task_status')->value('pending')->first()->id]);
+                            ->update(["status" => DbVariablesDetail::variableType('task_status')->variableValue('pending')->first()->id]);
                     }
-                    $taskResource["status"] = DbVariablesDetail::variableType('task_status')->value('completed')->first()->id;
+                    $taskResource["status"] = DbVariablesDetail::variableType('task_status')->variableValue('completed')->first()->id;
                     $exist["status"] = $request->status;
-                   
+
                     $this->mark_issue($request->issues, $exist->id);
                     $taskResource->save();
                     break;
 
                     //approve
                 case 9:
-                    $exist["status"] = DbVariablesDetail::variableType('task_status')->value('completed')->first()->id;
+                    $exist["status"] = DbVariablesDetail::variableType('task_status')->variableValue('completed')->first()->id;
                     $taskResource["status"] = $exist["status"];
                     $taskResource["end_at"] = Carbon::now("Asia/Karachi")->toDateTimeString();
                     $taskResource["total_effort"] =  $this->calculate_effort($taskResource);
-                    if ($taskResource["total_effort"] > $taskResource["estimated_effort"]){
+                    if ($taskResource["total_effort"] > $taskResource["estimated_effort"]) {
                         $taskResource["delay"] = true;
                     }
                     $taskResource->save();
                     break;
                 default:
-                    
+
                     break;
             }
-          
+
             $saved = $exist->save();
             DB::commit();
             if ($saved) {
@@ -400,21 +413,22 @@ class TaskController extends Controller
                         $existingResource = HResourcesTask::where('task_id', $taskId)
                             ->where('resource_id', $item["resource_id"])
                             ->first();
+
                         if ($existingResource) {
                             return $errorMesages->push($existingResource->resource_id . " already exist");;
                         }
+
                         $resource = new HResourcesTask();
-                        $resource["status"] = $item["sequence"] > 1 ? DbVariablesDetail::variableType('task_status')->value('notAssign')->first()->id : DbVariablesDetail::variableType('task_status')->value('pending')->first()->id;
+                        $resource["status"] = $item["sequence"] > 1 ? DbVariablesDetail::variableType('task_status')->variableValue('notAssign')->first()->id : DbVariablesDetail::variableType('task_status')->variableValue('pending')->first()->id;
                         $resource["resource_id"] = $item["resource_id"];
                         $resource["task_id"] = $taskId;
-                        $resource["created_at"] =  date('Y-m-d H:i:s');
-                        $resource["updated_at"] =  date('Y-m-d H:i:s');
                         $resource["sequence"] =  $item["sequence"];
                         $resource["tag"] =  $item["tag"];
                         $resource["estimated_effort"] =  $item["estimated_effort"];
-                       
                         $resource["start_date"] =  $item["start_date"];
                         $resource["end_date"] =  $item["end_date"];
+                        $resource["created_at"] =  date('Y-m-d H:i:s');
+                        $resource["updated_at"] =  date('Y-m-d H:i:s');
                         $resource->save();
                     });
 
@@ -431,6 +445,7 @@ class TaskController extends Controller
             return $this->error_response($e->getMessage(), 500);
         }
     }
+
     /**
      * Remove the specified resource from storage.
      *
@@ -472,10 +487,10 @@ class TaskController extends Controller
         try {
             $date = Carbon::now("Asia/Karachi")->toDateTimeString();
             $item["start_at"] = $date;
-            $item["status"] = DbVariablesDetail::variableType('task_status')->value('inProgress')->first()->id;
-            
+            $item["status"] = DbVariablesDetail::variableType('task_status')->variableValue('inProgress')->first()->id;
+
             if ($item->save()) {
-               
+
                 return true;
             } else {
                 return false;
