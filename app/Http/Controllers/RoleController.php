@@ -10,10 +10,13 @@ use Exception;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use App\Http\Traits\ResponseTrait;
+use App\Http\Traits\ReusableTrait;
 // use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 class RoleController extends Controller
 {
+    use ResponseTrait,ReusableTrait;
     public function __construct()
     {
         $this->middleware(['auth']);
@@ -25,28 +28,31 @@ class RoleController extends Controller
      */
     public function index()
     {
-        try {
+        
 
             if (auth()->user()->can('retrieve role')) {
-                $roles = Role::all();
+                
+                //retrieve child roles
+                $childRoles = collect($this->get_child_roles(auth()->user()));
+                $childRoles->push(auth()->user()->role_id);
+                $roles = Role::whereIn('parent', $childRoles)->get();
+
+                // $roles = Role::all();
                 if ($roles) {
                     return $this->success_response( [
                         
-                        'payload' => $roles->toArray(),
-                        'user' => auth()->user()
+                        'payload' => $roles->toArray()
+                      
                     ], 200);
                 } else {
                     return $this->error_response("Not found",404);
 
                 }
             } else {
-                return $this->error_response( "Unauthorized!", 401);
+                return $this->error_response( "Forbidden!", 403);
 
             }
-        } catch (Exception $e) {
-            return $this->error_response( $e->getMessage(), 500);
-
-        }
+        
     }
     
   
@@ -58,8 +64,7 @@ class RoleController extends Controller
      */
     public function store(Request $request)
     {
-        try {
-
+        
             if (auth()->user()->can('create role')) {
                 $this->validate($request, [
                     'name' => 'required'
@@ -76,13 +81,10 @@ class RoleController extends Controller
                  
                 }
             } else {
-                return $this->error_response( "Unauthorized!", 401);
+                return $this->error_response( "Forbidden!", 403);
 
             }
-        } catch (Exception $e) {
-            return $this->error_response( $e->getMessage(), 500);
-
-        }
+     
     }
 
     /**
@@ -93,8 +95,7 @@ class RoleController extends Controller
      */
     public function show($id)
     {
-        try {
-
+      
             $role = Role::find(auth()->user()->role_id);
             if ($role) {
                 return $this->success_response( $role, 200);
@@ -102,10 +103,7 @@ class RoleController extends Controller
                 return $this->error_response( "Not found", 404);
 
             }
-        } catch (Exception $e) {
-            return $this->error_response( $e->getMessage(), 500);
-
-        }
+      
     }
 
     /**
@@ -117,7 +115,7 @@ class RoleController extends Controller
      */
     public function update(Request $request, $id)
     {
-        try {
+      
             if (auth()->user()->can('edit role')) {
                 $exist = Role::find($id);
                 if (!$exist) {
@@ -136,13 +134,10 @@ class RoleController extends Controller
                   
                 }
             } else {
-                return $this->error_response( "Unauthorized!", 401);
+                return $this->error_response( "Forbidden!", 403);
 
             }
-        } catch (Exception $e) {
-            return $this->error_response( $e->getMessage(), 500);
-
-        }
+       
     }
 
     /**
@@ -153,8 +148,7 @@ class RoleController extends Controller
      */
     public function destroy($id)
     {
-        try {
-
+       
             if (auth()->user()->can('delete role')) {
                 $exist = Roles::find($id);
                 if (!$exist) {
@@ -169,26 +163,10 @@ class RoleController extends Controller
 
                 }
             } else {
-                return $this->error_response( "Unauthorized!", 401);
+                return $this->error_response( "Forbidden!", 403);
 
             }
-        } catch (Exception $e) {
-            return $this->error_response( $e->getMessage(), 500);
-
-        }
+      
     }
 }
 
-//   /**
-//      * get_roles
-//      *
-//      * @return void
-//      */
-//     public function get_roles()
-//     {
-//         // $children = Role::with('children')->get();
-//         $children = Roles::where('parent', 1)->with('children')->get();
-//         // dd($children);
-//         // return $children;
-//         return $children;
-//     }

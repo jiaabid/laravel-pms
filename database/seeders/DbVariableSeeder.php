@@ -22,7 +22,7 @@ class DbVariableSeeder extends Seeder
                 'variable_type' => 'resource_status'
             ],
             [
-                'variable_type' => 'task_status'
+                'variable_type' => 'resource_type'
             ],
             [
                 'variable_type' => 'project_status'
@@ -31,25 +31,28 @@ class DbVariableSeeder extends Seeder
                 'variable_type' => 'tag'
             ],
             [
-                'variable_type' => 'resource_type'
+                'variable_type' => 'task_status'
             ],
             [
                 'variable_type' => 'task_type'
-
-            ],
-            [
-                'variable_type' => 'user_type'
             ],
             [
                 'variable_type' => 'task_action_type'
+            ],
+            [
+                'variable_type' => 'issue_status'
+            ],
+            [
+                'variable_type' => 'working_days'
             ]
-      
+
         ]);
 
         $variables = DbVariables::all();
         foreach ($variables as $variable) {
-            switch ($variable->variable_type) {
-                case 'resource_status':
+            switch ($variable->id) {
+                    //resource status
+                case 1:
                     DbVariablesDetail::insert(
                         [
                             [
@@ -63,7 +66,9 @@ class DbVariableSeeder extends Seeder
                         ]
                     );
                     break;
-                case 'resource_type':
+
+                    //resource type
+                case 2:
                     DbVariablesDetail::insert(
                         [
                             [
@@ -77,45 +82,9 @@ class DbVariableSeeder extends Seeder
                         ]
                     );
                     break;
-                case 'task_status':
-                    DbVariablesDetail::insert(
-                        [
-                            [
-                                "variable_id" => $variable->id,
-                                "value" => "pending"
-                            ],
-                            [
-                                "variable_id" => $variable->id,
-                                "value" => "inProgress"
-                            ],
-                            [
-                                "variable_id" => $variable->id,
-                                "value" => "completed"
-                            ],
-                            [
-                                "variable_id" => $variable->id,
-                                "value" => "notAssign"
-                            ],
-                            [
-                                "variable_id" => $variable->id,
-                                "value" => "bug"
-                            ],
-                            [
-                                "variable_id" => $variable->id,
-                                "value" => "inReview"
-                            ],
-                            [
-                                "variable_id" => $variable->id,
-                                "value" => "approve"
-                            ],
-                            [
-                                "variable_id" => $variable->id,
-                                "value" => "reject"
-                            ]
-                        ]
-                    );
-                    break;
-                case 'project_status':
+
+                    //project status
+                case 3:
                     DbVariablesDetail::insert(
                         [
                             [
@@ -125,15 +94,13 @@ class DbVariableSeeder extends Seeder
                             [
                                 "variable_id" => $variable->id,
                                 "value" => "completed"
-                            ],
-                            [
-                                "variable_id" => $variable->id,
-                                "value" => "late"
                             ]
                         ]
                     );
                     break;
-                case 'tag':
+
+                    //tag
+                case 4:
                     DbVariablesDetail::insert(
                         [
                             [
@@ -152,7 +119,45 @@ class DbVariableSeeder extends Seeder
                     );
                     break;
 
-                case 'task_type':
+                    //task status
+                case 5:
+                    DbVariablesDetail::insert(
+                        [
+                            [
+                                "variable_id" => $variable->id,
+                                "value" => "notAssign"
+                            ],
+
+                            [
+                                "variable_id" => $variable->id,
+                                "value" => "pending"
+                            ],
+                            [
+                                "variable_id" => $variable->id,
+                                "value" => "inProgress"
+                            ],
+                            [
+                                "variable_id" => $variable->id,
+                                "value" => "issue"
+                            ],
+                            [
+                                "variable_id" => $variable->id,
+                                "value" => "inReview"
+                            ],
+                            [
+                                "variable_id" => $variable->id,
+                                "value" => "completed"
+                            ],
+                            [
+                                "variable_id" => $variable->id,
+                                "value" => "approve"
+                            ]
+                        ]
+                    );
+                    break;
+
+                    //task type
+                case 6:
                     DbVariablesDetail::insert(
                         [
                             [
@@ -166,21 +171,48 @@ class DbVariableSeeder extends Seeder
                         ]
                     );
                     break;
-                    case 'task_action_type':
+
+                    //task action
+                case 7:
+                    DbVariablesDetail::insert(
+                        [
+                            [
+                                "variable_id" => $variable->id,
+                                "value" => "pause"
+                            ],
+                            [
+                                "variable_id" => $variable->id,
+                                "value" => "resume"
+                            ]
+                        ]
+                    );
+                    break;
+
+                    //issue status
+                case 8:
+                    DbVariablesDetail::insert(
+                        [
+                            [
+                                "variable_id" => $variable->id,
+                                "value" => "pending"
+                            ],
+                            [
+                                "variable_id" => $variable->id,
+                                "value" => "resolved"
+                            ]
+                        ]
+                    );
+                    break;
+                    case 9:
                         DbVariablesDetail::insert(
                             [
                                 [
                                     "variable_id" => $variable->id,
-                                    "value" => "pause"
-                                ],
-                                [
-                                    "variable_id" => $variable->id,
-                                    "value" => "resume"
+                                    "value" =>"22"
                                 ]
                             ]
                         );
                         break;
-                
             }
         }
     }

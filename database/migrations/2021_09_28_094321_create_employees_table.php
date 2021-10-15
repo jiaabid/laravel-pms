@@ -17,14 +17,14 @@ class CreateEmployeesTable extends Migration
         //nullable in joining,designation & salary will be removed
         Schema::create('employees', function (Blueprint $table) {
             $table->id();
-            $table->string('contact',11)->nullable();
             $table->dateTime('joining_date')->nullable();
+            $table->string('contact',11)->nullable();
             $table->string('designation')->nullable();
             $table->float('salary')->nullable();
             $table->time('duty_start');
             $table->time('duty_end');
             $table->float('working_hrs');
-            $table->foreignId('user_id')->constrained('users');
+            $table->foreignId('user_id')->unique()->constrained('users');
             $table->boolean('break')->default(false);
             $table->foreignId('created_by')->constrained('users');
             $table->foreignId('updated_by')->nullable()->constrained('users');

@@ -22,18 +22,15 @@ class DepartmentController extends Controller
      */
     public function index()
     {
-        try {
-            if (auth()->user()->can('retrieve department')) {
-                $departs = Department::all();
-                foreach ($departs as $depart) {
-                    $depart->user;
-                }
-                return $this->success_response($departs, 200);
-            } else {
-                return $this->error_response("Unauthorized!", 401);;
+
+        if (auth()->user()->can('retrieve department')) {
+            $departs = Department::all();
+            foreach ($departs as $depart) {
+                $depart->user;
             }
-        } catch (Exception $e) {
-            return $this->error_response($e->getMessage(), 500);
+            return $this->success_response($departs, 200);
+        } else {
+            return $this->success_response(auth()->user()->department, 200);
         }
     }
 
@@ -45,21 +42,23 @@ class DepartmentController extends Controller
      */
     public function store(Request $request)
     {
-        try {
-            if (auth()->user()->can('create department')) {
-                $this->validate($request, [
-                    'name' => 'required'
-                ]);
+
+        if (auth()->user()->can('create department')) {
+            $this->validate($request, [
+                'name' => 'required'
+            ]);
+            try {
                 $depart = new Department();
                 $depart->fill($request->all());
                 $depart['created_by'] = auth()->user()->id;
                 $depart->save();
-                return $this->success_response($depart, 201);
-            } else {
-                return $this->error_response("Unauthorized!", 401);
+            } catch (Exception $e) {
+                return $this->error_response($e->getMessage(), 500);
             }
-        } catch (Exception $e) {
-            return $this->error_response($e->getMessage(), 500);
+
+            return $this->success_response($depart, 201);
+        } else {
+            return $this->error_response("Forbidden", 403);
         }
     }
 
@@ -72,18 +71,15 @@ class DepartmentController extends Controller
     public function show($id)
     {
 
-        try {
-            if (auth()->user()->can('retrieve department')) {
-                $depart = Department::find($id);
-                if ($depart) {
-                    return $this->success_response($depart, 200);
-                }
-                return $this->error_response("No such department exist!", 404);
-            } else {
-                return $this->error_response("Unauthorized!", 401);
+
+        if (auth()->user()->can('retrieve department')) {
+            $depart = Department::find($id);
+            if ($depart) {
+                return $this->success_response($depart, 200);
             }
-        } catch (Exception $e) {
-            return $this->error_response($e->getMessage(), 500);
+            return $this->error_response("No such department exist!", 404);
+        } else {
+            return $this->error_response("Forbidden!", 403);
         }
     }
 
@@ -97,24 +93,21 @@ class DepartmentController extends Controller
      */
     public function update(Request $request, $id)
     {
-        try {
-            if (auth()->user()->can('edit department')) {
-                $depart = Department::find($id);
-                if (!$depart) {
-                    return $this->error_response("Not found", 404);
-                }
-                $updatedDepart = $depart->fill($request->all());
-                $updatedDepart["updated_by"] = auth()->user()->id;
-                if ($updatedDepart->save()) {
-                    return $this->success_response($depart, 200);
-                } else {
-                    return $this->error_response("Error in updating", 400);
-                }
-            } else {
-                return $this->error_response("Unauthorized!", 401);
+
+        if (auth()->user()->can('edit department')) {
+            $depart = Department::find($id);
+            if (!$depart) {
+                return $this->error_response("Not found", 404);
             }
-        } catch (Exception $e) {
-            return $this->error_response($e->getMessage(), 500);
+            $updatedDepart = $depart->fill($request->all());
+            $updatedDepart["updated_by"] = auth()->user()->id;
+            if ($updatedDepart->save()) {
+                return $this->success_response($depart, 200);
+            } else {
+                return $this->error_response("Error in updating", 400);
+            }
+        } else {
+            return $this->error_response("Forbidden!", 403);
         }
     }
 
@@ -126,24 +119,21 @@ class DepartmentController extends Controller
      */
     public function destroy($id)
     {
-        try {
 
-            if (auth()->user()->can('delete department')) {
-                $depart = Department::find($id);
-                if (!$depart) {
-                    return $this->error_response("Not found", 404);
-                }
 
-                if ($depart->delete()) {
-                    return $this->success_response([], 204);
-                } else {
-                    return $this->error_response("Error in deleting", 400);
-                }
-            } else {
-                return $this->error_response("Unauthorized!", 401);
+        if (auth()->user()->can('delete department')) {
+            $depart = Department::find($id);
+            if (!$depart) {
+                return $this->error_response("Not found", 404);
             }
-        } catch (Exception $e) {
-            return $this->error_response($e->getMessage(), 500);
+
+            if ($depart->delete()) {
+                return $this->success_response([], 204);
+            } else {
+                return $this->error_response("Error in deleting", 400);
+            }
+        } else {
+            return $this->error_response("Forbidden!", 403);
         }
     }
 }

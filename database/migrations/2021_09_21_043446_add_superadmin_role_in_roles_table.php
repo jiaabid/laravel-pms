@@ -14,17 +14,12 @@ class AddSuperadminRoleInRolesTable extends Migration
      */
     public function up()
     {
-        // Schema::table('roles', function (Blueprint $table) {
-        //     //
-        // });
         $role = Role::create([
             'name'=>'superadmin',
             'guard_name'=>'api'
         ]);
         $user = User::where('name','superadmin')
         ->update(['role_id'=>$role->id]);
-        // $user->role_id = $role->id;
-        // $user->save();
     }
 
     /**

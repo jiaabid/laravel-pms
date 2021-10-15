@@ -16,7 +16,7 @@ class CreateTagStatusesTable extends Migration
         Schema::create('tag_statuses', function (Blueprint $table) {
             $table->id();
             $table->foreignId('tag_id')->constrained('db_variables_details');
-            $table->foreignId('task_status_id')->constrained('db_variables_details');
+            $table->foreignId('status_id')->constrained('db_variables_details');
             $table->softDeletes();
             $table->timestamps();
         });

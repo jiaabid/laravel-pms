@@ -16,11 +16,36 @@ class TagStatusSeeder extends Seeder
      */
     public function run()
     {
-        //
-        $tagStatusId = DbVariables::where('variable_type','tag')->first()->id;
-        $statuses = DbVariablesDetail::where('variable_id',$tagStatusId)->get()->value;
         TagStatus::insert([
-          
+
+            [
+                "tag_id" => 7,
+                "status_id" => 12
+            ],
+            [
+                "tag_id" => 7,
+                "status_id" => 15
+            ],
+            [
+                "tag_id" => 9,
+                "status_id" => 12
+            ], [
+                "tag_id" => 9,
+                "status_id" => 13
+            ], [
+                "tag_id" => 9,
+                "status_id" => 15
+            ],
+            [
+                "tag_id" => 8,
+                "status_id" => 12
+            ], [
+                "tag_id" => 8,
+                "status_id" => 13
+            ], [
+                "tag_id" => 8,
+                "status_id" => 16
+            ]
         ]);
     }
 }

@@ -42,7 +42,7 @@ Route::get('/check', function () {
 
 Route::middleware('auth:api')->group(function () {
     Route::resource('/department', DepartmentController::class);
-    Route::get('/roles', [RoleController::class, 'get_roles']);
+    // Route::get('/roles', [RoleController::class, 'get_roles']);
 
     Route::resource('/role', RoleController::class);
     Route::resource('/permission', PermissionController::class);
@@ -60,11 +60,13 @@ Route::middleware('auth:api')->group(function () {
     Route::post('tasks/action/{id}', [TaskController::class, 'task_action']);
     Route::post('tasks/resource/{id}', [TaskController::class, 'assign_resources']);
     Route::resource('resources', ResourceController::class);
-    Route::post('employee',[ EmployeeController::class,'store']);
-    Route::put('employee/{id}', [EmployeeController::class,'update']);
+    Route::get('employee', [EmployeeController::class, 'index']);
+    Route::post('employee', [EmployeeController::class, 'store']);
+    Route::put('employee/{id}', [EmployeeController::class, 'update']);
     Route::post('issue/status/{id}', [IssueController::class, 'change_status']);
     Route::put('issue/{id}', [IssueController::class, 'update']);
     Route::delete('issue/{id}', [IssueController::class, 'destroy']);
-    Route::get('/variables',[BasicController::class,'get_variables']);
-    Route::get('/variables/detail/{id}',[BasicController::class,'get_variable_values']);
+    Route::get('/variables', [BasicController::class, 'get_variables']);
+    Route::get('/variables/detail/{id}', [BasicController::class, 'get_variable_values']);
+    Route::get('/variables/status/{id}', [BasicController::class, 'get_status']);
 });

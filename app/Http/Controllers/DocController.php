@@ -11,9 +11,11 @@ use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use App\Http\Traits\ResponseTrait;
 
 class DocController extends Controller
 {
+    use ResponseTrait;
     public function __construct()
     {
         $this->middleware(['auth']);
@@ -28,21 +30,18 @@ class DocController extends Controller
     {
 
         //retrieve all the documents created by the user
-        try {
-            if (auth()->user()->can('retrieve project')) {
-                //  dd(auth()->user()->project);
-                $projects = auth()->user()->project;
-                $payload = [];
-                foreach ($projects as $project) {
-                    $project->doc;
-                }
-                // dd($payload);
-                return $this->success_response($projects, 200);
-            } else {
-                return $this->error_response("Unauthorized!", 401);
+
+        if (auth()->user()->can('retrieve project')) {
+            //  dd(auth()->user()->project);
+            $projects = auth()->user()->project;
+            $payload = [];
+            foreach ($projects as $project) {
+                $project->doc;
             }
-        } catch (Exception $e) {
-            return $this->error_response($e->getMessage(), 500);
+            // dd($payload);
+            return $this->success_response($projects, 200);
+        } else {
+            return $this->error_response("Forbidden!", 403);
         }
     }
 
@@ -55,46 +54,43 @@ class DocController extends Controller
      */
     public function store(Request $request)
     {
-        // dd($request);
-        try {
-            // dd($request->hasFile('check'));
 
+        if (auth()->user()->can('create project')) {
+            $this->validate($request, [
+                'name' => 'required'
+            ]);
+            $file = $request->file('file');
 
-            if (auth()->user()->can('create project')) {
-                $this->validate($request, [
-                    'name' => 'required'
-                ]);
-                $file = $request->file('file');
+            $path = $file->store('public/files');
+            $name = $file->getClientOriginalName();
 
-                $path = $file->store('public/files');
-                $name = $file->getClientOriginalName();
-
+            try {
                 $doc = new Doc();
                 $doc['name'] = $request->name;
                 $doc['description'] = $request->description ? $request->description : null;
                 $doc['link'] = $path;
                 $doc['created_by'] = auth()->user()->id;
-                DB::beginTransaction();
-                $saved = $doc->save();
-                // dd($doc);
-                if ($saved) {
-                    $res = $this->insert_into_bridge_table($request->projectId, $doc->id);
-                    DB::commit();
-                    if ($res) {
-                        return $this->success_response([
-                            "msg" => "doc uploaded"
-                        ], 201);
-                    } else {
-                        return $this->error_response('error in uploading!', 400);
-                    }
+            } catch (Exception $e) {
+                return $this->error_response($e->getMessage(), 500);
+            }
+            DB::beginTransaction();
+            $saved = $doc->save();
+            // dd($doc);
+            if ($saved) {
+                $res = $this->insert_into_bridge_table($request->projectId, $doc->id);
+                DB::commit();
+                if ($res) {
+                    return $this->success_response([
+                        "msg" => "doc uploaded"
+                    ], 201);
                 } else {
                     return $this->error_response('error in uploading!', 400);
                 }
             } else {
-                return $this->error_response("Unauthorized!", 401);
+                return $this->error_response('error in uploading!', 400);
             }
-        } catch (Exception $e) {
-            return $this->error_response($e->getMessage(), 500);
+        } else {
+            return $this->error_response("Forbidden!", 403);
         }
     }
 
@@ -124,17 +120,14 @@ class DocController extends Controller
      */
     public function show($id)
     {
-        try {
-            $exist = Doc::find($id);
-            if ($exist) {
-                $content = Storage::get($exist->link);
-                // dd($content);
-                return $this->success_response(utf8_encode($content), 200);
-            } else {
-                return $this->error_response("Not found", 404);
-            }
-        } catch (Exception $e) {
-            return $this->error_response($e->getMessage(), 500);
+
+        $exist = Doc::find($id);
+        if ($exist) {
+            $content = Storage::get($exist->link);
+            // dd($content);
+            return $this->success_response(utf8_encode($content), 200);
+        } else {
+            return $this->error_response("Not found", 404);
         }
     }
 
@@ -147,22 +140,19 @@ class DocController extends Controller
      */
     public function download_file(Request $request, $id)
     {
-        try {
-            if (auth()->user()->can('create project')) {
-                $exist = Doc::find($id);
-                // dd($exist);
-                $path = $exist->link;
-                if ($exist) {
-                    // return Storage::download($exist->link);
-                    return response()->download(storage_path("app/" . $path));
-                } else {
-                    return $this->error_response("Not found", 404);
-                }
+
+        if (auth()->user()->can('create project')) {
+            $exist = Doc::find($id);
+            // dd($exist);
+            $path = $exist->link;
+            if ($exist) {
+                // return Storage::download($exist->link);
+                return response()->download(storage_path("app/" . $path));
             } else {
-                return $this->error_response("Unauthorized!", 401);
+                return $this->error_response("Not found", 404);
             }
-        } catch (Exception $e) {
-            return $this->error_response($e->getMessage(), 500);
+        } else {
+            return $this->error_response("Forbidden!", 403);
         }
     }
 
@@ -176,27 +166,24 @@ class DocController extends Controller
      */
     public function update(Request $request, $id)
     {
-        try {
-            if (auth()->user()->can('edit project')) {
-                $doc = Doc::find($id);
-                if (!$doc) {
-                    return $this->error_response("Not found", 404);
-                }
-                $updatedDoc = $doc->fill($request->all());
-                $updatedDoc["updated_by"] = auth()->user()->id;
-                if ($updatedDoc->save()) {
-                    return response()->json([
-                        "success" => true,
-                        'payload' => $doc
-                    ]);
-                } else {
-                    return $this->error_response("Error in updating", 400);
-                }
-            } else {
-                return $this->error_response("Unauthorized!", 401);
+
+        if (auth()->user()->can('edit project')) {
+            $doc = Doc::find($id);
+            if (!$doc) {
+                return $this->error_response("Not found", 404);
             }
-        } catch (Exception $e) {
-            return $this->error_response($e->getMessage(), 500);
+            $updatedDoc = $doc->fill($request->all());
+            $updatedDoc["updated_by"] = auth()->user()->id;
+            if ($updatedDoc->save()) {
+                return response()->json([
+                    "success" => true,
+                    'payload' => $doc
+                ]);
+            } else {
+                return $this->error_response("Error in updating", 400);
+            }
+        } else {
+            return $this->error_response("Forbidden!", 403);
         }
     }
 
@@ -208,24 +195,21 @@ class DocController extends Controller
      */
     public function destroy($id)
     {
-        try {
 
-            if (auth()->user()->can('delete project')) {
-                $doc = Doc::find($id);
-                if (!$doc) {
-                    return $this->error_response("Not found", 404);
-                }
 
-                if ($doc->delete()) {
-                    return $this->success_response([], 204);
-                } else {
-                    return $this->error_response("Error in deleting", 400);
-                }
-            } else {
-                return $this->error_response("Unauthorized!", 401);
+        if (auth()->user()->can('delete project')) {
+            $doc = Doc::find($id);
+            if (!$doc) {
+                return $this->error_response("Not found", 404);
             }
-        } catch (Exception $e) {
-            return $this->error_response($e->getMessage(), 500);
+
+            if ($doc->delete()) {
+                return $this->success_response([], 204);
+            } else {
+                return $this->error_response("Error in deleting", 400);
+            }
+        } else {
+            return $this->error_response("Forbidden!", 403);
         }
     }
 }

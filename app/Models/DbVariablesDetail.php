@@ -17,6 +17,9 @@ class DbVariablesDetail extends Model
         return $this->belongsTo(DbVariables::class, 'variable_id');
     }
 
+    public function tag_status(){
+        return $this->hasMany(TagStatus::class,'status_id');
+    }
     //Queries  
 
     /**

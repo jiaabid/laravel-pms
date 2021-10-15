@@ -10,6 +10,9 @@
 "email":"wajiha@gmail.com",
     "password":"12345"
 
+"email":"admin@gmail.com",
+    "password":"12345"
+
 #change password
 https://blog.codehunger.in/change-password-in-laravel-8/
 

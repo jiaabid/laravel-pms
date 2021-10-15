@@ -7,6 +7,7 @@ use Exception;
 use Illuminate\Http\Request;
 use App\Http\Traits\ResponseTrait;
 use App\Models\DbVariables;
+use App\Models\TagStatus;
 
 class BasicController extends Controller
 {
@@ -22,15 +23,13 @@ class BasicController extends Controller
      */
     public function get_variable_values(Request $request, $id)
     {
-        try {
+       
             $values =  DbVariablesDetail::where('variable_id', $id)->get();
             if (!$values) {
                 return $this->error_response("Not found", 404);
             }
             return $this->success_response($values, 200);
-        } catch (Exception $e) {
-            return $this->error_response($e->getMessage(), 500);
-        }
+     
     }
 
     //get the database variables    
@@ -42,14 +41,32 @@ class BasicController extends Controller
      */
     public function get_variables(Request $request)
     {
-        try {
+        
             $variables = DbVariables::all();
             if (!$variables) {
                 return $this->error_response("Not found", 404);
             }
             return $this->success_response($variables, 200);
-        } catch (Exception $e) {
-            return $this->error_response($e->getMessage(), 500);
-        }
+      
+    }
+    
+    
+    /**
+     * get statuses specified to the tag
+     *
+     * @param  int $id (tagId)
+     *@return \Illuminate\Http\Response
+     */
+    public function get_status($id){
+        
+            $statuses = TagStatus::where('tag_id',$id)->with('variable_detail:value,id')
+            ->get(["id","status_id"]);
+            if(!$statuses){
+                return $this->error_response("Not found", 404);
+    
+            }
+            return $this->success_response($statuses,200);
+      
+     
     }
 }

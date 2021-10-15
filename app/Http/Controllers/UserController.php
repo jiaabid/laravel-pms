@@ -28,11 +28,11 @@ class UserController extends Controller
      */
     public function index()
     {
-        //
-        try {
+       
             if (auth()->user()->can('retrieve user')) {
+               
                 //retrieve child roles
-                $roles = $this->get_child_roles(auth()->user());
+                $roles = collect($this->get_child_roles(auth()->user()));
                 $users = User::whereIn('role_id', $roles)->get();
                 if ($users) {
                     return $this->success_response( $users, 200);
@@ -40,30 +40,12 @@ class UserController extends Controller
                     return $this->error_response( "No user exist!", 404);
                 }
             } else {
-                return $this->error_response( "Unauthorized!", 401);
+                return $this->error_response( "Forbidden!", 403);
             }
-        } catch (Exception $e) {
-            return $this->error_response( $e->getMessage(), 500);
-        }
+       
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-        // try {
-        //     if (auth()->user()->can("create user")) {
-        //     } else {
-        //         return $this->error_response("Unauthorized!", 401);
-        //     }
-        // } catch (Exception $e) {
-        //     return $this->error_response($e->getMessage(), 500);
-        // }
-    }
+  
 
     /**
      * Store a newly created resource in storage.
@@ -73,7 +55,7 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        try {
+       
             if (auth()->user()->can('create user')) {
                 $this->validate($request, [
                     'name' => "required|min:3",
@@ -95,11 +77,9 @@ class UserController extends Controller
                 return $this->success_response( $user, 201);
             } else {
 
-                return $this->error_response( "Unauthorized!", 401);
+                return $this->error_response( "Forbidden!", 403);
             }
-        } catch (Exception $e) {
-            return $this->error_response( $e->getMessage(), 500);
-        }
+      
     }
 
     /**
@@ -110,7 +90,7 @@ class UserController extends Controller
      */
     public function show($id)
     {
-        try {
+        
             if (auth()->user()->can('retrieve user')) {
                 $user = User::find($id);
                 $user->detail;
@@ -119,11 +99,9 @@ class UserController extends Controller
                 }
                 return $this->error_response( "Not Found", 404);
             } else {
-                return $this->error_response( "Unauthorized!", 401);
+                return $this->error_response( "Forbidden!", 403);
             }
-        } catch (Exception $e) {
-            return $this->error_response( $e->getMessage(), 500);
-        }
+       
     }
 
 
@@ -137,7 +115,7 @@ class UserController extends Controller
      */
     public function update(Request $request, $id)
     {
-        try {
+        
             if (auth()->user()->can('edit user')) {
                 $user = User::find($id);
                 if(!$user){
@@ -150,11 +128,9 @@ class UserController extends Controller
                     return $this->error_response( "Error in updating", 400);
                 }
             } else {
-                return $this->error_response( "Unauthorized!", 401);
+                return $this->error_response( "Forbidden!", 403);
             }
-        } catch (Exception $e) {
-            return $this->error_response( $e->getMessage(), 500);
-        }
+   
     }
     /**
      * change the password in storage.
@@ -166,7 +142,7 @@ class UserController extends Controller
 
     public function change_password(Request $request, $id)
     {
-        try {
+        
             if (auth()->user()->can('edit user')) {
 
                 $this->validate($request, [
@@ -182,11 +158,9 @@ class UserController extends Controller
                     return $this->error_response( "Wrong password!", 400);
                 }
             } else {
-                return $this->error_response( "Unauthorized!", 401);
+                return $this->error_response( "Forbidden!", 403);
             }
-        } catch (Exception $e) {
-            return $this->error_response( $e->getMessage(), 500);
-        }
+       
     }
 
 
@@ -198,7 +172,7 @@ class UserController extends Controller
      */
     public function destroy($id)
     {
-        try {
+    
             if (auth()->user()->can('delete user')) {
                 $user = User::find($id);
                 if (!$user) {
@@ -210,10 +184,8 @@ class UserController extends Controller
                     return $this->error_response( "Error in deleting", 400);
                 }
             } else {
-                return $this->error_response( "Unauthorized!", 401);
+                return $this->error_response( "Forbidden!", 403);
             }
-        } catch (Exception $e) {
-            return $this->error_response( $e->getMessage(), 500);
-        }
+       
     }
 }

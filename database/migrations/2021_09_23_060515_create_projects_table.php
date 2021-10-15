@@ -23,7 +23,7 @@ class CreateProjectsTable extends Migration
             $table->dateTime('start_date');
             $table->dateTime('end_date');
             $table->unsignedBigInteger('status');
-            // $table->foreign('status')->references('db_variables_id')->on('db_variables_details');
+            $table->boolean('late')->default(false);
             $table->softDeletes();
             $table->timestamps();
         });

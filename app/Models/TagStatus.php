@@ -12,8 +12,19 @@ class TagStatus extends Model
 
     protected $fillable = [
         'tag_id',
-        'task_status_id',
-        'updated_at',
-        'created_at'
+        'status_id'
     ];
+
+    protected $table = "tag_statuses";
+
+    //relations 
+    
+    /**
+     * relation with DbVariableDetail 
+     *
+     * @return void
+     */
+    public function variable_detail(){
+      return  $this->belongsTo(DbVariablesDetail::class,'status_id');
+    }
 }

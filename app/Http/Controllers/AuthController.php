@@ -11,7 +11,7 @@ use Exception;
 
 class AuthController extends Controller
 {
-    use  ResponseTrait;   
+    use  ResponseTrait;
 
     /**
      * login
@@ -21,27 +21,22 @@ class AuthController extends Controller
      */
     public function login(Request $req)
     {
-        try{
-            if (Auth::guard('web')->attempt($req->only('email', 'password'))) {
-                $user = User::where('email', $req->email)->first();
-                $token = $user->createToken('pmsToken')->accessToken;
-                return $this->success_response( [
+
+        if (Auth::guard('web')->attempt($req->only('email', 'password'))) {
+            $user = User::where('email', $req->email)->first();
+            $token = $user->createToken('pmsToken')->accessToken;
+            if ($token) {
+                return $this->success_response([
                     'token' => $token,
                     'msg' => "you have successfully logged in!",
-    
-                ], 200);
-    ;
-            } else {
-                return $this->error_response( "Unauthorized!", 401);
-    
-            }
-        }catch(Exception $e){
-            return $this->error_response( $e->getMessage(), 500);
 
+                ], 200);
+            }
+        } else {
+            return $this->error_response("Forbidden!", 403);
         }
-      
     }
-    
+
     /**
      * logout
      *
@@ -50,22 +45,18 @@ class AuthController extends Controller
      */
     public function logout(Request $req)
     {
-        try{
+       
             $accessToken = Auth::user()->token();
             DB::table('oauth_refresh_tokens')
                 ->where('access_token_id', $accessToken->id)
                 ->update([
                     'revoked' => true
                 ]);
-    
+
             $accessToken->revoke();
             //  echo auth()->user();
             return $this->success_response(null, 204);
-        }catch(Exception $e){
-            return $this->error_response( $e->getMessage(), 500);
-
-        }
-      
+        
     }
 }
 

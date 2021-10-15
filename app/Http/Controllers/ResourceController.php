@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\NhResourcesTask;
 use App\Models\NonHumanResources;
 use Exception;
 use Illuminate\Http\Request;
-
+use App\Http\Traits\ResponseTrait;
 class ResourceController extends Controller
 {
+    use ResponseTrait;
     public function __construct()
     {
         $this->middleware(['auth']);
@@ -20,23 +20,18 @@ class ResourceController extends Controller
      */
     public function index()
     {
-        try {
+        
             if (auth()->user()->can('retrieve department')) {
                 $resources = NonHumanResources::all();
-                // foreach ($departs as $depart) {
-                //     $depart->user;
-                // }
+               
                 return $this->success_response($resources, 200);
                 
                 
             } else {
-                return $this->error_response( "Unauthorized!", 401);
+                return $this->error_response( "Forbidden!", 403);
 
             }
-        } catch (Exception $e) {
-            return $this->error_response( $e->getMessage(), 500);
-
-        }
+     
     }
 
     
@@ -50,8 +45,7 @@ class ResourceController extends Controller
     public function store(Request $request)
     {
 
-        try {
-            // if (auth()->user()->can('create resourcement')) {
+      
             $this->validate($request, [
                 'name' => 'required'
             ]);
@@ -61,16 +55,8 @@ class ResourceController extends Controller
             $resource->save();
             return $this->success_response($resource, 201);
 
-            // } else {
-            //     return response()->json([
-            //         'success' => false,
-            //         'payload' => "Unauthorized!"
-            //     ], 401);
-            // }
-        } catch (Exception $e) {
-            return $this->error_response( $e->getMessage(), 500);
-
-        }
+           
+      
     }
 
     /**
@@ -82,7 +68,7 @@ class ResourceController extends Controller
     public function show($id)
     {
 
-        try {
+        
             if (auth()->user()->can('retrieve department')) {
                 $resource = NonHumanResources::find($id);
                 if ($resource) {
@@ -93,13 +79,10 @@ class ResourceController extends Controller
                 return $this->error_response( "Not Found", 404);
 
             } else {
-                return $this->error_response( "Unauthorized!", 401);
+                return $this->error_response( "Forbidden!", 403);
 
             }
-        } catch (Exception $e) {
-            return $this->error_response( $e->getMessage(), 500);
-
-        }
+       
     }
 
 
@@ -113,7 +96,7 @@ class ResourceController extends Controller
      */
     public function update(Request $request, $id)
     {
-        try {
+        
             if (auth()->user()->can('edit department')) {
                 $resource = NonHumanResources::find($id);
                 if (!$resource) {
@@ -130,13 +113,10 @@ class ResourceController extends Controller
 
                 }
             } else {
-                return $this->error_response( "Unauthorized!", 401);
+                return $this->error_response( "Forbidden!", 403);
 
             }
-        } catch (Exception $e) {
-            return $this->error_response( $e->getMessage(), 500);
-
-        }
+     
     }
 
     /**
@@ -147,8 +127,7 @@ class ResourceController extends Controller
      */
     public function destroy($id)
     {
-        try {
-
+       
             if (auth()->user()->can('delete department')) {
                 $resource = NonHumanResources::find($id);
                 if (!$resource) {
@@ -164,12 +143,9 @@ class ResourceController extends Controller
 
                 }
             } else {
-                return $this->error_response( "Unauthorized!", 401);
+                return $this->error_response( "Forbidden!", 403);
 
             }
-        } catch (Exception $e) {
-            return $this->error_response( $e->getMessage(), 500);
-
-        }
+      
     }
 }

@@ -9,9 +9,10 @@ use Exception;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
-
+use App\Http\Traits\ResponseTrait;
 class PermissionController extends Controller
 {
+    use ResponseTrait;
     public function __construct()
     {
         $this->middleware(['auth']);
@@ -23,7 +24,7 @@ class PermissionController extends Controller
      */
     public function index()
     {
-        try {
+       
             if (auth()->user()->can('retrieve permission')) {
                 $permissions = Permission::all();
                 if (!$permissions) {
@@ -31,11 +32,9 @@ class PermissionController extends Controller
                 }
                 return $this->success_response($permissions, 200);
             } else {
-                return $this->error_response("Unauthorized!", 401);
+                return $this->success_response(auth()->user()->getAllPermissions(), 200);
             }
-        } catch (Exception $e) {
-            return $this->error_response($e->getMessage(), 500);
-        }
+      
     }
 
 
@@ -48,7 +47,7 @@ class PermissionController extends Controller
      */
     public function store(Request $request)
     {
-        try {
+       
             if (auth()->user()->can('create permission')) {
                 $this->validate($request, [
 
@@ -66,11 +65,9 @@ class PermissionController extends Controller
                     return $this->error_response("Error in creating permission", 400);
                 }
             } else {
-                return $this->error_response("Unauthorized!", 401);
+                return $this->error_response("Forbidden!", 403);
             }
-        } catch (Exception $e) {
-            return $this->error_response($e->getMessage(), 500);
-        }
+       
     }
 
     /**
@@ -98,7 +95,7 @@ class PermissionController extends Controller
      */
     public function update(Request $request, $id)
     {
-        try {
+      
             if (auth()->user()->can('update permission')) {
                 $this->validate($request, [
 
@@ -113,11 +110,9 @@ class PermissionController extends Controller
                     return $this->error_response("Error in updating permission", 400);
                 }
             } else {
-                return $this->error_response("Unauthorized!", 401);
+                return $this->error_response("Forbidden!", 403);
             }
-        } catch (Exception $e) {
-            return $this->error_response($e->getMessage(), 500);
-        }
+      
     }
 
     /**
@@ -128,8 +123,7 @@ class PermissionController extends Controller
      */
     public function destroy($id)
     {
-        try {
-
+       
             if (auth()->user()->can('delete permission')) {
                 $exist = Permission::find($id);
                 if (!$exist) {
@@ -141,11 +135,9 @@ class PermissionController extends Controller
                     return $this->error_response("Error in deleting", 400);
                 }
             } else {
-                return $this->error_response("Unauthorized!", 401);
+                return $this->error_response("Forbidden!", 403);
             }
-        } catch (Exception $e) {
-            return $this->error_response($e->getMessage(), 500);
-        }
+       
     }
 
     
@@ -157,7 +149,7 @@ class PermissionController extends Controller
      */
     public function assign_permission(Request $request)
     {
-        try {
+        
             if (auth()->user()->can('assign permission')) {
                 $this->validate($request, [
 
@@ -177,12 +169,9 @@ class PermissionController extends Controller
 
                
             } else {
-                return $this->error_response( "Unauthorized!", 401);
+                return $this->error_response( "Forbidden!", 403);
 
             }
-        } catch (Exception $e) {
-            return $this->error_response( $e->getMessage(), 500);
-
-        }
+        
     }
 }

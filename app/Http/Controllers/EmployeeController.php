@@ -24,20 +24,22 @@ class EmployeeController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        try {
-            if (auth()->user()->can("retrieve user")) {
-                $employees = Employee::all();
-                if ($employees) {
-                    return $this->success_response($employees, 200);
-                } else {
-                }
+
+        if (auth()->user()->can("retrieve user")) {
+            $employees = "";
+            if ($request->query('break')) {
+                $employees = Employee::where('break', true)->get();
             } else {
-                return $this->error_response("Unauthorized!", 401);
+                $employees = Employee::all();
             }
-        } catch (Exception $e) {
-            return $this->error_response($e->getMessage(), 500);
+            if ($employees) {
+                return $this->success_response($employees, 200);
+            } else {
+            }
+        } else {
+            return $this->error_response("Forbidden!", 403);
         }
     }
 
@@ -51,20 +53,20 @@ class EmployeeController extends Controller
      */
     public function store(Request $request)
     {
-        try {
-            if (auth()->user()->can("create user")) {
-                $this->validate($request, [
-                    'joining_date' => 'required',
-                    'salary' => ' required',
-                    'duty_start' => ' required',
-                    'duty_end' => ' required|after:start_date',
-                    'user_id' => 'required'
-                ]);
 
-                $startTime = Carbon::createFromTimeString($request->duty_start, 'Asia/Karachi');
-                $endTime = Carbon::createFromTimeString($request->duty_end, 'Asia/Karachi');
+        if (auth()->user()->can("create user")) {
+            $this->validate($request, [
+                'joining_date' => 'required',
+                'salary' => ' required',
+                'duty_start' => ' required',
+                'duty_end' => ' required|after:start_date',
+                'user_id' => 'required'
+            ]);
 
+            $startTime = Carbon::createFromTimeString($request->duty_start, 'Asia/Karachi');
+            $endTime = Carbon::createFromTimeString($request->duty_end, 'Asia/Karachi');
 
+            try {
                 $employee = new Employee();
                 $employee["joining_date"] = $request->joining_date;
                 $employee["designation"] = $request->designation ? $request->designation : null;
@@ -74,17 +76,18 @@ class EmployeeController extends Controller
                 $employee["created_by"] = auth()->user()->id;
                 $employee["user_id"] = $request->user_id;
                 $employee["salary"] = $request->salary;
-
-                if ($employee->save()) {
-                    return $this->success_response($employee, 201);
-                } else {
-                    return $this->error_response("Error in creating new employee", 400);
-                }
-            } else {
-                return $this->error_response("Unauthorized!", 401);
+            } catch (Exception $e) {
+                return $this->error_response($e->getMessage(), 500);
             }
-        } catch (Exception $e) {
-            return $this->error_response($e->getMessage(), 500);
+
+
+            if ($employee->save()) {
+                return $this->success_response($employee, 201);
+            } else {
+                return $this->error_response("Error in creating new employee", 400);
+            }
+        } else {
+            return $this->error_response("Forbidden!", 403);
         }
     }
 
@@ -112,7 +115,7 @@ class EmployeeController extends Controller
      */
     public function update(Request $request, $id)
     {
-        try {
+       
 
             if (auth()->user()->can("edit user")) {
 
@@ -126,17 +129,16 @@ class EmployeeController extends Controller
                 $startTime = "";
                 $endTime = "";
                 $employeeExist = Employee::find($id);
-             
+
                 if (!$employeeExist) {
                     return $this->error_response("Not Found", 404);
                 }
                 $employeeExist->fill($request->except('user_id', 'duty_start', 'duty_end'));
-              
+
 
                 if ($request->duty_start) {
                     $startTime = Carbon::createFromTimeString($request->duty_start, 'Asia/Karachi');
                     $employeeExist["duty_start"] = $startTime->format('H:i:s');
-                 
                 }
                 if ($request->duty_end) {
                     $endTime = Carbon::createFromTimeString($request->duty_end, 'Asia/Karachi');
@@ -145,7 +147,7 @@ class EmployeeController extends Controller
                 $startTime = strtotime($employeeExist["duty_start"]);
                 $endTime = strtotime($employeeExist["duty_end"]);
                 $employeeExist["working_hrs"] =  abs(($endTime - $startTime) / 60 / 60);
-          
+
                 if ($employeeExist->save()) {
                     return $this->success_response($employeeExist, 200);
                 } else {
@@ -154,8 +156,6 @@ class EmployeeController extends Controller
             } else {
                 return $this->error_response('Forbidden', 403);
             }
-        } catch (Exception $e) {
-            return $this->error_response($e->getMessage(), 500);
-        }
+       
     }
 }
