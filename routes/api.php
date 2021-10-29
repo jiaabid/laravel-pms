@@ -33,6 +33,7 @@ Route::get('/', function () {
 });
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+
 Route::get('/check', function () {
     $id = 2;
     $roles = DB::select("CALL role_childs(" . $id . ")");
@@ -41,6 +42,9 @@ Route::get('/check', function () {
 // Route::resource('/department',DepartmentController::class)->middleware('auth');
 
 Route::middleware('auth:api')->group(function () {
+    Route::get('/hello',function(){
+        return response()->json('hello');
+    });
     Route::resource('/department', DepartmentController::class);
     // Route::get('/roles', [RoleController::class, 'get_roles']);
 

@@ -28,14 +28,24 @@ class RoleController extends Controller
      */
     public function index()
     {
-        
+        // return $this->success_response('hello',200);
+        //if super  admin
+        if(auth()->user()->role_id == 1 && auth()->user()->can('retrieve role')){
+            $roles = Role::where('created_by', auth()->user()->id)->where('deleted_at',NULL)->get();
 
-            if (auth()->user()->can('retrieve role')) {
+            // $roles = Role::all();
+            if ($roles) {
+                return $this->success_response(  $roles->toArray(), 200);
+            } else {
+                return $this->error_response("Not found",404);
+
+            }
+        }else if (auth()->user()->can('retrieve role')) {
                 
                 //retrieve child roles
                 $childRoles = collect($this->get_child_roles(auth()->user()));
                 $childRoles->push(auth()->user()->role_id);
-                $roles = Role::whereIn('parent', $childRoles)->get();
+                $roles = Role::whereIn('parent', $childRoles)->where('deleted_at',NULL)->get();
 
                 // $roles = Role::all();
                 if ($roles) {
@@ -156,7 +166,7 @@ class RoleController extends Controller
 
                 }
                 if ($exist->delete()) {
-                    return $this->success_response( [], 204);
+                    return $this->success_response( $exist, 200);
 
                 } else {
                     return $this->error_response( "Error in deleting", 400);

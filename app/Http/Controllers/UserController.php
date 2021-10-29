@@ -33,6 +33,7 @@ class UserController extends Controller
                
                 //retrieve child roles
                 $roles = collect($this->get_child_roles(auth()->user()));
+                $roles->push(auth()->user()->role_id);
                 $users = User::whereIn('role_id', $roles)->get();
                 if ($users) {
                     return $this->success_response( $users, 200);
