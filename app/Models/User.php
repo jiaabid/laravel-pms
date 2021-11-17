@@ -56,9 +56,27 @@ class User extends Authenticatable
      */
     public function department()
     {
-        return $this->belongsTo(Department::class, 'dept_id');
+        return $this->belongsTo(Department::class, 'dept_id')->select(['id','name']);
+    }
+  /**
+     * relation with role 
+     *
+     * @return void
+     */
+    public function role()
+    {
+        return $this->belongsTo(Roles::class, 'role_id')->select(['id','name']);
     }
 
+/**
+     * relation with role 
+     *
+     * @return void
+     */
+    public function specificRole()
+    {
+        return $this->belongsTo(Roles::class,'role_id')->select(['id','name']);
+    }
 
     /**
      * relation with project table , foreign key :created_by
@@ -67,7 +85,7 @@ class User extends Authenticatable
      */
     public function project()
     {
-        return $this->hasMany(Project::class, 'created_by');
+        return $this->hasOne(Project::class, 'created_by');
         // return $this->belongsTo(Project::class);
     }
 

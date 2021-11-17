@@ -24,7 +24,7 @@ class DepartmentController extends Controller
     {
 
         if (auth()->user()->can('retrieve department')) {
-            $departs = Department::all();
+            $departs = Department::where('deleted_at',NULL)->get();
             foreach ($departs as $depart) {
                 $depart->user;
             }
@@ -128,7 +128,7 @@ class DepartmentController extends Controller
             }
 
             if ($depart->delete()) {
-                return $this->success_response([], 204);
+                return $this->success_response($depart, 200);
             } else {
                 return $this->error_response("Error in deleting", 400);
             }

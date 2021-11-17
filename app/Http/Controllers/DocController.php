@@ -54,43 +54,46 @@ class DocController extends Controller
      */
     public function store(Request $request)
     {
+        try {
+            if (auth()->user()->can('create project')) {
+                $this->validate($request, [
+                    'name' => 'required'
+                ]);
+                $file = $request->file('file');
 
-        if (auth()->user()->can('create project')) {
-            $this->validate($request, [
-                'name' => 'required'
-            ]);
-            $file = $request->file('file');
+                $path = $file->store('public/files');
+                $name = $file->getClientOriginalName();
 
-            $path = $file->store('public/files');
-            $name = $file->getClientOriginalName();
-
-            try {
-                $doc = new Doc();
-                $doc['name'] = $request->name;
-                $doc['description'] = $request->description ? $request->description : null;
-                $doc['link'] = $path;
-                $doc['created_by'] = auth()->user()->id;
-            } catch (Exception $e) {
-                return $this->error_response($e->getMessage(), 500);
-            }
-            DB::beginTransaction();
-            $saved = $doc->save();
-            // dd($doc);
-            if ($saved) {
-                $res = $this->insert_into_bridge_table($request->projectId, $doc->id);
-                DB::commit();
-                if ($res) {
-                    return $this->success_response([
-                        "msg" => "doc uploaded"
-                    ], 201);
+                try {
+                    $doc = new Doc();
+                    $doc['name'] = $request->name;
+                    $doc['description'] = $request->description ? $request->description : null;
+                    $doc['link'] = $path;
+                    $doc['created_by'] = auth()->user()->id;
+                } catch (Exception $e) {
+                    return $this->error_response($e->getMessage(), 500);
+                }
+                DB::beginTransaction();
+                $saved = $doc->save();
+                // dd($doc);
+                if ($saved) {
+                    $res = $this->insert_into_bridge_table($request->projectId, $doc->id);
+                    DB::commit();
+                    if ($res) {
+                        return $this->success_response([
+                            "msg" => "doc uploaded"
+                        ], 201);
+                    } else {
+                        return $this->error_response('error in uploading!', 400);
+                    }
                 } else {
                     return $this->error_response('error in uploading!', 400);
                 }
             } else {
-                return $this->error_response('error in uploading!', 400);
+                return $this->error_response("Forbidden!", 403);
             }
-        } else {
-            return $this->error_response("Forbidden!", 403);
+        } catch (Exception $e) {
+            return $this->error_response($e->getMessage(), 500);;
         }
     }
 
@@ -204,7 +207,7 @@ class DocController extends Controller
             }
 
             if ($doc->delete()) {
-                return $this->success_response([], 204);
+                return $this->success_response($doc, 200);
             } else {
                 return $this->error_response("Error in deleting", 400);
             }

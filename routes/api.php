@@ -50,10 +50,13 @@ Route::middleware('auth:api')->group(function () {
 
     Route::resource('/role', RoleController::class);
     Route::resource('/permission', PermissionController::class);
+    Route::get('/my/permission/{id}',[PermissionController::class,'role_permissions']);
     Route::post('/assign/permission', [PermissionController::class, 'assign_permission']);
+    Route::post('/remove/permission', [PermissionController::class, 'remove_permission']);
     Route::delete('/logout', [AuthController::class, 'logout']);
     Route::resource('user', UserController::class);
     Route::resource('project', ProjectController::class);
+    Route::get('project/init/resource', [ProjectController::class, 'initial_resource']);
     Route::post('project/resource/{id}', [ProjectController::class, 'assign_resources']);
     Route::get('project/cost/{id}', [ProjectController::class, 'cost']);
     Route::resource('docs', DocController::class);

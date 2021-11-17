@@ -16,7 +16,7 @@ use App\Http\Traits\ReusableTrait;
 
 class RoleController extends Controller
 {
-    use ResponseTrait,ReusableTrait;
+    use ResponseTrait, ReusableTrait;
     public function __construct()
     {
         $this->middleware(['auth']);
@@ -30,42 +30,41 @@ class RoleController extends Controller
     {
         // return $this->success_response('hello',200);
         //if super  admin
-        if(auth()->user()->role_id == 1 && auth()->user()->can('retrieve role')){
-            $roles = Role::where('created_by', auth()->user()->id)->where('deleted_at',NULL)->get();
+        if (auth()->user()->role_id == 1 && auth()->user()->can('retrieve role')) {
+            $roles = Roles::with('parent:id,name')->where('created_by', auth()->user()->id)->where('deleted_at', NULL)->get();
+            // foreach($roles as $role){
+            //    $role->parent;
+            // };
+         
+            // $roles = Role::all();
+            if ($roles) {
+                return $this->success_response($roles->toArray(), 200);
+            } else {
+                return $this->error_response("Not found", 404);
+            }
+        } else if (auth()->user()->can('retrieve role')) {
+
+            //retrieve child roles
+            $childRoles = collect($this->get_child_roles(auth()->user()));
+            $childRoles->push(auth()->user()->role_id);
+            $roles = Roles::with('parent:id,name')->whereIn('parent', $childRoles)->where('deleted_at', NULL)->get();
 
             // $roles = Role::all();
             if ($roles) {
-                return $this->success_response(  $roles->toArray(), 200);
+                return $this->success_response([
+
+                    'payload' => $roles->toArray()
+
+                ], 200);
             } else {
-                return $this->error_response("Not found",404);
-
+                return $this->error_response("Not found", 404);
             }
-        }else if (auth()->user()->can('retrieve role')) {
-                
-                //retrieve child roles
-                $childRoles = collect($this->get_child_roles(auth()->user()));
-                $childRoles->push(auth()->user()->role_id);
-                $roles = Role::whereIn('parent', $childRoles)->where('deleted_at',NULL)->get();
-
-                // $roles = Role::all();
-                if ($roles) {
-                    return $this->success_response( [
-                        
-                        'payload' => $roles->toArray()
-                      
-                    ], 200);
-                } else {
-                    return $this->error_response("Not found",404);
-
-                }
-            } else {
-                return $this->error_response( "Forbidden!", 403);
-
-            }
-        
+        } else {
+            return $this->error_response("Forbidden!", 403);
+        }
     }
-    
-  
+
+
     /**
      * Store a newly created resource in storage.
      *
@@ -74,27 +73,23 @@ class RoleController extends Controller
      */
     public function store(Request $request)
     {
-        
-            if (auth()->user()->can('create role')) {
-                $this->validate($request, [
-                    'name' => 'required'
-                ]);
-                $role = new Role();
-                $role->fill($request->all());
-                $role['created_by'] = auth()->user()->id;
-                if ($role->save()) {
-                    return $this->success_response( $role, 201);
 
-                } else {
-                    return $this->error_response( "Error in saving the role", 400);
-
-                 
-                }
+        if (auth()->user()->can('create role')) {
+            $this->validate($request, [
+                'name' => 'required'
+            ]);
+            $role = new Role();
+            $role->fill($request->all());
+            $role['created_by'] = auth()->user()->id;
+            if ($role->save()) {
+                $newRole = Roles::with('parent:id,name')->where('parent',$role->parent)->where('deleted_at', NULL)->first();
+                return $this->success_response($newRole, 201);
             } else {
-                return $this->error_response( "Forbidden!", 403);
-
+                return $this->error_response("Error in saving the role", 400);
             }
-     
+        } else {
+            return $this->error_response("Forbidden!", 403);
+        }
     }
 
     /**
@@ -105,15 +100,13 @@ class RoleController extends Controller
      */
     public function show($id)
     {
-      
-            $role = Role::find(auth()->user()->role_id);
-            if ($role) {
-                return $this->success_response( $role, 200);
-            } else {
-                return $this->error_response( "Not found", 404);
 
-            }
-      
+        $role = Role::find(auth()->user()->role_id);
+        if ($role) {
+            return $this->success_response($role, 200);
+        } else {
+            return $this->error_response("Not found", 404);
+        }
     }
 
     /**
@@ -125,29 +118,23 @@ class RoleController extends Controller
      */
     public function update(Request $request, $id)
     {
-      
-            if (auth()->user()->can('edit role')) {
-                $exist = Role::find($id);
-                if (!$exist) {
-                    return $this->error_response( "Not found", 404);
 
-                }
-
-                $exist = $exist->fill($request->all());
-                $exist['updated_by'] = auth()->user()->id;
-                if ($exist->save()) {
-                    return $this->success_response( $exist, 200);
-
-                } else {
-                    return $this->error_response( "Error in saving ,bad request", 400);
-
-                  
-                }
-            } else {
-                return $this->error_response( "Forbidden!", 403);
-
+        if (auth()->user()->can('edit role')) {
+            $exist = Role::find($id);
+            if (!$exist) {
+                return $this->error_response("Not found", 404);
             }
-       
+
+            $exist = $exist->fill($request->all());
+            $exist['updated_by'] = auth()->user()->id;
+            if ($exist->save()) {
+                return $this->success_response($exist, 200);
+            } else {
+                return $this->error_response("Error in saving ,bad request", 400);
+            }
+        } else {
+            return $this->error_response("Forbidden!", 403);
+        }
     }
 
     /**
@@ -158,25 +145,19 @@ class RoleController extends Controller
      */
     public function destroy($id)
     {
-       
-            if (auth()->user()->can('delete role')) {
-                $exist = Roles::find($id);
-                if (!$exist) {
-                    return $this->error_response( "Not found", 404);
 
-                }
-                if ($exist->delete()) {
-                    return $this->success_response( $exist, 200);
-
-                } else {
-                    return $this->error_response( "Error in deleting", 400);
-
-                }
-            } else {
-                return $this->error_response( "Forbidden!", 403);
-
+        if (auth()->user()->can('delete role')) {
+            $exist = Roles::find($id);
+            if (!$exist) {
+                return $this->error_response("Not found", 404);
             }
-      
+            if ($exist->delete()) {
+                return $this->success_response($exist, 200);
+            } else {
+                return $this->error_response("Error in deleting", 400);
+            }
+        } else {
+            return $this->error_response("Forbidden!", 403);
+        }
     }
 }
-

@@ -70,6 +70,7 @@ class EmployeeController extends Controller
                 $employee = new Employee();
                 $employee["joining_date"] = $request->joining_date;
                 $employee["designation"] = $request->designation ? $request->designation : null;
+                $employee["contact"] = $request->contact ? $request->contact : null;
                 $employee["duty_start"] = $startTime->format("H:i:s");
                 $employee["duty_end"] =  $endTime->format("H:i:s");
                 $employee["working_hrs"] = abs((strtotime($endTime) - strtotime($startTime)) / 60 / 60);
@@ -119,13 +120,13 @@ class EmployeeController extends Controller
 
             if (auth()->user()->can("edit user")) {
 
-                $this->validate($request, [
-                    'joining_date' => 'date',
-                    'designation' => 'string',
-                    'salary' => 'float',
-                    'break' => 'boolean'
+                // $this->validate($request, [
+                //     'joining_date' => 'date',
+                //     'designation' => 'string',
+                //     'salary' => 'float',
+                //     'break' => 'boolean'
 
-                ]);
+                // ]);
                 $startTime = "";
                 $endTime = "";
                 $employeeExist = Employee::find($id);
@@ -134,8 +135,6 @@ class EmployeeController extends Controller
                     return $this->error_response("Not Found", 404);
                 }
                 $employeeExist->fill($request->except('user_id', 'duty_start', 'duty_end'));
-
-
                 if ($request->duty_start) {
                     $startTime = Carbon::createFromTimeString($request->duty_start, 'Asia/Karachi');
                     $employeeExist["duty_start"] = $startTime->format('H:i:s');
