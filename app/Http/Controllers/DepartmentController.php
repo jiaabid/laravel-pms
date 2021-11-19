@@ -20,11 +20,16 @@ class DepartmentController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
 
         if (auth()->user()->can('retrieve department')) {
-            $departs = Department::where('deleted_at',NULL)->get();
+            if ($request->query("all") == "true") {
+                $departs = Department::where('deleted_at', NULL)->get();
+            } else {
+                $departs = Department::where('deleted_at', NULL)->paginate(12);
+            }
+
             foreach ($departs as $depart) {
                 $depart->user;
             }

@@ -28,10 +28,10 @@ class PermissionController extends Controller
     {
 
         if (auth()->user()->can('retrieve permission')) {
-            if($request->query("all")){
+            if($request->query("all") == "true"){
                 $permissions = Permission::all();
             }else{
-                $permissions = Permission::paginate(15);
+                $permissions = Permission::paginate(12);
             }
          
             if (!$permissions) {

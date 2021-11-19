@@ -26,17 +26,18 @@ class RoleController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
         // return $this->success_response('hello',200);
         //if super  admin
         if (auth()->user()->role_id == 1 && auth()->user()->can('retrieve role')) {
-            $roles = Roles::with('parent:id,name')->where('created_by', auth()->user()->id)->where('deleted_at', NULL)->get();
-            // foreach($roles as $role){
-            //    $role->parent;
-            // };
          
-            // $roles = Role::all();
+            if($request->query("all") == "true"){
+                $roles = Roles::with('parent:id,name')->where('created_by', auth()->user()->id)->where('deleted_at', NULL)->get();
+            }else{
+                $roles = Roles::with('parent:id,name')->where('created_by', auth()->user()->id)->where('deleted_at', NULL)->paginate(12);
+            }
+         
             if ($roles) {
                 return $this->success_response($roles->toArray(), 200);
             } else {
@@ -47,8 +48,13 @@ class RoleController extends Controller
             //retrieve child roles
             $childRoles = collect($this->get_child_roles(auth()->user()));
             $childRoles->push(auth()->user()->role_id);
-            $roles = Roles::with('parent:id,name')->whereIn('parent', $childRoles)->where('deleted_at', NULL)->get();
-
+          
+            if($request->query("all") == "true"){
+                $roles = Roles::with('parent:id,name')->whereIn('parent', $childRoles)->where('deleted_at', NULL)->get();
+            }else{
+                $roles = Roles::with('parent:id,name')->whereIn('parent', $childRoles)->where('deleted_at', NULL)->paginate(12);
+            }
+         
             // $roles = Role::all();
             if ($roles) {
                 return $this->success_response([

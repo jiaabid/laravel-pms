@@ -26,12 +26,23 @@ class UserController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
 
         //if user is super admin then it will get all the user created by hime
         if (auth()->user()->can('retrieve user') && auth()->user()->id == 1) {
             $users = User::where('created_by', auth()->user()->id)->with('role:id,name')->with('department:id,name')->get();
+            if($request->query("all") == "true"){
+                $users = User::where('created_by', auth()->user()->id)->with('role:id,name')->with('department:id,name')->get();
+
+
+            }else{
+                $users = User::where('created_by', auth()->user()->id)->with('role:id,name')->with('department:id,name')->paginate(12);
+
+
+            }
+            
+            
             if ($users) {
                 return $this->success_response($users, 200);
             } else {
@@ -45,6 +56,14 @@ class UserController extends Controller
             //retrieve child roles  
             $roles = collect($this->get_child_roles(auth()->user()));
             $roles->push(auth()->user()->role_id);
+            if($request->query("all") == "true"){
+                $users = User::whereIn('role_id', $roles)->with('role:id,name')->with('department:id,name')->with('detail')->get();
+
+            }else{
+                $users = User::whereIn('role_id', $roles)->with('role:id,name')->with('department:id,name')->with('detail')->paginate(12);
+
+            }
+         
             $users = User::whereIn('role_id', $roles)->with('role:id,name')->with('department:id,name')->with('detail')->get();
             if ($users) {
                 return $this->success_response($users, 200);

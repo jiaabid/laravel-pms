@@ -16,6 +16,7 @@ use App\Http\Traits\ResponseTrait;
 use App\Models\DbVariablesDetail;
 use App\Models\Employee;
 use App\Models\NonHumanResources;
+
 class ProjectController extends Controller
 {
 
@@ -30,7 +31,7 @@ class ProjectController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
 
         if (auth()->user()->can('retrieve project')) {
@@ -38,12 +39,19 @@ class ProjectController extends Controller
             //retrieve child roles
             $roles = $this->get_child_roles(auth()->user());
             $roles->push(auth()->user()->role_id);
-  
-            //get my projects and my child projects
-            $projects  = Project::with('user')->whereHas('user', function ($query) use ($roles) {
-                return $query->whereIn('role_id', $roles);
-            })->get();
-           
+
+
+            if ($request->query("all") == "true") {
+                //get my projects and my child projects
+                $projects  = Project::with('user')->whereHas('user', function ($query) use ($roles) {
+                    return $query->whereIn('role_id', $roles);
+                })->get();
+            } else {
+                //get my projects and my child projects
+                $projects  = Project::with('user')->whereHas('user', function ($query) use ($roles) {
+                    return $query->whereIn('role_id', $roles);
+                })->paginate(12);
+            }
             if ($projects) {
                 return $this->success_response($projects, 200);
             } else {
@@ -107,7 +115,7 @@ class ProjectController extends Controller
             ->with('human_resource')
             ->with('nonhuman_resource')
             ->with('tasks')
-            ->get();
+            ->first();
         if ($projects) {
             return $this->success_response($projects, 200);
         }
@@ -123,6 +131,7 @@ class ProjectController extends Controller
      */
     public function assign_resources(Request $request, $id)
     {
+
 
         if (auth()->user()->can('assign project')) {
             $this->validate($request, [
@@ -154,13 +163,16 @@ class ProjectController extends Controller
                     $resource["type"] =  $item["type"];
                     return $resource->save();
                 });
+                $project->doc;
+                $project->department;
+                $project->human_resource;
+                $project->nonhuman_resource;
+                $project->tasks;
 
                 if (count($errorMesages) > 0) {
                     return $this->error_response($errorMesages, 400);
                 } else {
-                    return $this->success_response([
-                        "msg" => "Resource Assigned!"
-                    ], 200);
+                    return $this->success_response( $project, 200);
                 }
             }
         } else {
@@ -169,17 +181,18 @@ class ProjectController extends Controller
     }
 
     //getting the resource related data
-    public function initial_resource(){
+    public function initial_resource()
+    {
         //replace create project with assign project
-         if(auth()->user()->can('create project')){
+        if (auth()->user()->can('create project')) {
             $roles = collect($this->get_child_roles(auth()->user()));
             $roles->push(auth()->user()->role_id);
             $users = User::whereIn('role_id', $roles)->with('role')->get();
             // dd($users);
             $nonHumanResouces = NonHumanResources::all();
-            $resourceType = DbVariablesDetail::variableType('resource_type')->get(['id','value']);
-            return $this->success_response(['humanResource'=>$users,'nonHumanResource'=>$nonHumanResouces,'resourceType'=>$resourceType],200);
-         }
+            $resourceType = DbVariablesDetail::variableType('resource_type')->get(['id', 'value']);
+            return $this->success_response(['humanResource' => $users, 'nonHumanResource' => $nonHumanResouces, 'resourceType' => $resourceType], 200);
+        }
     }
 
     /**
@@ -227,15 +240,13 @@ class ProjectController extends Controller
             $project = Project::find($id);
             if (!$project) {
                 return $this->error_response("Not found", 404);
-
             }
-            
+
             if ($project->delete()) {
-                    return $this->success_response($project, 200);
-                } else {
-                    return $this->error_response("Error in deleting", 400);
-                }
-            
+                return $this->success_response($project, 200);
+            } else {
+                return $this->error_response("Error in deleting", 400);
+            }
         } else {
             return $this->error_response("Forbidden!", 403);
         }

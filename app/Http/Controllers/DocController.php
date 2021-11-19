@@ -79,10 +79,15 @@ class DocController extends Controller
                 if ($saved) {
                     $res = $this->insert_into_bridge_table($request->projectId, $doc->id);
                     DB::commit();
+                    $projects = Project::where('id', $request->projectId)
+                        ->with('doc')
+                        ->with('department')
+                        ->with('human_resource')
+                        ->with('nonhuman_resource')
+                        ->with('tasks')
+                        ->first();
                     if ($res) {
-                        return $this->success_response([
-                            "msg" => "doc uploaded"
-                        ], 201);
+                        return $this->success_response($projects, 201);
                     } else {
                         return $this->error_response('error in uploading!', 400);
                     }
