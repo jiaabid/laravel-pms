@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use App\Http\Traits\ResponseTrait;
 use Exception;
 
@@ -22,20 +23,29 @@ class AuthController extends Controller
     public function login(Request $req)
     {
 
-        if (Auth::guard('web')->attempt($req->only('email', 'password'))) {
+        // if (Auth::guard('web')->attempt($req->only('email', 'password'))) {
+          
             $user = User::where('email', $req->email)->first();
+            // dd(Hash::check($req->password, $user->password));
+            // return Hash::check($req->password, $user->password);
+            if (!$user) {
+                return $this->error_response("Invalid Email", 400);
+            } 
+            if (!Hash::check($req->password, $user->password)) {
+                return $this->error_response("Invalid Password", 400);
+            }
             $token = $user->createToken('pmsToken')->accessToken;
             if ($token) {
                 return $this->success_response([
                     'token' => $token,
                     'msg' => "you have successfully logged in!",
-                    'user'=>$user
+                    'user' => $user
 
                 ], 200);
             }
-        } else {
-            return $this->error_response("Forbidden!", 403);
-        }
+        // } else {
+        //     return $this->error_response("Forbidden!", 403);
+        // }
     }
 
     /**
@@ -46,18 +56,17 @@ class AuthController extends Controller
      */
     public function logout(Request $req)
     {
-       
-            $accessToken = Auth::user()->token();
-            DB::table('oauth_refresh_tokens')
-                ->where('access_token_id', $accessToken->id)
-                ->update([
-                    'revoked' => true
-                ]);
 
-            $accessToken->revoke();
-            //  echo auth()->user();
-            return $this->success_response(null, 204);
-        
+        $accessToken = Auth::user()->token();
+        DB::table('oauth_refresh_tokens')
+            ->where('access_token_id', $accessToken->id)
+            ->update([
+                'revoked' => true
+            ]);
+
+        $accessToken->revoke();
+        //  echo auth()->user();
+        return $this->success_response(null, 204);
     }
 }
 
