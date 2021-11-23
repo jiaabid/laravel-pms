@@ -189,7 +189,7 @@ class PermissionController extends Controller
     //remove permissions
     public function remove_permission(Request $request)
     {
-        if (auth()->user()->can('assign permission')) {
+        if (auth()->user()->can('assign permission')) { 
             $this->validate($request, [
 
                 'role_id' => 'required',

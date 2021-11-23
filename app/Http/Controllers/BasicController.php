@@ -50,6 +50,24 @@ class BasicController extends Controller
       
     }
     
+     //get the database variables detail   
+    /**
+     * get variable types from database e.g:(task_status,user_type)
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function details()
+    {
+        
+            $variables = DbVariablesDetail::all();
+                
+            if (!$variables) {
+                return $this->error_response("Not found", 404);
+            }
+            return $this->success_response($variables,200);
+      
+    }
     
     /**
      * get statuses specified to the tag

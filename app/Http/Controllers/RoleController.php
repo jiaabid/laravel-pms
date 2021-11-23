@@ -134,10 +134,11 @@ class RoleController extends Controller
             $exist = $exist->fill($request->all());
             $exist['updated_by'] = auth()->user()->id;
             if ($exist->save()) {
-                return $this->success_response($exist, 200);
+                $role = Roles::with('parent:id,name')->where('id',$exist->id)->first();
+                return $this->success_response($role, 200);
             } else {
                 return $this->error_response("Error in saving ,bad request", 400);
-            }
+            }   
         } else {
             return $this->error_response("Forbidden!", 403);
         }

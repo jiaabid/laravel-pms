@@ -101,6 +101,7 @@ class UserController extends Controller
             $user['password'] = Hash::make($request->password);
             $user->assignRole($request->role_id);
             $user['created_by'] = auth()->user()->id;
+            $user['admin'] = !$request->admin ? false : true;
             $user->save();
             DB::commit();
             $user->role;
@@ -154,7 +155,7 @@ class UserController extends Controller
             if (!$user) {
                 return $this->error_response("Not found", 404);
             }
-            $user->fill($request->only('name', 'email', 'phone_number', 'role_id'));
+            $user->fill($request->only('name', 'email', 'phone_number', 'role_id','dept_id'));
             if ($user->save()) {
                 return $this->success_response($user, 200);
             } else {

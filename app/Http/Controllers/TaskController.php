@@ -25,7 +25,7 @@ class TaskController extends Controller
     use ResponseTrait;
     private $responseBody;
 
-    
+
 
 
     /**
@@ -36,64 +36,63 @@ class TaskController extends Controller
      */
     public function store(Request $request)
     {
-        
+
+        $this->validate($request, [
+            'type' => 'required'
+        ]);
+
+        if (auth()->user()->can('create task') && $request->type == 18) {
+            //    dd($request->input('start_date'));
+
             $this->validate($request, [
-                'type' => 'required'
+                'name' => "required|min:3|string",
+                'project_id' => "required|numeric",
+                'start_date' => "required|date",
+                'end_date' => 'required|date'
             ]);
 
-            if (auth()->user()->can('create task') && $request->type == 18) {
-                //    dd($request->input('start_date'));
+            $task = new Task();
+            $task['name'] = $request->name;
+            $task['start_date'] = $request->start_date;
+            $task['end_date'] = $request->end_date;
+            $task['project_id'] = $request->project_id;
+            $task['type'] = $request->type;
+            $task['description'] = $request->description ? $request->description : '';
+            $task['created_by'] = auth()->user()->id;
+            DB::beginTransaction();
+            $saved = $task->save();
 
-                $this->validate($request, [
-                    'name' => "required|min:3|string",
-                    'project_id' => "required|numeric",
-                    'start_date' => "required|date",
-                    'end_date' => 'required|date'
-                ]);
-
-                $task = new Task();
-                $task['name'] = $request->name;
-                $task['start_date'] = $request->start_date;
-                $task['end_date'] = $request->end_date;
-                $task['project_id'] = $request->project_id;
-                $task['type'] = $request->type;
-                $task['description'] = $request->description ? $request->description : '';
-                $task['created_by'] = auth()->user()->id;
-                DB::beginTransaction();
-                $saved = $task->save();
-
-                if ($saved) {
-                    DB::commit();
-                    return $this->success_response($task, 201);
-                } else {
-                    return $this->error_response("Error in saving", 400);
-                }
-            } else if ($request->type == 17) {
-                $this->validate($request, [
-                    'name' => 'required|string',
-                    'start_date' => 'required|date',
-                    'end_date' => 'required|date'
-                ]);
-                $task = new Task();
-                $task['name'] = $request->name;
-                $task['start_date'] = $request->start_date;
-                $task['end_date'] = $request->end_date;
-                $task['type'] = $request->type;
-                $task['description'] = $request->description ? $request->description : '';
-                $task['created_by'] = auth()->user()->id;
-                DB::beginTransaction();
-                $saved = $task->save();
-
-                if ($saved) {
-                    DB::commit();
-                    return $this->success_response($task, 201);
-                } else {
-                    return $this->error_response("Error in saving", 400);
-                }
+            if ($saved) {
+                DB::commit();
+                return $this->success_response($task, 201);
             } else {
-                return $this->error_response("Forbidden!", 403);
+                return $this->error_response("Error in saving", 400);
             }
-     
+        } else if ($request->type == 17) {
+            $this->validate($request, [
+                'name' => 'required|string',
+                'start_date' => 'required|date',
+                'end_date' => 'required|date'
+            ]);
+            $task = new Task();
+            $task['name'] = $request->name;
+            $task['start_date'] = $request->start_date;
+            $task['end_date'] = $request->end_date;
+            $task['type'] = $request->type;
+            $task['description'] = $request->description ? $request->description : '';
+            $task['created_by'] = auth()->user()->id;
+            DB::beginTransaction();
+            $saved = $task->save();
+
+            if ($saved) {
+                DB::commit();
+                return $this->success_response($task, 201);
+            } else {
+                return $this->error_response("Error in saving", 400);
+            }
+        } else {
+            return $this->error_response("Forbidden!", 403);
+        }
     }
 
     //retrieving tasks assigned ,created , assign to others    
@@ -105,42 +104,47 @@ class TaskController extends Controller
      */
     public function my_tasks(Request $request, $id)
     {
-        
-            $payload = [];
-            if (auth()->user()->can('retrieve task')) {
 
-                switch ($id) {
-                        //individual tasks
-                    case 17:
-                        $myTasks = Task::where('created_by', auth()->user()->id)->where('type', $id)->get();
-                        $payload["myTasks"] = $myTasks;
-                        break;
-                        //tasks assign by me and assignTo me
-                    case 18:
-                        $pid = $request->query('pid');
-                        
-                        $assignByMe = Task::where('created_by', auth()->user()->id)->where('type', $id)->where('project_id', $pid)->get();
-                        $assignToMe = auth()->user()->assigned_task()->where('project_id', $pid)->get();
-                        foreach ($assignByMe as $item) {
-                            $item->issues;
-                            $item->team;
-                        }
-                        foreach ($assignToMe as $item) {
-                            $item->issues;
-                        }
-                        $payload["assignedToMe"] = $assignToMe;
-                        $payload["assignedByMe"] = $assignByMe;
-                        break;
-                    default:
-                        break;
-                }
-                return $this->success_response($payload, 200);
-            } else {
-                $myTasks = Task::where('created_by', auth()->user()->id)->where('type', DbVariablesDetail::variableType('task_type')->variableValue('individual')->first()->id)->get();
-                $payload["myTasks"] = $myTasks;
-                return $this->success_response($payload, 200);
+        $payload = [];
+        if (auth()->user()->can('retrieve task')) {
+
+            switch ($id) {
+                    //individual tasks
+                case 17:
+                    $myTasks = Task::where('created_by', auth()->user()->id)->where('type', $id)->get();
+                    $payload["myTasks"] = $myTasks;
+                    break;
+                    //tasks assign by me and assignTo me
+                case 18:
+                    $pid = $request->query('pid');
+
+                    $assignByMe = Task::with('issues')->where('created_by', auth()->user()->id)->where('type', $id)->where('project_id', $pid)->get();
+                    $assignToMe = auth()->user()->assigned_task()->where('project_id', $pid)->get();
+                    foreach ($assignByMe as $item) {
+                       
+                        $item->team;
+                    }
+                    foreach ($assignToMe as $item) {
+                        $item->issues;
+                    }
+                    $payload["assignedToMe"] = $assignToMe;
+                    $payload["assignedByMe"] = $assignByMe;
+                    break;
+
+                default:
+                    $tasks = Task::with('issues')->where('project_id', $request->query('pid'))->get();
+                    foreach ($tasks as $task ) {
+                        $task->team;
+                    }
+                    $payload['tasks'] = $tasks;
+                    break;
             }
-       
+            return $this->success_response($payload, 200);
+        } else {
+            $myTasks = Task::where('created_by', auth()->user()->id)->where('type', DbVariablesDetail::variableType('task_type')->variableValue('individual')->first()->id)->get();
+            $payload["myTasks"] = $myTasks;
+            return $this->success_response($payload, 200);
+        }
     }
 
 
@@ -154,14 +158,13 @@ class TaskController extends Controller
      */
     public function show($id)
     {
-        
-            $task = Task::find($id);
-            if (!$task) {
-                return $this->error_response('Not found', 404);
-            }
-            $task->team;
-            return $this->success_response($task, 200);
-       
+
+        $task = Task::find($id);
+        if (!$task) {
+            return $this->error_response('Not found', 404);
+        }
+        $task->team;
+        return $this->success_response($task, 200);
     }
 
 
@@ -174,28 +177,27 @@ class TaskController extends Controller
      */
     public function update(Request $request, $id)
     {
-        
-            if (auth()->user()->can('edit task')) {
-                $exist = Task::find($id);
-                if ($exist) {
-                    $this->validate($request, [
-                        'name' => 'string',
-                        'start_date' => 'date',
-                        'end_date' => 'date'
-                    ]);
-                    $exist->fill($request->all());
-                    if ($exist->save()) {
-                        return $this->success_response($exist, 200);
-                    } else {
-                        return $this->error_response("Error in updating", 400);
-                    }
+
+        if (auth()->user()->can('edit task')) {
+            $exist = Task::find($id);
+            if ($exist) {
+                $this->validate($request, [
+                    'name' => 'string',
+                    'start_date' => 'date',
+                    'end_date' => 'date'
+                ]);
+                $exist->fill($request->all());
+                if ($exist->save()) {
+                    return $this->success_response($exist, 200);
                 } else {
-                    return $this->error_response('No such task exist!', 404);
+                    return $this->error_response("Error in updating", 400);
                 }
             } else {
-                return $this->error_response("Forbidden!", 403);
+                return $this->error_response('No such task exist!', 404);
             }
-       
+        } else {
+            return $this->error_response("Forbidden!", 403);
+        }
     }
 
     /**
@@ -207,34 +209,33 @@ class TaskController extends Controller
      */
     public function task_action(Request $request, $id)
     {
-       
-            $this->validate($request, [
-                'mode' => 'required'
-            ]);
-            $exist = HResourcesTask::where('resource_id', auth()->user()->id)->where('task_id', $id)->first();
-            //   dd($exist);
-            if (!$exist) {
-                return $this->error_response("No such entry exist", 404);
-            }
-            switch ($request->mode) {
-                    //pause
-                case 19:
-                    if ($this->pause_task($exist)) {
-                        return $this->success_response("Task has been paused", 200);
-                    } else {
-                        return $this->error_response('error in pausing the task status', 400);
-                    }
-                    break;
-                    //resume id in DbVariableDetail table
-                case 20:
-                    if ($this->resume_task($exist)) {
-                        return $this->success_response("Task has been resumed", 200);
-                    } else {
-                        return $this->error_response('error in pausing the task status', 400);
-                    }
-                    break;
-            }
-       
+
+        $this->validate($request, [
+            'mode' => 'required'
+        ]);
+        $exist = HResourcesTask::where('resource_id', auth()->user()->id)->where('task_id', $id)->first();
+        //   dd($exist);
+        if (!$exist) {
+            return $this->error_response("No such entry exist", 404);
+        }
+        switch ($request->mode) {
+                //pause
+            case 19:
+                if ($this->pause_task($exist)) {
+                    return $this->success_response("Task has been paused", 200);
+                } else {
+                    return $this->error_response('error in pausing the task status', 400);
+                }
+                break;
+                //resume id in DbVariableDetail table
+            case 20:
+                if ($this->resume_task($exist)) {
+                    return $this->success_response("Task has been resumed", 200);
+                } else {
+                    return $this->error_response('error in pausing the task status', 400);
+                }
+                break;
+        }
     }
 
 
@@ -247,86 +248,85 @@ class TaskController extends Controller
      */
     public function change_status(Request $request, $id)
     {
-        
-            // if (auth()->user()->can('edit task')) {
-            $res = '';
-            $this->validate($request, [
-                'status' => "required"
-            ]);
 
-            $exist = Task::find($id);
-            if (!$exist) {
-                return $this->error_response('No such task exist!', 404);
-            }
+        // if (auth()->user()->can('edit task')) {
+        $res = '';
+        $this->validate($request, [
+            'status' => "required"
+        ]);
 
-            DB::beginTransaction();
-            $taskResource = HResourcesTask::where("resource_id", auth()->user()->id)
-                ->where('task_id', $exist->id)->first();
+        $exist = Task::find($id);
+        if (!$exist) {
+            return $this->error_response('No such task exist!', 404);
+        }
+
+        DB::beginTransaction();
+        $taskResource = HResourcesTask::where("resource_id", auth()->user()->id)
+            ->where('task_id', $exist->id)->first();
 
 
-            $status = DbVariablesDetail::statusById($request->status)->first();
+        $status = DbVariablesDetail::statusById($request->status)->first();
 
-            switch ($request->status) {
+        switch ($request->status) {
 
-                    //inProgress
-                    //inProgress == start , start the task
-                case 12:
-                    $this->start_task($taskResource);
-                    $exist["status"] = $request->status;
+                //inProgress
+                //inProgress == start , start the task
+            case 12:
+                $this->start_task($taskResource);
+                $exist["status"] = $request->status;
 
-                    break;
+                break;
 
-                    //complete
-                case 15:
-                    HResourcesTask::where('sequence', $taskResource["sequence"] + 1)
+                //complete
+            case 15:
+                HResourcesTask::where('sequence', $taskResource["sequence"] + 1)
+                    ->where('task_id', $exist->id)
+                    ->update(["status" => DbVariablesDetail::variableType('task_status')->variableValue('pending')->first()->id]);
+                $taskResource["status"] = $status->id;
+                $exist["status"] = DbVariablesDetail::variableType('task_status')->variableValue('inReview')->first()->id;
+                $taskResource["end_at"] = Carbon::now("Asia/Karachi")->toDateTimeString();
+                $taskResource["total_effort"] =  $this->calculate_effort($taskResource);
+                $taskResource->save();
+                break;
+
+                //issue
+            case 13:
+                for ($i = $taskResource["sequence"] - 1; $i > 0; $i--) {
+                    HResourcesTask::where('sequence', $i)
                         ->where('task_id', $exist->id)
                         ->update(["status" => DbVariablesDetail::variableType('task_status')->variableValue('pending')->first()->id]);
-                    $taskResource["status"] = $status->id;
-                    $exist["status"] = DbVariablesDetail::variableType('task_status')->variableValue('inReview')->first()->id;
-                    $taskResource["end_at"] = Carbon::now("Asia/Karachi")->toDateTimeString();
-                    $taskResource["total_effort"] =  $this->calculate_effort($taskResource);
-                    $taskResource->save();
-                    break;
+                }
+                $taskResource["status"] = DbVariablesDetail::variableType('task_status')->variableValue('completed')->first()->id;
+                $exist["status"] = $request->status;
 
-                    //issue
-                case 13:
-                    for ($i = $taskResource["sequence"] - 1; $i > 0; $i--) {
-                        HResourcesTask::where('sequence', $i)
-                            ->where('task_id', $exist->id)
-                            ->update(["status" => DbVariablesDetail::variableType('task_status')->variableValue('pending')->first()->id]);
-                    }
-                    $taskResource["status"] = DbVariablesDetail::variableType('task_status')->variableValue('completed')->first()->id;
-                    $exist["status"] = $request->status;
+                $this->mark_issue($request->issues, $exist->id);
+                $taskResource->save();
+                break;
 
-                    $this->mark_issue($request->issues, $exist->id);
-                    $taskResource->save();
-                    break;
+                //approve
+            case 16:
+                $exist["status"] = DbVariablesDetail::variableType('task_status')->variableValue('completed')->first()->id;
+                $taskResource["status"] = $exist["status"];
+                $taskResource["end_at"] = Carbon::now("Asia/Karachi")->toDateTimeString();
+                $taskResource["total_effort"] =  $this->calculate_effort($taskResource);
+                if ($exist["end_date"] < Carbon::now("Asia/Karachi")->toDateTimeString() && $exist["status"] ==  DbVariablesDetail::variableType('task_status')->variableValue('completed')->first()->id) {
 
-                    //approve
-                case 16:
-                    $exist["status"] = DbVariablesDetail::variableType('task_status')->variableValue('completed')->first()->id;
-                    $taskResource["status"] = $exist["status"];
-                    $taskResource["end_at"] = Carbon::now("Asia/Karachi")->toDateTimeString();
-                    $taskResource["total_effort"] =  $this->calculate_effort($taskResource);
-                    if ($exist["end_date"] < Carbon::now("Asia/Karachi")->toDateTimeString() && $exist["status"] ==  DbVariablesDetail::variableType('task_status')->variableValue('completed')->first()->id ) {
+                    $exist["delay"] = true;
+                }
+                $taskResource->save();
+                break;
+            default:
 
-                        $exist["delay"] = true;
-                    }
-                    $taskResource->save();
-                    break;
-                default:
+                break;
+        }
 
-                    break;
-            }
-
-            $saved = $exist->save();
-            DB::commit();
-            if ($saved) {
-                return $this->success_response($exist, 200);
-            } else {
-                return $this->error_response('Error in changing status', 400);
-            }
-        
+        $saved = $exist->save();
+        DB::commit();
+        if ($saved) {
+            return $this->success_response($exist, 200);
+        } else {
+            return $this->error_response('Error in changing status', 400);
+        }
     }
 
 
@@ -373,53 +373,52 @@ class TaskController extends Controller
      */
     public function assign_resources(Request $request, $id)
     {
-        
-            if (auth()->user()->can('assign task')) {
-                $this->validate($request, [
-                    'humanResources' => 'required|array'
-                ]);
-                $errorMesages = collect([]);
-                $task = Task::find($id);
-                $taskId = $task->id;
 
-                if (!$task) {
-                    return $this->error_response('No such task exist!', 404);
-                }
-                if ($request->humanResources) {
+        if (auth()->user()->can('assign task')) {
+            $this->validate($request, [
+                'humanResources' => 'required|array'
+            ]);
+            $errorMesages = collect([]);
+            $task = Task::find($id);
+            $taskId = $task->id;
 
-                    $humanResourcesCollection = collect($request->humanResources)->map(function ($item) use ($taskId, $errorMesages) {
-                        $existingResource = HResourcesTask::where('task_id', $taskId)
-                            ->where('resource_id', $item["resource_id"])
-                            ->first();
-
-                        if ($existingResource) {
-                            return $errorMesages->push($existingResource->resource_id . " already exist");;
-                        }
-
-                        $resource = new HResourcesTask();
-                        $resource["status"] = $item["sequence"] > 1 ? DbVariablesDetail::variableType('task_status')->variableValue('notAssign')->first()->id : DbVariablesDetail::variableType('task_status')->variableValue('pending')->first()->id;
-                        $resource["resource_id"] = $item["resource_id"];
-                        $resource["task_id"] = $taskId;
-                        $resource["sequence"] =  $item["sequence"];
-                        $resource["tag"] =  $item["tag"];
-                        $resource["estimated_effort"] =  $item["estimated_effort"];
-                        $resource["start_date"] =  $item["start_date"];
-                        $resource["end_date"] =  $item["end_date"];
-                        $resource["created_at"] =  date('Y-m-d H:i:s');
-                        $resource["updated_at"] =  date('Y-m-d H:i:s');
-                        $resource->save();
-                    });
-
-                    if (count($errorMesages) > 0) {
-                        return $this->error_response($errorMesages, 400);
-                    } else {
-                        return $this->success_response(["msg" => "resource assigned!"], 200);
-                    }
-                }
-            } else {
-                return $this->error_response("Forbidden!", 403);
+            if (!$task) {
+                return $this->error_response('No such task exist!', 404);
             }
-      
+            if ($request->humanResources) {
+
+                $humanResourcesCollection = collect($request->humanResources)->map(function ($item) use ($taskId, $errorMesages) {
+                    $existingResource = HResourcesTask::where('task_id', $taskId)
+                        ->where('resource_id', $item["resource_id"])
+                        ->first();
+
+                    if ($existingResource) {
+                        return $errorMesages->push($existingResource->resource_id . " already exist");;
+                    }
+
+                    $resource = new HResourcesTask();
+                    $resource["status"] = $item["sequence"] > 1 ? DbVariablesDetail::variableType('task_status')->variableValue('notAssign')->first()->id : DbVariablesDetail::variableType('task_status')->variableValue('pending')->first()->id;
+                    $resource["resource_id"] = $item["resource_id"];
+                    $resource["task_id"] = $taskId;
+                    $resource["sequence"] =  $item["sequence"];
+                    $resource["tag"] =  $item["tag"];
+                    $resource["estimated_effort"] =  $item["estimated_effort"];
+                    $resource["start_date"] =  $item["start_date"];
+                    $resource["end_date"] =  $item["end_date"];
+                    $resource["created_at"] =  date('Y-m-d H:i:s');
+                    $resource["updated_at"] =  date('Y-m-d H:i:s');
+                    $resource->save();
+                });
+
+                if (count($errorMesages) > 0) {
+                    return $this->error_response($errorMesages, 400);
+                } else {
+                    return $this->success_response(["msg" => "resource assigned!"], 200);
+                }
+            }
+        } else {
+            return $this->error_response("Forbidden!", 403);
+        }
     }
 
     /**
@@ -430,22 +429,21 @@ class TaskController extends Controller
      */
     public function destroy($id)
     {
-       
-            if (auth()->user()->can('delete task')) {
-                $task = Task::find($id);
-                if (!$task) {
-                    return $this->error_response('No such task exist!', 404);
-                }
 
-                if ($task->delete()) {
-                    return $this->success_response([], 200);
-                } else {
-                    return $this->error_response('Error in delete', 400);
-                }
-            } else {
-                return $this->error_response("Forbidden!", 403);
+        if (auth()->user()->can('delete task')) {
+            $task = Task::find($id);
+            if (!$task) {
+                return $this->error_response('No such task exist!', 404);
             }
-      
+
+            if ($task->delete()) {
+                return $this->success_response([], 200);
+            } else {
+                return $this->error_response('Error in delete', 400);
+            }
+        } else {
+            return $this->error_response("Forbidden!", 403);
+        }
     }
 
     /**
@@ -456,18 +454,17 @@ class TaskController extends Controller
      */
     public function start_task($item)
     {
-       
-            $date = Carbon::now("Asia/Karachi")->toDateTimeString();
-            $item["start_at"] = $date;
-            $item["status"] = DbVariablesDetail::variableType('task_status')->variableValue('inProgress')->first()->id;
 
-            if ($item->save()) {
+        $date = Carbon::now("Asia/Karachi")->toDateTimeString();
+        $item["start_at"] = $date;
+        $item["status"] = DbVariablesDetail::variableType('task_status')->variableValue('inProgress')->first()->id;
 
-                return true;
-            } else {
-                return false;
-            }
-        
+        if ($item->save()) {
+
+            return true;
+        } else {
+            return false;
+        }
     }
 
     /**
@@ -478,19 +475,18 @@ class TaskController extends Controller
      */
     function pause_task($item)
     {
-        
-            $item["pause"] = true;
-            $item["end_at"] = Carbon::now("Asia/Karachi")->toDateTimeString();
-            $item["total_effort"] =  $this->calculate_effort($item);
-            if ($item["total_effort"] > $item["estimated_effort"]) {
-                $item["delay"] = true;
-            }
-            if ($item->save()) {
-                return true;
-            } else {
-                return false;
-            }
-        
+
+        $item["pause"] = true;
+        $item["end_at"] = Carbon::now("Asia/Karachi")->toDateTimeString();
+        $item["total_effort"] =  $this->calculate_effort($item);
+        if ($item["total_effort"] > $item["estimated_effort"]) {
+            $item["delay"] = true;
+        }
+        if ($item->save()) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     /**

@@ -74,6 +74,7 @@ Route::middleware('auth:api')->group(function () {
     Route::put('issue/{id}', [IssueController::class, 'update']);
     Route::delete('issue/{id}', [IssueController::class, 'destroy']);
     Route::get('/variables', [BasicController::class, 'get_variables']);
+    Route::get('/db/detail', [BasicController::class, 'details']);
     Route::get('/variables/detail/{id}', [BasicController::class, 'get_variable_values']);
     Route::get('/variables/status/{id}', [BasicController::class, 'get_status']);
 });
