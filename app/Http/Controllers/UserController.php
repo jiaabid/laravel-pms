@@ -64,7 +64,7 @@ class UserController extends Controller
 
             }
          
-            $users = User::whereIn('role_id', $roles)->with('role:id,name')->with('department:id,name')->with('detail')->get();
+            // $users = User::whereIn('role_id', $roles)->with('role:id,name')->with('department:id,name')->with('detail')->get();
             if ($users) {
                 return $this->success_response($users, 200);
             } else {

@@ -50,18 +50,15 @@ class RoleController extends Controller
             $childRoles->push(auth()->user()->role_id);
           
             if($request->query("all") == "true"){
-                $roles = Roles::with('parent:id,name')->whereIn('parent', $childRoles)->where('deleted_at', NULL)->get();
+                $roles = Roles::with('parent:id,name')->whereIn('parent', $childRoles)->where('deleted_at', NULL)->orWhere('created_by',auth()->user()->id)->get();
+                $roles[] = Roles::with('parent:id,name')->where('id', auth()->user()->role_id)->where('deleted_at', NULL)->first();
             }else{
                 $roles = Roles::with('parent:id,name')->whereIn('parent', $childRoles)->where('deleted_at', NULL)->paginate(12);
             }
          
             // $roles = Role::all();
             if ($roles) {
-                return $this->success_response([
-
-                    'payload' => $roles->toArray()
-
-                ], 200);
+                return $this->success_response($roles, 200);
             } else {
                 return $this->error_response("Not found", 404);
             }
@@ -88,7 +85,10 @@ class RoleController extends Controller
             $role->fill($request->all());
             $role['created_by'] = auth()->user()->id;
             if ($role->save()) {
-                $newRole = Roles::with('parent:id,name')->where('parent',$role->parent)->where('deleted_at', NULL)->first();
+                // if(auth()->user()->role_id == 1){
+
+                // }
+                $newRole = Roles::with('parent:id,name')->where('id',$role->id)->where('deleted_at', NULL)->first();
                 return $this->success_response($newRole, 201);
             } else {
                 return $this->error_response("Error in saving the role", 400);
