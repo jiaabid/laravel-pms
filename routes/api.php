@@ -35,16 +35,18 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
 Route::get('/check', function () {
-    $id = 2;
+    $id = 1;
     $roles = DB::select("CALL role_childs(" . $id . ")");
     dd($roles);
 });
 // Route::resource('/department',DepartmentController::class)->middleware('auth');
 
 Route::middleware('auth:api')->group(function () {
-    Route::get('/hello',function(){
-        return response()->json('hello');
-    });
+    // Route::get('/hello',function(){
+    //     return response()->json('hello');
+    // });
+Route::get('/logout', [AuthController::class, 'logout']);
+
     Route::resource('/department', DepartmentController::class);
     // Route::get('/roles', [RoleController::class, 'get_roles']);
 
@@ -53,7 +55,7 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/my/permission/{id}',[PermissionController::class,'role_permissions']);
     Route::post('/assign/permission', [PermissionController::class, 'assign_permission']);
     Route::post('/remove/permission', [PermissionController::class, 'remove_permission']);
-    Route::delete('/logout', [AuthController::class, 'logout']);
+    // Route::delete('/logout', [AuthController::class, 'logout']);
     Route::resource('user', UserController::class);
     Route::resource('project', ProjectController::class);
     Route::get('project/init/resource', [ProjectController::class, 'initial_resource']);

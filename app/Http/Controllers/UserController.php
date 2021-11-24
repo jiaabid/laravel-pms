@@ -31,7 +31,9 @@ class UserController extends Controller
 
         //if user is super admin then it will get all the user created by hime
         if (auth()->user()->can('retrieve user') && auth()->user()->id == 1) {
-            $users = User::where('created_by', auth()->user()->id)->with('role:id,name')->with('department:id,name')->get();
+                // return auth()->user()->role_id;
+
+            // $users = User::where('created_by', auth()->user()->id)->with('role:id,name')->with('department:id,name')->get();
             if($request->query("all") == "true"){
                 $users = User::where('created_by', auth()->user()->id)->with('role:id,name')->with('department:id,name')->get();
 
@@ -60,8 +62,8 @@ class UserController extends Controller
                 $users = User::whereIn('role_id', $roles)->with('role:id,name')->with('department:id,name')->with('detail')->get();
 
             }else{
-                $users = User::whereIn('role_id', $roles)->with('role:id,name')->with('department:id,name')->with('detail')->paginate(12);
-
+                // return auth()->user()->role_id;
+                $users = User::whereIn('role_id', $roles)->where('role_id','!=',auth()->user()->role_id)->with('role:id,name')->with('department:id,name')->with('detail')->paginate(12);
             }
          
             // $users = User::whereIn('role_id', $roles)->with('role:id,name')->with('department:id,name')->with('detail')->get();
