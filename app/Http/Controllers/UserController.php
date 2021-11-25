@@ -63,7 +63,7 @@ class UserController extends Controller
 
             }else{
                 // return auth()->user()->role_id;
-                $users = User::whereIn('role_id', $roles)->where('role_id','!=',auth()->user()->role_id)->with('role:id,name')->with('department:id,name')->with('detail')->paginate(12);
+                $users = User::whereIn('role_id', $roles)->with('role:id,name')->with('department:id,name')->with('detail')->paginate(12);
             }
          
             // $users = User::whereIn('role_id', $roles)->with('role:id,name')->with('department:id,name')->with('detail')->get();
