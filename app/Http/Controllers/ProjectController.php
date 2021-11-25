@@ -75,7 +75,6 @@ class ProjectController extends Controller
     public function store(Request $request)
     {
 
-
         if (auth()->user()->can('create project')) {
             //    dd($request->input('start_date'));
             $this->validate($request, [
@@ -144,41 +143,67 @@ class ProjectController extends Controller
             if (!$project) {
                 return $this->error_response("Not Found!", 404);
             }
+            // $removeResources = collect([]);
+            // $assignResources = collect([]);
+            // dd(count($request->removeResources));
             if ($request->resources) {
-
+                //  $existingResources = ProjectResource::where('project_id',$projectId)->get();
+                //  $newResources = collect($request->resources);
+                //  foreach($existingResources as $existing){
+                     
+                //      if($newResources->where('resource_id','!=',$existing->resource_id)->where('type','!=',$existing->type)){
+                //         $assignResources->push($newResources->where('resource_id','!=',$existing->resource_id)->where('type','!=',$existing->type));
+                       
+                //      }else{
+                //         $existingResources->splice($existing,1);
+                //      }
+                     
+   
+                
+                //  }
+                //  dd($assignResources);
                 $humanResourcesCollection = collect($request->resources)->map(function ($item) use ($projectId, $errorMesages) {
                     $existingResource = ProjectResource::where('project_id', $projectId)
                         ->where('resource_id', $item["resource_id"])
                         ->where('type', $item["type"])
                         ->first();
-                    if ($existingResource) {
-                        return $errorMesages->push([$existingResource . 'already exist']);
+                    if (!$existingResource) {
+                        $resource = new ProjectResource();
+                        $resource["resource_id"] = $item["resource_id"];
+                        $resource["project_id"] = $projectId;
+                        $resource["created_at"] =  date('Y-m-d H:i:s');
+                        $resource["updated_at"] =  date('Y-m-d H:i:s');
+                        $resource["type"] =  $item["type"];
+                        return $resource->save();
+                        // return $errorMesages->push([$existingResource . 'already exist']);
                         // return  $errorMesages[] = ;
                     }
-                    $resource = new ProjectResource();
-                    $resource["resource_id"] = $item["resource_id"];
-                    $resource["project_id"] = $projectId;
-                    $resource["created_at"] =  date('Y-m-d H:i:s');
-                    $resource["updated_at"] =  date('Y-m-d H:i:s');
-                    $resource["type"] =  $item["type"];
-                    return $resource->save();
+                   
                 });
+                if (count($request->removeResources) > 0) {
+                    foreach ($request->removeResources as $resource) {
+                        // dd($resource);
+                        ProjectResource::where('project_id', $id)->where('resource_id', $resource["resource_id"])->where('type', $resource["type"])->delete();
+                    }
+                }
                 $project->doc;
                 $project->department;
                 $project->human_resource;
                 $project->nonhuman_resource;
                 $project->tasks;
+                return $this->success_response($project, 200);
 
-                if (count($errorMesages) > 0) {
-                    return $this->error_response($errorMesages, 400);
-                } else {
-                    return $this->success_response( $project, 200);
-                }
+                // if (count($errorMesages) > 0) {
+                //     return $this->error_response($errorMesages, 400);
+                // } 
+                // else {
+                // }
             }
         } else {
             return $this->error_response("Forbidden", 403);
         }
     }
+
 
     //getting the resource related data
     public function initial_resource()

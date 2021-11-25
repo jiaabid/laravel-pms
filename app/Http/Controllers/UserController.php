@@ -40,8 +40,6 @@ class UserController extends Controller
 
             }else{
                 $users = User::where('created_by', auth()->user()->id)->with('role:id,name')->with('department:id,name')->paginate(12);
-
-
             }
             
             
