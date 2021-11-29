@@ -35,8 +35,8 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
 Route::get('/check', function () {
-    $id = 1;
-    $roles = DB::select("CALL role_childs(" . $id . ")");
+    $id = 3;
+    $roles = DB::select("CALL user_childs(" . $id . ")");
     dd($roles);
 });
 // Route::resource('/department',DepartmentController::class)->middleware('auth');

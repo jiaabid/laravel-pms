@@ -19,12 +19,12 @@ DROP PROCEDURE IF EXISTS `user_childs`;
 
 CREATE PROCEDURE `user_childs`(IN userId bigint)
 BEGIN
-with recursive role_childs(id,created_by) as (
-select id,created_by from users where created_by= userId
+with recursive user_childs(id,name,created_by) as (
+select id,name,created_by from users where created_by =userId
 union all
-select users.id  from user_childs as uc join users on uc.id = users.created_by
+select users.id,users.name,users.created_by  from user_childs as uc join users on uc.id = users.created_by
 )
-select id from user_childs;
+select * from user_childs;
 
 END
 ";

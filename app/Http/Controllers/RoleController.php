@@ -48,10 +48,9 @@ class RoleController extends Controller
             //retrieve child roles
             $childRoles = collect($this->get_child_roles(auth()->user()));
             $childRoles->push(auth()->user()->role_id);
-          
             if($request->query("all") == "true"){
                 $roles = Roles::with('parent:id,name')->whereIn('parent', $childRoles)->where('deleted_at', NULL)->orWhere('created_by',auth()->user()->id)->get();
-                $roles[] = Roles::with('parent:id,name')->where('id', auth()->user()->role_id)->where('deleted_at', NULL)->first();
+                // $roles[] = Roles::with('parent:id,name')->where('id', auth()->user()->role_id)->where('deleted_at', NULL)->first();
             }else{
                 $roles = Roles::with('parent:id,name')->whereIn('parent', $childRoles)->where('deleted_at', NULL)->paginate(12);
             }

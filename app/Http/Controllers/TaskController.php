@@ -164,6 +164,7 @@ class TaskController extends Controller
             return $this->error_response('Not found', 404);
         }
         $task->team;
+        $task->issues;
         return $this->success_response($task, 200);
     }
 
@@ -319,8 +320,9 @@ class TaskController extends Controller
 
                 break;
         }
-
         $saved = $exist->save();
+        $exist->issues;
+        $exist->team;
         DB::commit();
         if ($saved) {
             return $this->success_response($exist, 200);
@@ -328,9 +330,7 @@ class TaskController extends Controller
             return $this->error_response('Error in changing status', 400);
         }
     }
-
-
-
+    
     /**
      * open issues on particular task and add into storage
      *
