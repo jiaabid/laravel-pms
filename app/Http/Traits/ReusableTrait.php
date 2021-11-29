@@ -21,4 +21,19 @@ trait ReusableTrait
         return $roles;
 
     }
+
+    /**
+     * for retrieving the child users
+     *
+     * @param  User $user
+     * @return array users
+     */
+    public function get_child_users($user)
+    {
+        $id = $user->id;
+        $users = DB::select('call user_childs(?)', [$id]);
+        $users = collect($users)->pluck('id');
+        return $users;
+
+    }
 }

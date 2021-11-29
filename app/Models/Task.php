@@ -65,7 +65,7 @@ class Task extends Model
     protected function team()
     {
         return $this->belongsToMany(User::class, 'resources_tasks', 'task_id', 'resource_id')
-            ->withPivot(['status', 'sequence', 'tag', 'estimated_effort', 'total_effort', 'delay'])
+            ->withPivot(['status', 'sequence', 'tag', 'estimated_effort', 'total_effort', 'delay','start_date','end_date'])
             ->as('detail');
     }
    

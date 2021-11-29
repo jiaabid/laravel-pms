@@ -56,12 +56,14 @@ class UserController extends Controller
             //retrieve child roles  
             $roles = collect($this->get_child_roles(auth()->user()));
             $roles->push(auth()->user()->role_id);
+            $childUsers = $this->get_child_users(auth()->user());
+
             if($request->query("all") == "true"){
-                $users = User::whereIn('role_id', $roles)->with('role:id,name')->with('department:id,name')->with('detail')->get();
+                $users = User::whereIn('role_id', $roles)->whereIn('id',$childUsers)->with('role:id,name')->with('department:id,name')->with('detail')->get();
 
             }else{
                 // return auth()->user()->role_id;
-                $users = User::whereIn('role_id', $roles)->with('role:id,name')->with('department:id,name')->with('detail')->paginate(12);
+                $users = User::whereIn('role_id', $roles)->whereIn('id',$childUsers)->with('role:id,name')->with('department:id,name')->with('detail')->paginate(12);
             }
          
             // $users = User::whereIn('role_id', $roles)->with('role:id,name')->with('department:id,name')->with('detail')->get();
