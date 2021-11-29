@@ -22,7 +22,7 @@ class ResourceController extends Controller
     {
         
             if (auth()->user()->can('retrieve department')) {
-                $resources = NonHumanResources::all();
+                $resources = NonHumanResources::where('deleted_at',NULL)->get();
                
                 return $this->success_response($resources, 200);
                 
@@ -136,7 +136,7 @@ class ResourceController extends Controller
                 }
 
                 if ($resource->delete()) {
-                    return $this->success_response( [], 204);
+                    return $this->success_response( $resource, 200);
 
                 } else {
                     return $this->error_response( "Error in deleting", 400);
