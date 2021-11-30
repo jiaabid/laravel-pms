@@ -52,6 +52,9 @@ class ProjectController extends Controller
                     return $query->whereIn('role_id', $roles);
                 })->paginate(12);
             }
+            // $payload = collect([]);
+            // $payload->push(...auth()->user()->projects);
+            // $payload->push(...auth()->user()->project);
             if ($projects) {
                 return $this->success_response($projects, 200);
             } else {

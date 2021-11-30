@@ -136,4 +136,11 @@ class User extends Authenticatable
     {
         return $this->hasOne(Employee::class, "user_id");
     }
+
+    // public function resourceDetail()
+    // {
+    //     return $this->belongsTo(TaskResource::class,'resouce_id');
+    // }
+
+
 }

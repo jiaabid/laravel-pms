@@ -121,7 +121,7 @@ class TaskController extends Controller
                     $assignByMe = Task::with('issues')->where('created_by', auth()->user()->id)->where('type', $id)->where('project_id', $pid)->get();
                     $assignToMe = auth()->user()->assigned_task()->where('project_id', $pid)->get();
                     foreach ($assignByMe as $item) {
-                       
+
                         $item->team;
                     }
                     foreach ($assignToMe as $item) {
@@ -133,7 +133,7 @@ class TaskController extends Controller
 
                 default:
                     $tasks = Task::with('issues')->where('project_id', $request->query('pid'))->get();
-                    foreach ($tasks as $task ) {
+                    foreach ($tasks as $task) {
                         $task->team;
                     }
                     $payload['tasks'] = $tasks;
@@ -159,12 +159,20 @@ class TaskController extends Controller
     public function show($id)
     {
 
-        $task = Task::find($id);
+        $task = Task::where('id', $id)->with('team')->with('issues')->first();
+        foreach ($task->team as $member) {
+            $member->detail->tagId;
+        }
+        // $first= $task->team[0];
+        // return $first;
+        //  $first->pivot->tagId;
+        // return $task;
+        // $task = Task::find($id);
         if (!$task) {
             return $this->error_response('Not found', 404);
         }
-        $task->team;
-        $task->issues;
+        // $task->team;
+        // $task->issues;
         return $this->success_response($task, 200);
     }
 
@@ -265,72 +273,79 @@ class TaskController extends Controller
         $taskResource = HResourcesTask::where("resource_id", auth()->user()->id)
             ->where('task_id', $exist->id)->first();
 
+        if ($taskResource !== null) {
+            $status = DbVariablesDetail::statusById($request->status)->first();
+            // dd($taskResource);
+            switch ($request->status) {
 
-        $status = DbVariablesDetail::statusById($request->status)->first();
+                    //inProgress
+                    //inProgress == start , start the task
+                case 12:
+                    $this->start_task($taskResource);
+                    $exist["status"] = $request->status;
 
-        switch ($request->status) {
+                    break;
 
-                //inProgress
-                //inProgress == start , start the task
-            case 12:
-                $this->start_task($taskResource);
-                $exist["status"] = $request->status;
-
-                break;
-
-                //complete
-            case 15:
-                HResourcesTask::where('sequence', $taskResource["sequence"] + 1)
-                    ->where('task_id', $exist->id)
-                    ->update(["status" => DbVariablesDetail::variableType('task_status')->variableValue('pending')->first()->id]);
-                $taskResource["status"] = $status->id;
-                $exist["status"] = DbVariablesDetail::variableType('task_status')->variableValue('inReview')->first()->id;
-                $taskResource["end_at"] = Carbon::now("Asia/Karachi")->toDateTimeString();
-                $taskResource["total_effort"] =  $this->calculate_effort($taskResource);
-                $taskResource->save();
-                break;
-
-                //issue
-            case 13:
-                for ($i = $taskResource["sequence"] - 1; $i > 0; $i--) {
-                    HResourcesTask::where('sequence', $i)
+                    //complete
+                case 15:
+                    HResourcesTask::where('sequence', $taskResource["sequence"] + 1)
                         ->where('task_id', $exist->id)
                         ->update(["status" => DbVariablesDetail::variableType('task_status')->variableValue('pending')->first()->id]);
-                }
-                $taskResource["status"] = DbVariablesDetail::variableType('task_status')->variableValue('completed')->first()->id;
-                $exist["status"] = $request->status;
+                    $taskResource["status"] = $status->id;
+                    $exist["status"] = DbVariablesDetail::variableType('task_status')->variableValue('inReview')->first()->id;
+                    $taskResource["end_at"] = Carbon::now("Asia/Karachi")->toDateTimeString();
+                    $taskResource["total_effort"] =  $this->calculate_effort($taskResource);
+                    $taskResource->save();
+                    break;
 
-                $this->mark_issue($request->issues, $exist->id);
-                $taskResource->save();
-                break;
+                    //issue
+                case 13:
+                    for ($i = $taskResource["sequence"] - 1; $i > 0; $i--) {
+                        HResourcesTask::where('sequence', $i)
+                            ->where('task_id', $exist->id)
+                            ->update(["status" => DbVariablesDetail::variableType('task_status')->variableValue('pending')->first()->id]);
+                    }
+                    $taskResource["status"] = DbVariablesDetail::variableType('task_status')->variableValue('completed')->first()->id;
+                    $exist["status"] = $request->status;
 
-                //approve
-            case 16:
-                $exist["status"] = DbVariablesDetail::variableType('task_status')->variableValue('completed')->first()->id;
-                $taskResource["status"] = $exist["status"];
-                $taskResource["end_at"] = Carbon::now("Asia/Karachi")->toDateTimeString();
-                $taskResource["total_effort"] =  $this->calculate_effort($taskResource);
-                if ($exist["end_date"] < Carbon::now("Asia/Karachi")->toDateTimeString() && $exist["status"] ==  DbVariablesDetail::variableType('task_status')->variableValue('completed')->first()->id) {
+                    $this->mark_issue($request->issues, $exist->id);
+                    $taskResource->save();
+                    break;
 
-                    $exist["delay"] = true;
-                }
-                $taskResource->save();
-                break;
-            default:
+                    //approve
+                case 16:
+                    $exist["status"] = DbVariablesDetail::variableType('task_status')->variableValue('completed')->first()->id;
+                    $taskResource["status"] = $exist["status"];
+                    $taskResource["end_at"] = Carbon::now("Asia/Karachi")->toDateTimeString();
+                    $taskResource["total_effort"] =  $this->calculate_effort($taskResource);
+                    if ($exist["end_date"] < Carbon::now("Asia/Karachi")->toDateTimeString() && $exist["status"] ==  DbVariablesDetail::variableType('task_status')->variableValue('completed')->first()->id) {
 
-                break;
-        }
-        $saved = $exist->save();
-        $exist->issues;
-        $exist->team;
-        DB::commit();
-        if ($saved) {
-            return $this->success_response($exist, 200);
+                        $exist["delay"] = true;
+                    }
+                    $taskResource->save();
+                    break;
+                default:
+
+                    break;
+            }
+            // return $exist;
+            $saved = $exist->save();
+            $exist->issues;
+            $exist->team;
+            foreach ($exist->team as $member) {
+                $member->detail->tagId;
+            }
+            DB::commit();
+            if ($saved) {
+                return $this->success_response($exist, 200);
+            } else {
+                return $this->error_response('Error in changing status', 400);
+            }
         } else {
-            return $this->error_response('Error in changing status', 400);
+            return $this->error_response('Unauthorized!', 403);
         }
     }
-    
+
     /**
      * open issues on particular task and add into storage
      *
@@ -454,11 +469,11 @@ class TaskController extends Controller
      */
     public function start_task($item)
     {
-
+        // dd($item);
         $date = Carbon::now("Asia/Karachi")->toDateTimeString();
         $item["start_at"] = $date;
         $item["status"] = DbVariablesDetail::variableType('task_status')->variableValue('inProgress')->first()->id;
-
+        // dd(gettype($item));
         if ($item->save()) {
 
             return true;

@@ -129,7 +129,20 @@ class DocController extends Controller
     public function show($id)
     {
 
-        $exist = Doc::find($id);
+        $docIds = ProjectDocs::where('project_id', $id)->get()->pluck('doc_id');
+        // return $docIds;
+        $exist = Doc::whereIn('id', $docIds)->get();
+        if ($exist) {
+            // $content = Storage::get($exist->link);
+            // dd($content);
+            return $this->success_response($exist, 200);
+        } else {
+            return $this->error_response("Not found", 404);
+        }   
+    }
+    public function viewFile($id)
+    {
+        $exist = Doc::where('id', $id)->first();
         if ($exist) {
             $content = Storage::get($exist->link);
             // dd($content);

@@ -27,4 +27,6 @@ class TagStatus extends Model
     public function variable_detail(){
       return  $this->belongsTo(DbVariablesDetail::class,'status_id');
     }
+
+    
 }

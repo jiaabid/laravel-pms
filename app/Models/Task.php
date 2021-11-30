@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+// use Tag;
 
 class Task extends Model
 {
@@ -62,13 +63,21 @@ class Task extends Model
      *
      * @return void
      */
-    protected function team()
+    public function team()
     {
         return $this->belongsToMany(User::class, 'resources_tasks', 'task_id', 'resource_id')
-            ->withPivot(['status', 'sequence', 'tag', 'estimated_effort', 'total_effort', 'delay','start_date','end_date'])
-            ->as('detail');
+        ->using(TagDetail::class)
+        ->withPivot('tag_id')
+        ->withPivot(['status', 'sequence',  'estimated_effort', 'total_effort', 'delay','start_date','end_date','tag_id','start_at','pause'])
+        ->as('detail');
+            // ->withPivot(['status', 'sequence', 'tag', 'estimated_effort', 'total_effort', 'delay','start_date','end_date'])
+            // ->with('.tagStatus');
+            // ->as('resourceDetail');
+            // ->with('resourceDetail');
     }
    
+
+
     
     /**
      * project
