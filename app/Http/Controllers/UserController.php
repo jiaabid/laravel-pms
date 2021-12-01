@@ -31,18 +31,16 @@ class UserController extends Controller
 
         //if user is super admin then it will get all the user created by hime
         if (auth()->user()->can('retrieve user') && auth()->user()->id == 1) {
-                // return auth()->user()->role_id;
+            // return auth()->user()->role_id;
 
             // $users = User::where('created_by', auth()->user()->id)->with('role:id,name')->with('department:id,name')->get();
-            if($request->query("all") == "true"){
+            if ($request->query("all") == "true") {
                 $users = User::where('created_by', auth()->user()->id)->with('role:id,name')->with('department:id,name')->get();
-
-
-            }else{
+            } else {
                 $users = User::where('created_by', auth()->user()->id)->with('role:id,name')->with('department:id,name')->paginate(12);
             }
-            
-            
+
+
             if ($users) {
                 return $this->success_response($users, 200);
             } else {
@@ -57,15 +55,18 @@ class UserController extends Controller
             $roles = collect($this->get_child_roles(auth()->user()));
             $roles->push(auth()->user()->role_id);
             $childUsers = $this->get_child_users(auth()->user());
-
-            if($request->query("all") == "true"){
-                $users = User::whereIn('role_id', $roles)->with('role:id,name')->with('department:id,name')->with('detail')->get();
-
-            }else{
+            // return $roles;
+            // return $childUsers;
+            if ($request->query("all") == "true") {
+                $users = auth()->user()->admin ? User::whereIn('role_id', $roles)->with('role:id,name')->with('department:id,name')->with('detail')->get() :
+                    User::whereIn('role_id', $roles)->where('dept_id', auth()->user()->dept_id)->with('role:id,name')->with('department:id,name')->with('detail')->get();
+            } else {
                 // return auth()->user()->role_id;
-                $users = User::whereIn('role_id', $roles)->whereIn('id',$childUsers)->with('role:id,name')->with('department:id,name')->with('detail')->paginate(12);
+                $users = auth()->user()->admin ? User::whereIn('role_id', $roles)->with('role:id,name')->with('department:id,name')->with('detail')->paginate(12):
+                    User::whereIn('role_id', $roles)->where('dept_id', auth()->user()->dept_id)->with('role:id,name')->with('department:id,name')->with('detail')->paginate(12);
+                 // $users = User::whereIn('role_id', $roles)->whereIn('id', $childUsers)->with('role:id,name')->with('department:id,name')->with('detail')->paginate(12);
             }
-         
+
             // $users = User::whereIn('role_id', $roles)->with('role:id,name')->with('department:id,name')->with('detail')->get();
             if ($users) {
                 return $this->success_response($users, 200);
@@ -157,7 +158,7 @@ class UserController extends Controller
             if (!$user) {
                 return $this->error_response("Not found", 404);
             }
-            $user->fill($request->only('name', 'email', 'phone_number', 'role_id','dept_id'));
+            $user->fill($request->only('name', 'email', 'phone_number', 'role_id', 'dept_id'));
             if ($user->save()) {
                 return $this->success_response($user, 200);
             } else {

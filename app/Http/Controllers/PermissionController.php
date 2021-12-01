@@ -11,6 +11,7 @@ use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use App\Http\Traits\ResponseTrait;
 use App\Models\RolePermission;
+use App\Models\Roles;
 
 class PermissionController extends Controller
 {
@@ -195,8 +196,11 @@ class PermissionController extends Controller
                 'role_id' => 'required',
                 'permissions' => 'required'
             ]);
-
-            RolePermission::where('role_id', $request->role_id)->whereIn('permission_id', $request->permissions)->delete();
+            $role = Role::find($request->role_id);
+            foreach($request->permissions as $permission){
+                $role->revokePermissionTo($permission);
+            };
+            // RolePermission::where('role_id', $request->role_id)->whereIn('permission_id', $request->permissions)->delete();
 
 
             return $this->success_response(['msg' => "permissions removed"], 200);

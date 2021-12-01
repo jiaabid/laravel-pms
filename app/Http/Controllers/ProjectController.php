@@ -33,13 +33,14 @@ class ProjectController extends Controller
      */
     public function index(Request $request)
     {
-
-        if (auth()->user()->can('retrieve project')) {
+        // return auth()->user()->can('create project');
+        if ((auth()->user()->can('retrieve project') && auth()->user()->admin) || (auth()->user()->can('retrieve project') && auth()->user()->can('create project'))) {
 
             //retrieve child roles
             $roles = $this->get_child_roles(auth()->user());
             $roles->push(auth()->user()->role_id);
-
+            // return auth()->user()->projects;
+            //   return $roles;
 
             if ($request->query("all") == "true") {
                 //get my projects and my child projects
@@ -62,8 +63,10 @@ class ProjectController extends Controller
             }
         } else {
             $payload = collect([]);
-            $payload->push(...auth()->user()->projects);
-            $payload->push(...auth()->user()->project);
+            auth()->user()->projects !== null ?
+                $payload->push(...auth()->user()->projects) : '';
+            auth()->user()->project !== null ? $payload->push(auth()->user()->project) : '';
+            // $payload->paginate(12);
             return $this->success_response($payload, 200);
         }
     }
@@ -153,16 +156,16 @@ class ProjectController extends Controller
                 //  $existingResources = ProjectResource::where('project_id',$projectId)->get();
                 //  $newResources = collect($request->resources);
                 //  foreach($existingResources as $existing){
-                     
+
                 //      if($newResources->where('resource_id','!=',$existing->resource_id)->where('type','!=',$existing->type)){
                 //         $assignResources->push($newResources->where('resource_id','!=',$existing->resource_id)->where('type','!=',$existing->type));
-                       
+
                 //      }else{
                 //         $existingResources->splice($existing,1);
                 //      }
-                     
-   
-                
+
+
+
                 //  }
                 //  dd($assignResources);
                 $humanResourcesCollection = collect($request->resources)->map(function ($item) use ($projectId, $errorMesages) {
@@ -181,7 +184,6 @@ class ProjectController extends Controller
                         // return $errorMesages->push([$existingResource . 'already exist']);
                         // return  $errorMesages[] = ;
                     }
-                   
                 });
                 if (count($request->removeResources) > 0) {
                     foreach ($request->removeResources as $resource) {
