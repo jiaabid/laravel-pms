@@ -114,6 +114,7 @@ class TaskController extends Controller
                     $myTasks = Task::where('created_by', auth()->user()->id)->where('type', $id)->get();
                     $payload["myTasks"] = $myTasks;
                     break;
+
                     //tasks assign by me and assignTo me
                 case 18:
                     $pid = $request->query('pid');
@@ -123,12 +124,18 @@ class TaskController extends Controller
                     foreach ($assignByMe as $item) {
 
                         $item->team;
+                        $item['assignByMe'] = true;
                     }
                     foreach ($assignToMe as $item) {
                         $item->issues;
+                        $item->team;
+                        $item['assignByMe'] = false;
                     }
-                    $payload["assignedToMe"] = $assignToMe;
-                    $payload["assignedByMe"] = $assignByMe;
+                    // $payload["assignedToMe"] = $assignToMe;
+                    // $payload["assignedByMe"] = $assignByMe;
+                    $payload['tasks'] = collect([]);
+                    $payload['tasks']->push(...$assignByMe);
+                    $payload['tasks']->push(...$assignToMe);
                     break;
 
                 default:
@@ -282,7 +289,10 @@ class TaskController extends Controller
                     //inProgress == start , start the task
                 case 12:
                     $this->start_task($taskResource);
-                    $exist["status"] = $request->status;
+                    if($taskResource->sequence == 1){
+                        $exist["status"] = $request->status;
+                    }
+                  
 
                     break;
 
@@ -400,6 +410,7 @@ class TaskController extends Controller
             if (!$task) {
                 return $this->error_response('No such task exist!', 404);
             }
+            // return $this->success_response($request->humanResources,200);
             if ($request->humanResources) {
 
                 $humanResourcesCollection = collect($request->humanResources)->map(function ($item) use ($taskId, $errorMesages) {
@@ -416,7 +427,7 @@ class TaskController extends Controller
                     $resource["resource_id"] = $item["resource_id"];
                     $resource["task_id"] = $taskId;
                     $resource["sequence"] =  $item["sequence"];
-                    $resource["tag"] =  $item["tag"];
+                    $resource["tag_id"] =  $item["tag_id"];
                     $resource["estimated_effort"] =  $item["estimated_effort"];
                     $resource["start_date"] =  $item["start_date"];
                     $resource["end_date"] =  $item["end_date"];
