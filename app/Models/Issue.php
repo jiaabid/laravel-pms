@@ -35,6 +35,7 @@ class Issue extends Model
         'name',
         'description',
         'task_id',
+        'resource_id',
         'status',
         'approved'
     ];
