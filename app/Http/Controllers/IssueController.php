@@ -82,7 +82,7 @@ class IssueController extends Controller
                 $issueExist->fill($request->all());
                 $issueExist["updated_by"] = auth()->user()->id;
                 if ($issueExist->save()) {
-                    return $this->success_response("issue updated", 200);
+                    return $this->success_response($issueExist, 200);
                 } else {
                     return $this->error_response("error in status update", 400);
                 }
@@ -107,7 +107,7 @@ class IssueController extends Controller
                     return $this->error_response('Not found', 404);
                 }
                 if ($issueExist->delete()) {
-                    return $this->success_response("", 204);
+                    return $this->success_response($issueExist, 200);
                 } else {
                     return $this->error_response("Error in delete", 400);
                 }
