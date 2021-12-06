@@ -317,7 +317,8 @@ class TaskController extends Controller
                     }
                     $taskResource["status"] = DbVariablesDetail::variableType('task_status')->variableValue('completed')->first()->id;
                     $exist["status"] = $request->status;
-
+                    $taskResource["end_at"] = Carbon::now("Asia/Karachi")->toDateTimeString();
+                    $taskResource["total_effort"] =  $this->calculate_effort($taskResource);
                     $this->mark_issue($request->issues, $exist->id);
                     $taskResource->save();
                     break;

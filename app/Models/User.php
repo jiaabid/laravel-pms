@@ -114,7 +114,8 @@ class User extends Authenticatable
         return $this->belongsToMany(Task::class, 'resources_tasks', 'resource_id', 'task_id')
             ->withPivot(['status', 'sequence', 'tag_id','estimated_effort', 'total_effort', 'delay'])
             ->as('detail')
-            ->wherePivot('status', '<>', $notAssignId);
+            ->wherePivot('status', '<>', $notAssignId)
+            ;
     }
 
     /**

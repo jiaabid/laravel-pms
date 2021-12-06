@@ -35,6 +35,10 @@ class PermissionSeeder extends Seeder
                 'guard_name' => 'api'
             ],
             [
+                'name' => 'view user',
+                'guard_name' => 'api'
+            ],
+            [
                 'name' => 'create role',
                 'guard_name' => 'api'
             ],
@@ -48,6 +52,10 @@ class PermissionSeeder extends Seeder
             ],
             [
                 'name' => 'delete role',
+                'guard_name' => 'api'
+            ],
+            [
+                'name' => 'view role',
                 'guard_name' => 'api'
             ],
             [
@@ -71,6 +79,20 @@ class PermissionSeeder extends Seeder
                 'guard_name' => 'api'
             ],
             [
+                'name' => 'view permission',
+                'guard_name' => 'api'
+            ],
+
+        ]);
+
+        $role = Role::where('name', 'superadmin')->first();
+        $permissions = Permission::all();
+        $role->syncPermissions($permissions);
+        $user = User::where('email', 'admin@outcastsolutions.us')->first();
+        $user->assignRole($role);
+
+        Permission::insert([
+            [
                 'name' => 'create department',
                 'guard_name' => 'api'
             ],
@@ -85,16 +107,11 @@ class PermissionSeeder extends Seeder
             [
                 'name' => 'delete department',
                 'guard_name' => 'api'
-            ]
-        ]);
-
-        $role = Role::where('name', 'superadmin')->first();
-        $permissions = Permission::all();
-        $role->syncPermissions($permissions);
-        $user = User::where('email', 'admin@outcastsolutions.us')->first();
-        $user->assignRole($role);
-
-        Permission::insert([
+            ],
+            [
+                'name' => 'view department',
+                'guard_name' => 'api'
+            ],
             [
                 'name' => 'create project',
                 'guard_name' => 'api'
@@ -116,6 +133,10 @@ class PermissionSeeder extends Seeder
                 'guard_name' => 'api'
             ],
             [
+                'name' => 'view project',
+                'guard_name' => 'api'
+            ],
+            [
                 'name' => 'create task',
                 'guard_name' => 'api'
             ],
@@ -134,7 +155,11 @@ class PermissionSeeder extends Seeder
             [
                 'name' => 'assign task',
                 'guard_name' => 'api'
-            ]
+            ],
+            [
+                'name' => 'view task',
+                'guard_name' => 'api'
+            ],
 
         ]);
     }
