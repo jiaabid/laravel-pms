@@ -97,7 +97,7 @@ class User extends Authenticatable
     public function task()
     {
         return $this->belongsToMany(Task::class, 'resources_tasks', 'resource_id', 'task_id')
-            ->withPivot(['status', 'sequence', 'tag_id'])
+            ->withPivot(['status', 'sequence',  'estimated_effort', 'total_effort', 'delay','start_date','end_date','tag_id','start_at','pause'])
             ->as('check');
         // return $this->belongsToMany(Task::class,'h_resources_tasks','task_id','resource_id');
     }
@@ -112,7 +112,7 @@ class User extends Authenticatable
         $notAssignId = DbVariablesDetail::variableType('task_status')->variableValue('notAssign')->first()->id;
 
         return $this->belongsToMany(Task::class, 'resources_tasks', 'resource_id', 'task_id')
-            ->withPivot(['status', 'sequence', 'tag_id','estimated_effort', 'total_effort', 'delay'])
+            ->withPivot(['status', 'sequence',  'estimated_effort', 'total_effort', 'delay','start_date','end_date','tag_id','start_at','pause'])
             ->as('detail')
             ->wherePivot('status', '<>', $notAssignId)
             ;

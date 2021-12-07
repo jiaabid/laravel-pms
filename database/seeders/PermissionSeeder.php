@@ -19,7 +19,7 @@ class PermissionSeeder extends Seeder
         //
         Permission::insert([
             [
-                'name' => 'create user',
+                'name' => 'create user',    
                 'guard_name' => 'api'
             ],
             [
