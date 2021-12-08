@@ -34,7 +34,7 @@ class ProjectController extends Controller
     public function index(Request $request)
     {
         // return auth()->user()->can('create project');
-        if ((auth()->user()->can('retrieve project') && auth()->user()->admin) || (auth()->user()->can('retrieve project') && auth()->user()->can('create project'))) {
+        if ((auth()->user()->can('retrieve project') && auth()->user()->admin) ) {
 
             //retrieve child roles
             $roles = $this->get_child_roles(auth()->user());
@@ -53,15 +53,40 @@ class ProjectController extends Controller
                     return $query->whereIn('role_id', $roles);
                 })->paginate(12);
             }
-            // $payload = collect([]);
-            // $payload->push(...auth()->user()->projects);
-            // $payload->push(...auth()->user()->project);
+            
             if ($projects) {
                 return $this->success_response($projects, 200);
             } else {
                 return $this->error_response("Not Found", 404);
             }
-        } else {
+        }
+        //if the user has created a project
+        else if(auth()->user()->can('retrieve project') && auth()->user()->can('create project')){
+       //retrieve child roles
+       $roles = $this->get_child_roles(auth()->user());
+       $roles->push(auth()->user()->role_id);
+       // return auth()->user()->projects;
+       //   return $roles;
+
+       if ($request->query("all") == "true") {
+           //get my projects and my child projects
+           $projects  = Project::with('user')->whereHas('user', function ($query) use ($roles) {
+               return $query->whereIn('role_id', $roles);
+           })->where('dept_id',auth()->user()->dept_id)->where('deleted_at',null)->get();
+       } else {
+           //get my projects and my child projects
+           $projects  = Project::with('user')->whereHas('user', function ($query) use ($roles) {
+               return $query->whereIn('role_id', $roles);
+           })->where('dept_id',auth()->user()->dept_id)->where('deleted_at',null)->paginate(12);
+       }
+       
+       if ($projects) {
+           return $this->success_response($projects, 200);
+       } else {
+           return $this->error_response("Not Found", 404);
+       }
+        }
+        else {
             $payload = collect([]);
             auth()->user()->projects !== null ?
                 $payload->push(...auth()->user()->projects) : '';
@@ -140,7 +165,7 @@ class ProjectController extends Controller
 
         if (auth()->user()->can('assign project')) {
             $this->validate($request, [
-                'resources' => 'required|array'
+                'resources' => 'array'
             ]);
             $errorMesages = collect([]);
             $project = Project::find($id);
@@ -152,7 +177,7 @@ class ProjectController extends Controller
             // $removeResources = collect([]);
             // $assignResources = collect([]);
             // dd(count($request->removeResources));
-            if ($request->resources) {
+            if (count($request->resources)>0) {
                 //  $existingResources = ProjectResource::where('project_id',$projectId)->get();
                 //  $newResources = collect($request->resources);
                 //  foreach($existingResources as $existing){
@@ -185,6 +210,7 @@ class ProjectController extends Controller
                         // return  $errorMesages[] = ;
                     }
                 });
+            }
                 if (count($request->removeResources) > 0) {
                     foreach ($request->removeResources as $resource) {
                         // dd($resource);
@@ -203,7 +229,7 @@ class ProjectController extends Controller
                 // } 
                 // else {
                 // }
-            }
+            // }
         } else {
             return $this->error_response("Forbidden", 403);
         }

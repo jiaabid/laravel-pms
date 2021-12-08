@@ -81,6 +81,10 @@ class RoleController extends Controller
             $this->validate($request, [
                 'name' => 'required'
             ]);
+            $exist = Role::where('name',$request->name)->where('deleted_at',null)->first();
+            if($exist){
+                return $this->error_response("Already Exist",400);
+            }
             $role = new Role();
             $role->fill($request->all());
             $role['created_by'] = auth()->user()->id;

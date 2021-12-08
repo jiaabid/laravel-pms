@@ -19,8 +19,8 @@ class CreateHResourcesTasksTable extends Migration
             // $table->integer('id',true);
             $table->foreignId('task_id')->constrained('tasks');
             $table->foreignId('resource_id')->constrained('users');
-            $table->string('sequence');
-            $table->string('tag');
+            $table->integer('sequence');
+            $table->bigInteger('tag_id');
             $table->unsignedBigInteger('status');
             $table->float('estimated_effort');
             $table->float('total_effort')->nullable();
@@ -36,7 +36,7 @@ class CreateHResourcesTasksTable extends Migration
     }
 
     /**
-     * Reverse the migrations.
+     * Reverse the migrations.  
      *
      * @return void
      */

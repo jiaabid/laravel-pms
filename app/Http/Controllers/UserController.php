@@ -53,7 +53,7 @@ class UserController extends Controller
 
             //retrieve child roles  
             $roles = collect($this->get_child_roles(auth()->user()));
-            $roles->push(auth()->user()->role_id);
+            // $roles->push(auth()->user()->role_id);
             $childUsers = $this->get_child_users(auth()->user());
             // return $roles;
             // return $childUsers;
@@ -62,9 +62,9 @@ class UserController extends Controller
                     User::whereIn('role_id', $roles)->where('dept_id', auth()->user()->dept_id)->with('role:id,name')->with('department:id,name')->with('detail')->get();
             } else {
                 // return auth()->user()->role_id;
-                $users = auth()->user()->admin ? User::whereIn('role_id', $roles)->with('role:id,name')->with('department:id,name')->with('detail')->paginate(12):
+                $users = auth()->user()->admin ? User::whereIn('role_id', $roles)->with('role:id,name')->with('department:id,name')->with('detail')->paginate(12) :
                     User::whereIn('role_id', $roles)->where('dept_id', auth()->user()->dept_id)->with('role:id,name')->with('department:id,name')->with('detail')->paginate(12);
-                 // $users = User::whereIn('role_id', $roles)->whereIn('id', $childUsers)->with('role:id,name')->with('department:id,name')->with('detail')->paginate(12);
+                // $users = User::whereIn('role_id', $roles)->whereIn('id', $childUsers)->with('role:id,name')->with('department:id,name')->with('detail')->paginate(12);
             }
 
             // $users = User::whereIn('role_id', $roles)->with('role:id,name')->with('department:id,name')->with('detail')->get();
