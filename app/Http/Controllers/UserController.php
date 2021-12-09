@@ -53,7 +53,7 @@ class UserController extends Controller
 
             //retrieve child roles  
             $roles = collect($this->get_child_roles(auth()->user()));
-            // $roles->push(auth()->user()->role_id);
+            $roles->push(auth()->user()->role_id);
             $childUsers = $this->get_child_users(auth()->user());
             // return $roles;
             // return $childUsers;

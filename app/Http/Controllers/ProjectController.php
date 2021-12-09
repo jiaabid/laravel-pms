@@ -87,10 +87,11 @@ class ProjectController extends Controller
        }
         }
         else {
+            // return 'hh';
             $payload = collect([]);
             auth()->user()->projects !== null ?
-                $payload->push(...auth()->user()->projects) : '';
-            auth()->user()->project !== null ? $payload->push(auth()->user()->project) : '';
+                $payload->push(...auth()->user()->projects->where('deleted_at',null)) : '';
+            auth()->user()->project !== null && $payload->where('id',auth()->user()->project->id) ? $payload->push(auth()->user()->project->where('deleted_at',null)) : '';
             // $payload->paginate(12);
             return $this->success_response($payload, 200);
         }

@@ -115,6 +115,7 @@ class User extends Authenticatable
             ->withPivot(['status', 'sequence',  'estimated_effort', 'total_effort', 'delay','start_date','end_date','tag_id','start_at','pause'])
             ->as('detail')
             ->wherePivot('status', '<>', $notAssignId)
+            
             ;
     }
 
@@ -125,7 +126,8 @@ class User extends Authenticatable
      */
     public function projects()
     {
-        return $this->belongsToMany(Project::class, 'project_resources', 'resource_id', 'project_id')->where('deleted_at',null);
+        return $this->belongsToMany(Project::class, 'project_resources', 'resource_id', 'project_id')
+        ->wherePivot('deleted_at',null);
     }
 
     /**
