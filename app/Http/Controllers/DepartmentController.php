@@ -23,15 +23,12 @@ class DepartmentController extends Controller
     public function index(Request $request)
     {
 
-        if (auth()->user()->can('retrieve department')) {
+        if (auth()->user()->can('retrieve department') ) {
             if ($request->query("all") == "true") {
-                $departs = Department::where('deleted_at', NULL)->get();
+                // dd(auth()->user()->department); 
+                $departs =auth()->user()->admin? Department::with('user')->where('deleted_at', NULL)->get():[auth()->user()->department];
             } else {
-                $departs = Department::where('deleted_at', NULL)->paginate(12);
-            }
-
-            foreach ($departs as $depart) {
-                $depart->user;
+                $departs = auth()->user()->admin?Department::with('user')->where('deleted_at', NULL)->paginate(12):[auth()->user()->department];
             }
             return $this->success_response($departs, 200);
         } else {
