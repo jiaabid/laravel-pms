@@ -32,11 +32,12 @@ class RoleController extends Controller
         //if super  admin
         if (auth()->user()->role_id == 1 && auth()->user()->can('retrieve role')) {
          
-            if($request->query("all") == "true"){
-                $roles = Roles::with('parent:id,name')->where('created_by', auth()->user()->id)->where('deleted_at', NULL)->get();
-            }else{
-                $roles = Roles::with('parent:id,name')->where('created_by', auth()->user()->id)->where('deleted_at', NULL)->paginate(12);
-            }
+            // if($request->query("all") == "true"){
+            //     $roles = Roles::with('parent:id,name')->where('created_by', auth()->user()->id)->where('deleted_at', NULL)->get();
+            // }else{
+            //     $roles = Roles::with('parent:id,name')->where('created_by', auth()->user()->id)->where('deleted_at', NULL)->paginate(12);
+            // }
+            $roles = Roles::with('parent:id,name')->where('created_by', auth()->user()->id)->where('deleted_at', NULL)->get();
          
             if ($roles) {
                 return $this->success_response($roles->toArray(), 200);
@@ -48,14 +49,15 @@ class RoleController extends Controller
             //retrieve child roles
             $childRoles = collect($this->get_child_roles(auth()->user()));
             $childRoles->push(auth()->user()->role_id);
-            if($request->query("all") == "true"){
-                $roles = Roles::with('parent:id,name')->whereIn('parent', $childRoles)->where('deleted_at', NULL)->orWhere('created_by',auth()->user()->id)->get();
-                $roles[] = auth()->user()->role;
-                // $roles[] = Roles::with('parent:id,name')->where('id', auth()->user()->role_id)->where('deleted_at', NULL)->first();
-            }else{
-                $roles = Roles::with('parent:id,name')->whereIn('parent', $childRoles)->where('deleted_at', NULL)->paginate(12);
-            }
-         
+            // if($request->query("all") == "true"){
+            //     $roles = Roles::with('parent:id,name')->whereIn('parent', $childRoles)->where('deleted_at', NULL)->orWhere('created_by',auth()->user()->id)->get();
+            //     $roles[] = auth()->user()->role;
+            //     // $roles[] = Roles::with('parent:id,name')->where('id', auth()->user()->role_id)->where('deleted_at', NULL)->first();
+            // }else{
+            //     $roles = Roles::with('parent:id,name')->whereIn('parent', $childRoles)->where('deleted_at', NULL)->paginate(12);
+            // }
+            $roles = Roles::with('parent:id,name')->whereIn('parent', $childRoles)->where('deleted_at', NULL)->orWhere('created_by',auth()->user()->id)->get();
+            $roles[] = auth()->user()->role;
             // $roles = Role::all();
             if ($roles) {
                 return $this->success_response($roles, 200);

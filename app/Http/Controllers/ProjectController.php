@@ -42,18 +42,20 @@ class ProjectController extends Controller
             // return auth()->user()->projects;
             //   return $roles;
 
-            if ($request->query("all") == "true") {
-                //get my projects and my child projects
-                $projects  = Project::with('user')->whereHas('user', function ($query) use ($roles) {
-                    return $query->whereIn('role_id', $roles);
-                })->get();
-            } else {
-                //get my projects and my child projects
-                $projects  = Project::with('user')->whereHas('user', function ($query) use ($roles) {
-                    return $query->whereIn('role_id', $roles);
-                })->paginate(12);
-            }
-            
+            // if ($request->query("all") == "true") {
+            //     //get my projects and my child projects
+            //     $projects  = Project::with('user')->whereHas('user', function ($query) use ($roles) {
+            //         return $query->whereIn('role_id', $roles);
+            //     })->get();
+            // } else {
+            //     //get my projects and my child projects
+            //     $projects  = Project::with('user')->whereHas('user', function ($query) use ($roles) {
+            //         return $query->whereIn('role_id', $roles);
+            //     })->paginate(12);
+            // }
+            $projects  = Project::with('user')->whereHas('user', function ($query) use ($roles) {
+                return $query->whereIn('role_id', $roles);
+            })->get();
             if ($projects) {
                 return $this->success_response($projects, 200);
             } else {
@@ -68,18 +70,20 @@ class ProjectController extends Controller
        // return auth()->user()->projects;
        //   return $roles;
 
-       if ($request->query("all") == "true") {
-           //get my projects and my child projects
-           $projects  = Project::with('user')->whereHas('user', function ($query) use ($roles) {
-               return $query->whereIn('role_id', $roles);
-           })->where('dept_id',auth()->user()->dept_id)->where('deleted_at',null)->get();
-       } else {
-           //get my projects and my child projects
-           $projects  = Project::with('user')->whereHas('user', function ($query) use ($roles) {
-               return $query->whereIn('role_id', $roles);
-           })->where('dept_id',auth()->user()->dept_id)->where('deleted_at',null)->paginate(12);
-       }
-       
+    //    if ($request->query("all") == "true") {
+    //        //get my projects and my child projects
+    //        $projects  = Project::with('user')->whereHas('user', function ($query) use ($roles) {
+    //            return $query->whereIn('role_id', $roles);
+    //        })->where('dept_id',auth()->user()->dept_id)->where('deleted_at',null)->get();
+    //    } else {
+    //        //get my projects and my child projects
+    //        $projects  = Project::with('user')->whereHas('user', function ($query) use ($roles) {
+    //            return $query->whereIn('role_id', $roles);
+    //        })->where('dept_id',auth()->user()->dept_id)->where('deleted_at',null)->paginate(12);
+    //    }
+       $projects  = Project::with('user')->whereHas('user', function ($query) use ($roles) {
+        return $query->whereIn('role_id', $roles);
+    })->where('dept_id',auth()->user()->dept_id)->where('deleted_at',null)->get();
        if ($projects) {
            return $this->success_response($projects, 200);
        } else {

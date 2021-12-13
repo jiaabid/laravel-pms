@@ -29,11 +29,12 @@ class PermissionController extends Controller
     {
 
         if (auth()->user()->can('retrieve permission')) {
-            if($request->query("all") == "true"){
-                $permissions = Permission::all();
-            }else{
-                $permissions = Permission::paginate(12);
-            }
+            // if($request->query("all") == "true"){
+            //     $permissions = Permission::all();
+            // }else{
+            //     $permissions = Permission::paginate(12);
+            // }
+            $permissions = Permission::all();
          
             if (!$permissions) {
                 return $this->error_response("Not found", 404);

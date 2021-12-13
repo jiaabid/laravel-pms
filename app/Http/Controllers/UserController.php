@@ -34,12 +34,13 @@ class UserController extends Controller
             // return auth()->user()->role_id;
 
             // $users = User::where('created_by', auth()->user()->id)->with('role:id,name')->with('department:id,name')->get();
-            if ($request->query("all") == "true") {
-                $users = User::where('created_by', auth()->user()->id)->with('role:id,name')->with('department:id,name')->get();
-            } else {
-                $users = User::where('created_by', auth()->user()->id)->with('role:id,name')->with('department:id,name')->paginate(12);
-            }
+            // if ($request->query("all") == "true") {
+            //     $users = User::where('created_by', auth()->user()->id)->with('role:id,name')->with('department:id,name')->get();
+            // } else {
+            //     $users = User::where('created_by', auth()->user()->id)->with('role:id,name')->with('department:id,name')->paginate(12);
+            // }
 
+            $users = User::where('created_by', auth()->user()->id)->with('role:id,name')->with('department:id,name')->get();
 
             if ($users) {
                 return $this->success_response($users, 200);
@@ -57,16 +58,17 @@ class UserController extends Controller
             $childUsers = $this->get_child_users(auth()->user());
             // return $roles;
             // return $childUsers;
-            if ($request->query("all") == "true") {
-                $users = auth()->user()->admin ? User::whereIn('role_id', $roles)->with('role:id,name')->with('department:id,name')->with('detail')->get() :
-                    User::whereIn('role_id', $roles)->where('dept_id', auth()->user()->dept_id)->with('role:id,name')->with('department:id,name')->with('detail')->get();
-            } else {
-                // return auth()->user()->role_id;
-                $users = auth()->user()->admin ? User::whereIn('role_id', $roles)->with('role:id,name')->with('department:id,name')->with('detail')->paginate(12) :
-                    User::whereIn('role_id', $roles)->where('dept_id', auth()->user()->dept_id)->with('role:id,name')->with('department:id,name')->with('detail')->paginate(12);
-                // $users = User::whereIn('role_id', $roles)->whereIn('id', $childUsers)->with('role:id,name')->with('department:id,name')->with('detail')->paginate(12);
-            }
-
+            // if ($request->query("all") == "true") {
+            //     $users = auth()->user()->admin ? User::whereIn('role_id', $roles)->with('role:id,name')->with('department:id,name')->with('detail')->get() :
+            //         User::whereIn('role_id', $roles)->where('dept_id', auth()->user()->dept_id)->with('role:id,name')->with('department:id,name')->with('detail')->get();
+            // } else {
+            //     // return auth()->user()->role_id;
+            //     $users = auth()->user()->admin ? User::whereIn('role_id', $roles)->with('role:id,name')->with('department:id,name')->with('detail')->paginate(12) :
+            //         User::whereIn('role_id', $roles)->where('dept_id', auth()->user()->dept_id)->with('role:id,name')->with('department:id,name')->with('detail')->paginate(12);
+            //     // $users = User::whereIn('role_id', $roles)->whereIn('id', $childUsers)->with('role:id,name')->with('department:id,name')->with('detail')->paginate(12);
+            // }
+            $users = auth()->user()->admin ? User::whereIn('role_id', $roles)->with('role:id,name')->with('department:id,name')->with('detail')->get() :
+            User::whereIn('role_id', $roles)->where('dept_id', auth()->user()->dept_id)->with('role:id,name')->with('department:id,name')->with('detail')->get();
             // $users = User::whereIn('role_id', $roles)->with('role:id,name')->with('department:id,name')->with('detail')->get();
             if ($users) {
                 return $this->success_response($users, 200);

@@ -24,12 +24,14 @@ class DepartmentController extends Controller
     {
 
         if (auth()->user()->can('retrieve department') ) {
-            if ($request->query("all") == "true") {
-                // dd(auth()->user()->department); 
-                $departs =auth()->user()->admin? Department::with('user')->where('deleted_at', NULL)->get():[auth()->user()->department];
-            } else {
-                $departs = auth()->user()->admin?Department::with('user')->where('deleted_at', NULL)->paginate(12):[auth()->user()->department];
-            }
+            // if ($request->query("all") == "true") {
+            //     // dd(auth()->user()->department); 
+            //     $departs =auth()->user()->admin? Department::with('user')->where('deleted_at', NULL)->get():[auth()->user()->department];
+            // } else {
+            //     $departs = auth()->user()->admin?Department::with('user')->where('deleted_at', NULL)->paginate(12):[auth()->user()->department];
+            // }
+            $departs =auth()->user()->admin? Department::with('user')->where('deleted_at', NULL)->get():[auth()->user()->department];
+
             return $this->success_response($departs, 200);
         } else {
             return $this->success_response(auth()->user()->department, 200);
