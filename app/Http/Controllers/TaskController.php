@@ -343,6 +343,7 @@ class TaskController extends Controller
             $saved = $exist->save();
             $exist->issues;
             $exist->team;
+            $exist->detail;
             foreach ($exist->team as $member) {
                 $member->detail->tagId;
             }
@@ -421,7 +422,8 @@ class TaskController extends Controller
                         ->first();
 
                     if ($existingResource) {
-                        return $errorMesages->push($existingResource->resource_id . " already exist");;
+                        $existingResource->delete();
+                        // return $errorMesages->push($existingResource->resource_id . " already exist");;
                     }
 
                     $resource = new HResourcesTask();

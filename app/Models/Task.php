@@ -69,6 +69,7 @@ class Task extends Model
         ->using(TagDetail::class)
         ->withPivot('tag_id')
         ->withPivot(['status', 'sequence',  'estimated_effort', 'total_effort', 'delay','start_date','end_date','tag_id','start_at','pause'])
+        ->wherePivot('deleted_at',null)
         ->as('detail');
             // ->withPivot(['status', 'sequence', 'tag', 'estimated_effort', 'total_effort', 'delay','start_date','end_date'])
             // ->with('.tagStatus');

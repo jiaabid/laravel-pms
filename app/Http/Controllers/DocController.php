@@ -16,10 +16,10 @@ use App\Http\Traits\ResponseTrait;
 class DocController extends Controller
 {
     use ResponseTrait;
-    public function __construct()
-    {
-        $this->middleware(['auth']);
-    }
+    // public function __construct()
+    // {
+    //     $this->middleware(['auth']);
+    // }
 
     /**
      * Display a listing of the resource.
@@ -60,15 +60,18 @@ class DocController extends Controller
                     'name' => 'required'
                 ]);
                 $file = $request->file('file');
+                $project = Project::where('id', $request->projectId)->first();
+                $filename = 'public/files/' . $project->name;
+              
 
-                $path = $file->store('public/files');
+                $path = $file->store($filename);
                 $name = $file->getClientOriginalName();
-
+                $filepath = explode('/',$path);
                 try {
                     $doc = new Doc();
                     $doc['name'] = $request->name;
                     $doc['description'] = $request->description ? $request->description : null;
-                    $doc['link'] = $path;
+                    $doc['link'] = $filepath[count($filepath)-2].'/'.$filepath[count($filepath)-1   ];
                     $doc['created_by'] = auth()->user()->id;
                 } catch (Exception $e) {
                     return $this->error_response($e->getMessage(), 500);
@@ -138,7 +141,7 @@ class DocController extends Controller
             return $this->success_response($exist, 200);
         } else {
             return $this->error_response("Not found", 404);
-        }   
+        }
     }
     public function viewFile($id)
     {
@@ -162,7 +165,7 @@ class DocController extends Controller
     public function download_file(Request $request, $id)
     {
 
-        if (auth()->user()->can('create project')) {
+        // if (auth()->user()->can('create project')) {
             $exist = Doc::find($id);
             // dd($exist);
             $path = $exist->link;
@@ -172,9 +175,9 @@ class DocController extends Controller
             } else {
                 return $this->error_response("Not found", 404);
             }
-        } else {
-            return $this->error_response("Forbidden!", 403);
-        }
+        // } else {
+        //     return $this->error_response("Forbidden!", 403);
+        // }
     }
 
 

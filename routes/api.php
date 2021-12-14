@@ -42,6 +42,8 @@ Route::get('/check', function () {
     $roles = DB::select("CALL user_childs(" . $id . ")");
     dd($roles);
 });
+Route::get('/doc/download/{id}', [DocController::class, 'download_file']);
+
 // Route::resource('/department',DepartmentController::class)->middleware('auth');
 
 Route::middleware('auth:api')->group(function () {
