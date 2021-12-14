@@ -71,7 +71,8 @@ class DocController extends Controller
                     $doc = new Doc();
                     $doc['name'] = $request->name;
                     $doc['description'] = $request->description ? $request->description : null;
-                    $doc['link'] = $filepath[count($filepath)-2].'/'.$filepath[count($filepath)-1   ];
+                    // $doc['link'] = $filepath[count($filepath)-2].'/'.$filepath[count($filepath)-1   ];
+                    $doc['link'] = $path;
                     $doc['created_by'] = auth()->user()->id;
                 } catch (Exception $e) {
                     return $this->error_response($e->getMessage(), 500);
@@ -134,7 +135,7 @@ class DocController extends Controller
 
         $docIds = ProjectDocs::where('project_id', $id)->get()->pluck('doc_id');
         // return $docIds;
-        $exist = Doc::whereIn('id', $docIds)->get();
+        $exist = Doc::whereIn('id', $docIds)->where('deleted_at',null)->get();
         if ($exist) {
             // $content = Storage::get($exist->link);
             // dd($content);
