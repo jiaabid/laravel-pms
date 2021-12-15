@@ -111,7 +111,7 @@ class TaskController extends Controller
             switch ($id) {
                     //individual tasks
                 case 17:
-                    $myTasks = Task::where('created_by', auth()->user()->id)->where('type', $id)->get();
+                    $myTasks = Task::where('created_by', auth()->user()->id)->where('type', $id)->where('deleted_at', null)->get();
                     $payload["myTasks"] = $myTasks;
                     break;
 
@@ -254,7 +254,23 @@ class TaskController extends Controller
         }
     }
 
+    public function my_task_change_status(Request $request)
+    {
+        $this->validate($request, [
+            'status' => "required"
+        ]);
+        $exist = Task::find($request->id);
+        if (!$exist) {
+            return $this->error_response('No such task exist!', 404);
+        }
+        $exist['status'] = $request->status;
 
+        if ($exist->save()) {
+            return $this->success_response($exist, 200);
+        } else {
+            return $this->error_response('Error in changing status', 400);
+        }
+    }
     /**
      * change_status
      *
@@ -289,10 +305,10 @@ class TaskController extends Controller
                     //inProgress == start , start the task
                 case 12:
                     $this->start_task($taskResource);
-                    if($taskResource->sequence == 1){
+                    if ($taskResource->sequence == 1) {
                         $exist["status"] = $request->status;
                     }
-                  
+
 
                     break;
 
@@ -341,15 +357,22 @@ class TaskController extends Controller
             }
             // return $exist;
             $saved = $exist->save();
-            $exist->issues;
-            $exist->team;
-            $exist->detail;
-            foreach ($exist->team as $member) {
+            $task = auth()->user()->assigned_task()->where('task_id', $exist->id)->where('project_id', $exist->project_id)->first();
+            $task->issues;
+            $task->team;
+            foreach ($task->team as $member) {
                 $member->detail->tagId;
             }
+            // return $task;
+            // $exist->issues;
+            // $exist->team;
+            // $exist->detail;
+            // foreach ($exist->team as $member) {
+            //     $member->detail->tagId;
+            // }
             DB::commit();
             if ($saved) {
-                return $this->success_response($exist, 200);
+                return $this->success_response($task, 200);
             } else {
                 return $this->error_response('Error in changing status', 400);
             }
@@ -457,17 +480,27 @@ class TaskController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
+        if ($request->query('my')) {
+            $task = Task::where('id', $id)->where('type', 17)->first();
+            if (!$task) {
+                return $this->error_response('No such task exist!', 404);
+            }
 
-        if (auth()->user()->can('delete task')) {
+            if ($task->delete()) {
+                return $this->success_response($task, 200);
+            } else {
+                return $this->error_response('Error in delete', 400);
+            }
+        } else if (auth()->user()->can('delete task') && !$re) {
             $task = Task::find($id);
             if (!$task) {
                 return $this->error_response('No such task exist!', 404);
             }
 
             if ($task->delete()) {
-                return $this->success_response([], 200);
+                return $this->success_response($task, 200);
             } else {
                 return $this->error_response('Error in delete', 400);
             }

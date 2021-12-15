@@ -94,7 +94,7 @@ class ProjectController extends Controller
             $payload = collect([]);
             auth()->user()->projects !== null ?
                 $payload->push(...auth()->user()->projects->where('deleted_at', null)) : '';
-                dd($payload->where('id', auth()->user()->project->id));
+                // dd($payload->where('id', auth()->user()->project->id));
             auth()->user()->project !== null && $payload->where('id', auth()->user()->project->id) ? $payload->push(auth()->user()->project->where('deleted_at', null)) : '';
             // $payload->paginate(12);
             return $this->success_response($payload, 200);

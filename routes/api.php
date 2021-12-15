@@ -75,7 +75,8 @@ Route::middleware('auth:api')->group(function () {
         return 43; 
      });
  
-    Route::post('/tasks/status/{id}', [TaskController::class, 'change_status']);
+     Route::post('/tasks/status/{id}', [TaskController::class, 'change_status']);
+     Route::post('/tasks/my/status', [TaskController::class, 'my_task_change_status']);
 
    
     Route::post('tasks/action/{id}', [TaskController::class, 'task_action']);
