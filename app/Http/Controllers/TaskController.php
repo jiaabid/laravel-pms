@@ -184,6 +184,33 @@ class TaskController extends Controller
     }
 
 
+    public function update_mytask(Request $request, $id)
+    {
+
+        // if (auth()->user()->can('edit task')) {
+            $exist = Task::find($id);
+            if ($exist) {
+                // $this->validate($request, [
+                //     'name' => 'string',
+                //     'start_date' => 'date',
+                //     'end_date' => 'date'
+                // ]);
+                $exist->fill($request->all());
+                
+                if ($exist->save()) {
+                    return $this->success_response($exist, 200);
+                } else {
+                    return $this->error_response("Error in updating", 400);
+                }
+            } else {
+                return $this->error_response('No such task exist!', 404);
+            }
+        // } else {
+        //     return $this->error_response("Forbidden!", 403);
+        // }
+    }
+
+
     /**
      * Update the specified resource in storage.
      *

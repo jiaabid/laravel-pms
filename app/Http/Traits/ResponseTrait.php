@@ -4,7 +4,7 @@ namespace App\Http\Traits;
 
 
 trait ResponseTrait
-{    
+{
     /**
      * shorthand for success response
      *
@@ -12,7 +12,7 @@ trait ResponseTrait
      * @param  int $code
      * @return response
      */
-    public function success_response( $payload, $code)
+    public function success_response($payload, $code)
     {
         return response()->json([
             "success" => true,
@@ -27,10 +27,14 @@ trait ResponseTrait
      * @param  int $code
      * @return response
      */
-    public function error_response($msg,$code){
+    public function error_response($msg, $code)
+    {
         return response()->json([
-            "success" =>false,
-            "error" => $msg
+            "success" => false,
+            "message"=>$msg,
+            "errors" => [
+                "name" => [$msg]
+            ]
         ], $code);
     }
 }
