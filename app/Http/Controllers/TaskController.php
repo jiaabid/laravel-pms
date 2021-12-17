@@ -195,8 +195,12 @@ class TaskController extends Controller
                 //     'start_date' => 'date',
                 //     'end_date' => 'date'
                 // ]);
-                $exist->fill($request->all());
-                
+                $exist['name'] = $request->name;
+                $exist['description'] = $request->description;
+                $exist['start_date'] = $request->start_date;
+                $exist['end_date']=$request->end_date;
+                // $exist->fill($request->all());
+            
                 if ($exist->save()) {
                     return $this->success_response($exist, 200);
                 } else {
@@ -489,12 +493,12 @@ class TaskController extends Controller
                     $resource["updated_at"] =  date('Y-m-d H:i:s');
                     $resource->save();
                 });
+                return $this->success_response(["msg" => "resource assigned!"], 200);
 
-                if (count($errorMesages) > 0) {
-                    return $this->error_response($errorMesages, 400);
-                } else {
-                    return $this->success_response(["msg" => "resource assigned!"], 200);
-                }
+                // if (count($errorMesages) > 0) {
+                //     return $this->error_response($errorMesages, 400);
+                // } else {
+                // }
             }
         } else {
             return $this->error_response("Forbidden!", 403);

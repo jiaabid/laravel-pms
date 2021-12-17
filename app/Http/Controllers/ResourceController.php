@@ -97,7 +97,7 @@ class ResourceController extends Controller
     public function update(Request $request, $id)
     {
         
-            if (auth()->user()->can('edit department')) {
+            // if (auth()->user()->can('edit department')) {
                 $resource = NonHumanResources::find($id);
                 if (!$resource) {
                     return $this->error_response( "Not Found", 404);
@@ -112,10 +112,10 @@ class ResourceController extends Controller
                     return $this->error_response( "Error in updating", 400);
 
                 }
-            } else {
-                return $this->error_response( "Forbidden!", 403);
+            // } else {
+            //     return $this->error_response( "Forbidden!", 403);
 
-            }
+            // }
      
     }
 

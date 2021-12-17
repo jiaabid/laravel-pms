@@ -28,23 +28,24 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return response('hello1');
-});
-Route::get('/test', function(){
-    return 1;
-});
-Route::post('/register', [AuthController::class, 'register']);
+// Route::get('/', function () {
+//     return response('hello1');
+// });
+// Route::get('/test', function(){
+//     return 1;
+// });
+// Route::post('/register', [AuthController::class, 'register']);
+// Route::get('/check', function () {
+//     $id = 3;
+//     $roles = DB::select("CALL user_childs(" . $id . ")");
+//     dd($roles);
+// });
+
+//login route
 Route::post('/login', [AuthController::class, 'login']);
 
-Route::get('/check', function () {
-    $id = 3;
-    $roles = DB::select("CALL user_childs(" . $id . ")");
-    dd($roles);
-});
+//doc download
 Route::get('/doc/download/{id}', [DocController::class, 'download_file']);
-
-// Route::resource('/department',DepartmentController::class)->middleware('auth');
 
 Route::middleware('auth:api')->group(function () {
     // Route::get('/hello',function(){
