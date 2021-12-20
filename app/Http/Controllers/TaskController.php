@@ -188,33 +188,61 @@ class TaskController extends Controller
     {
 
         // if (auth()->user()->can('edit task')) {
-            $exist = Task::find($id);
-            if ($exist) {
-                // $this->validate($request, [
-                //     'name' => 'string',
-                //     'start_date' => 'date',
-                //     'end_date' => 'date'
-                // ]);
-                $exist['name'] = $request->name;
-                $exist['description'] = $request->description;
-                $exist['start_date'] = $request->start_date;
-                $exist['end_date']=$request->end_date;
-                // $exist->fill($request->all());
+        $exist = Task::find($id);
+        if ($exist) {
+            // $this->validate($request, [
+            //     'name' => 'string',
+            //     'start_date' => 'date',
+            //     'end_date' => 'date'
+            // ]);
             
-                if ($exist->save()) {
-                    return $this->success_response($exist, 200);
-                } else {
-                    return $this->error_response("Error in updating", 400);
-                }
+            $exist['name'] = $request->name;
+            $exist['description'] = $request->description;
+            $exist['start_date'] = $request->start_date;
+            $exist['end_date'] = $request->end_date;
+            // $exist->fill($request->all());
+
+            if ($exist->save()) {
+                return $this->success_response($exist, 200);
             } else {
-                return $this->error_response('No such task exist!', 404);
+                return $this->error_response("Error in updating", 400);
             }
+        } else {
+            return $this->error_response('No such task exist!', 404);
+        }
         // } else {
         //     return $this->error_response("Forbidden!", 403);
         // }
     }
 
+    protected function update_resource($humanResources,$taskId)
+    {
+        collect($humanResources)->map(function ($item) use ($taskId) {
+            $existingResource = HResourcesTask::where('task_id', $taskId)
+                ->where('resource_id', $item["resource_id"])
+                ->first();
 
+            if ($existingResource) {
+                $existingResource->delete();
+                // return $errorMesages->push($existingResource->resource_id . " already exist");;
+            }
+
+            $resource = new HResourcesTask();
+            $resource["status"] = $item["sequence"] > 1 ? DbVariablesDetail::variableType('task_status')->variableValue('notAssign')->first()->id : DbVariablesDetail::variableType('task_status')->variableValue('pending')->first()->id;
+            $resource["resource_id"] = $item["resource_id"];
+            $resource["task_id"] = $taskId;
+            $resource["sequence"] =  $item["sequence"];
+            $resource["tag_id"] =  $item["tag_id"];
+            $resource["estimated_effort"] =  $item["estimated_effort"];
+            $resource["start_date"] =  $item["start_date"];
+            $resource["end_date"] =  $item["end_date"];
+            $resource["created_at"] =  date('Y-m-d H:i:s');
+            $resource["updated_at"] =  date('Y-m-d H:i:s');
+            $resource->save();
+        });
+        return true;
+
+    }
     /**
      * Update the specified resource in storage.
      *
@@ -226,15 +254,30 @@ class TaskController extends Controller
     {
 
         if (auth()->user()->can('edit task')) {
-            $exist = Task::find($id);
+            $exist = Task::where('id',$id)->with('team')->first();
             if ($exist) {
                 $this->validate($request, [
                     'name' => 'string',
                     'start_date' => 'date',
                     'end_date' => 'date'
                 ]);
-                $exist->fill($request->all());
+                // $exist->fill($request->all());
+                DB::beginTransaction();
+                $exist['name'] = $request->name;
+                $exist['description'] = $request->description;
+                $exist['start_date'] = $request->start_date;
+                $exist['end_date'] = $request->end_date;
+                if(count($request->humanResources)>0){
+                    $assigned = $this->update_resource($request->humanResources,$exist->id);
+                    if($assigned){
+                        $exist->save();
+                        DB::commit();
+                        // $exist->team;
+                        return $this->success_response($exist, 200);
+                    }
+                }
                 if ($exist->save()) {
+                    DB::commit();
                     return $this->success_response($exist, 200);
                 } else {
                     return $this->error_response("Error in updating", 400);

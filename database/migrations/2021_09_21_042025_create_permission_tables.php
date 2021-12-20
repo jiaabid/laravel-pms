@@ -49,11 +49,11 @@ class CreatePermissionTables extends Migration
             $table->softDeletes();
             $table->foreignId('created_by')->nullable()->constrained('users');
             $table->foreignId('updated_by')->nullable()->constrained('users');
-            if ($teams || config('permission.testing')) {
-                $table->unique([$columnNames['team_foreign_key'], 'name', 'guard_name']);
-            } else {
-                $table->unique(['name', 'guard_name']);
-            }
+            // if ($teams || config('permission.testing')) {
+            //     $table->unique([$columnNames['team_foreign_key'], 'name', 'guard_name']);
+            // } else {
+            //     $table->unique(['name', 'guard_name']);
+            // }
         });
 
         Schema::create($tableNames['model_has_permissions'], function (Blueprint $table) use ($tableNames, $columnNames, $teams) {
