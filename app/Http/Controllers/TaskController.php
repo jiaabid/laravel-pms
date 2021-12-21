@@ -256,18 +256,21 @@ class TaskController extends Controller
         if (auth()->user()->can('edit task')) {
             $exist = Task::where('id',$id)->with('team')->first();
             if ($exist) {
-                $this->validate($request, [
-                    'name' => 'string',
-                    'start_date' => 'date',
-                    'end_date' => 'date'
-                ]);
+                // $this->validate($request, [
+                //     'name' => 'string',
+                //     'start_date' => 'date',
+                //     'end_date' => 'date'
+                // ]);
                 // $exist->fill($request->all());
                 DB::beginTransaction();
-                $exist['name'] = $request->name;
+                $exist['name'] = $request->name ? $request->name : $exist['name'] ;
                 $exist['description'] = $request->description;
-                $exist['start_date'] = $request->start_date;
-                $exist['end_date'] = $request->end_date;
-                if(count($request->humanResources)>0){
+                $exist['start_date'] = $request->start_date?$request->start_date:$exist['start_date'];
+                $exist['end_date'] = $request->end_date ? $request->end_date : $exist['end_date'];
+                foreach ($exist->team as $member) {
+                    $member->detail->tagId;
+                }
+                if($request->humanResources && count($request->humanResources)>0){
                     $assigned = $this->update_resource($request->humanResources,$exist->id);
                     if($assigned){
                         $exist->save();
@@ -276,8 +279,10 @@ class TaskController extends Controller
                         return $this->success_response($exist, 200);
                     }
                 }
-                if ($exist->save()) {
-                    DB::commit();
+                $saved = $exist->save();
+                DB::commit();
+                if ($saved) {
+                    
                     return $this->success_response($exist, 200);
                 } else {
                     return $this->error_response("Error in updating", 400);

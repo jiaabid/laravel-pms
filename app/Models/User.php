@@ -98,6 +98,7 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Task::class, 'resources_tasks', 'resource_id', 'task_id')
             ->withPivot(['status', 'sequence',  'estimated_effort', 'total_effort', 'delay','start_date','end_date','tag_id','start_at','pause'])
+            ->wherePivot('deleted_at',null)
             ->as('check');
         // return $this->belongsToMany(Task::class,'h_resources_tasks','task_id','resource_id');
     }
@@ -115,8 +116,7 @@ class User extends Authenticatable
             ->withPivot(['status', 'sequence',  'estimated_effort', 'total_effort', 'delay','start_date','end_date','tag_id','start_at','pause'])
             ->as('detail')
             ->wherePivot('status', '<>', $notAssignId)
-            
-            ;
+            ->wherePivot('deleted_at',null);
     }
 
     /**
