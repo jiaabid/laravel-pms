@@ -44,7 +44,7 @@ class TagStatusSeeder extends Seeder
                 "status_id" => 13
             ], [
                 "tag_id" => 8,
-                "status_id" => 16
+                "status_id" => 15
             ]
         ]);
     }
