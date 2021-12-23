@@ -18,7 +18,8 @@ class CreateIssuesTable extends Migration
             $table->string('name');
             $table->text('description')->nullable();
             $table->foreignId('task_id')->constrained('tasks');
-            $table->foreignId('resource_id')->constrained('users');
+            $table->bigInteger('tag_id');
+            // $table->foreignId('resource_id')->constrained('users');
             $table->unsignedBigInteger('status');
             $table->boolean('approved')->default(false);
             $table->foreignId('created_by')->constrained('users');

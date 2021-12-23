@@ -331,12 +331,14 @@ class ProjectController extends Controller
     {
 
         $tasks = Project::find($id)->with('tasks')->first()->tasks;
+        // dd($tasks);
         $overallEstimatedCost = 0;
         $overallTotalCost = 0;
         $costExceed = 0;
         $taskDetails = collect([]);
         foreach ($tasks as $task) {
             $task->team;
+            
             $taskDetail = [];
             foreach ($task->team as $resource) {
                 // dd($resource->id);

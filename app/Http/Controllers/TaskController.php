@@ -533,7 +533,8 @@ class TaskController extends Controller
                 $newIssue["name"] = $issue["name"];
                 $newIssue["description"] = isset($issue["description"]) ? $issue["description"] : null;
                 $newIssue["task_id"] = $taskId;
-                $newIssue["resource_id"] = $issue['resource_id'];
+                // $newIssue["resource_id"] = $issue['resource_id'];
+                $newIssue['tag_id'] = $issue['tag_id'];
                 $newIssue["created_by"] = auth()->user()->id;
                 $saved = $newIssue->save();
                 if (!$saved) {
