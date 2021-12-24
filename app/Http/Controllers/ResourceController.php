@@ -128,7 +128,7 @@ class ResourceController extends Controller
     public function destroy($id)
     {
        
-            if (auth()->user()->can('delete department')) {
+            if (auth()->user()->can('delete project')) {
                 $resource = NonHumanResources::find($id);
                 if (!$resource) {
                     return $this->error_response("Not found",404);

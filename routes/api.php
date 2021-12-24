@@ -95,4 +95,5 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/variables/detail/{id}', [BasicController::class, 'get_variable_values']);
     Route::get('/variables/status/{id}', [BasicController::class, 'get_status']);
     Route::get('/stats/project',[BasicController::class,'get_project_stats']);
+    Route::get('/stats/task',[BasicController::class,'get_task_stats']);
 });
