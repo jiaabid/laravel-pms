@@ -375,7 +375,7 @@ class TaskController extends Controller
 
         DB::beginTransaction();
         $taskResource = HResourcesTask::where("resource_id", auth()->user()->id)
-            ->where('task_id', $exist->id)->where('tag_id',$request->tag_id)->where('deleted_at', null)->first();
+            ->where('task_id', $exist->id)->where('tag_id',$request->myTag)->where('deleted_at', null)->first();
 
         if ($taskResource !== null) {
             $status = DbVariablesDetail::statusById($request->status)->first();
@@ -416,8 +416,8 @@ class TaskController extends Controller
                         if (count($unapprovedTask) > 0) {
                             return $this->error_response("Cant complete you have unapproved tasks!", 400);
                         }
-                        $myUnresolvedTask =Issue::where('task_id', $id)->where('tag_id', $taskResource->tag_id)->where('status', 21)->count();
-                        if($myUnresolvedTask==0){
+                        $myUnresolvedTask =Issue::where('task_id', $id)->where('tag_id', $taskResource->tag_id)->where('sequence_no',$taskResource->sequence)->where('status', 21)->count();
+                        if($myUnresolvedTask !==0){
                             return $this->error_response("Cant complete you have unresolved tasks!", 400);
 
                         }
@@ -546,6 +546,7 @@ class TaskController extends Controller
                 $newIssue["task_id"] = $taskId;
                 // $newIssue["resource_id"] = $issue['resource_id'];
                 $newIssue['tag_id'] = $issue['tag_id'];
+                $newIssue['sequence_no'] = $issue['sequence_no'];
                 $newIssue["created_by"] = auth()->user()->id;
                 $saved = $newIssue->save();
                 if (!$saved) {
