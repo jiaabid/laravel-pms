@@ -20,7 +20,7 @@ class CreateEmployeesTable extends Migration
             $table->dateTime('joining_date')->nullable();
             $table->string('contact',11)->nullable();
             $table->string('designation')->nullable();
-            $table->float('salary')->nullable();
+            $table->double('salary')->nullable();
             $table->time('duty_start');
             $table->time('duty_end');
             $table->float('working_hrs');

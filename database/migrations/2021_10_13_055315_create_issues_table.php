@@ -19,6 +19,7 @@ class CreateIssuesTable extends Migration
             $table->text('description')->nullable();
             $table->foreignId('task_id')->constrained('tasks');
             $table->bigInteger('tag_id');
+            $table->bigInteger('sequence_no');
             // $table->foreignId('resource_id')->constrained('users');
             $table->unsignedBigInteger('status');
             $table->boolean('approved')->default(false);

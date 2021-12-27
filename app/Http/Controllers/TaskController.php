@@ -124,7 +124,7 @@ class TaskController extends Controller
                     foreach ($assignByMe as $item) {
 
                         $item->team;
-                        foreach ( $item->team as $member) {
+                        foreach ($item->team as $member) {
                             $member->detail->tagId;
                         }
                         $item['assignByMe'] = true;
@@ -132,7 +132,7 @@ class TaskController extends Controller
                     foreach ($assignToMe as $item) {
                         $item->issues;
                         $item->team;
-                        foreach ( $item->team as $member) {
+                        foreach ($item->team as $member) {
                             $member->detail->tagId;
                         }
                         $item['assignByMe'] = false;
@@ -375,7 +375,7 @@ class TaskController extends Controller
 
         DB::beginTransaction();
         $taskResource = HResourcesTask::where("resource_id", auth()->user()->id)
-            ->where('task_id', $exist->id)->where('tag_id',$request->myTag)->where('deleted_at', null)->first();
+            ->where('task_id', $exist->id)->where('tag_id', $request->myTag)->where('deleted_at', null)->first();
 
         if ($taskResource !== null) {
             $status = DbVariablesDetail::statusById($request->status)->first();
@@ -416,34 +416,33 @@ class TaskController extends Controller
                         if (count($unapprovedTask) > 0) {
                             return $this->error_response("Cant complete you have unapproved tasks!", 400);
                         }
-                        $myUnresolvedTask =Issue::where('task_id', $id)->where('tag_id', $taskResource->tag_id)->where('sequence_no',$taskResource->sequence)->where('status', 21)->count();
-                        if($myUnresolvedTask !==0){
+                        $myUnresolvedTask = Issue::where('task_id', $id)->where('tag_id', $taskResource->tag_id)->where('sequence_no', $taskResource->sequence)->where('status', 21)->count();
+                        if ($myUnresolvedTask !== 0) {
                             return $this->error_response("Cant complete you have unresolved tasks!", 400);
-
                         }
                         $unresolvedTask = Issue::where('task_id', $id)->where('created_by', auth()->user()->id)->where('status', 21)->where('deleted_at', null)->get();
                         if (count($unresolvedTask) > 0) {
                             // for ($i = $taskResource["sequence"] - 1; $i > 0; $i--) {
-                                HResourcesTask::where('sequence',  $taskResource["sequence"] - 1)
-                                    ->where('task_id', $exist->id)
-                                    ->where('deleted_at', null)
-                                    ->update(["status" => DbVariablesDetail::variableType('task_status')->variableValue('pending')->first()->id]);
+                            HResourcesTask::where('sequence',  $taskResource["sequence"] - 1)
+                                ->where('task_id', $exist->id)
+                                ->where('deleted_at', null)
+                                ->update(["status" => DbVariablesDetail::variableType('task_status')->variableValue('pending')->first()->id]);
                             // }
                         } else {
-                            if(count(HResourcesTask::where('sequence', $taskResource["sequence"] + 1)
-                            ->where('task_id', $exist->id)->get())>0){
+                            if (count(HResourcesTask::where('sequence', $taskResource["sequence"] + 1)
+                                ->where('task_id', $exist->id)->get()) > 0) {
                                 HResourcesTask::where('sequence', $taskResource["sequence"] + 1)
-                                ->where('task_id', $exist->id)
-                                ->update(["status" => DbVariablesDetail::variableType('task_status')->variableValue('pending')->first()->id]);
+                                    ->where('task_id', $exist->id)
+                                    ->update(["status" => DbVariablesDetail::variableType('task_status')->variableValue('pending')->first()->id]);
                                 $exist["status"] = DbVariablesDetail::variableType('task_status')->variableValue('inReview')->first()->id;
-                            }else{
+                            } else {
                                 $exist["status"] = DbVariablesDetail::variableType('task_status')->variableValue('completed')->first()->id;
                             }
-
+                          
                         }
                         $taskResource["status"] = DbVariablesDetail::variableType('task_status')->variableValue('completed')->first()->id;
                         $taskResource["status"] = $status->id;
-                     
+
                         $taskResource["end_at"] = Carbon::now("Asia/Karachi")->toDateTimeString();
                         $taskResource["total_effort"] =  $this->calculate_effort($taskResource);
                         $taskResource->save();
@@ -451,7 +450,7 @@ class TaskController extends Controller
                     }
 
 
-
+                    break;
 
 
 
