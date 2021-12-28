@@ -23,8 +23,8 @@ class CreateIssuesTable extends Migration
             // $table->foreignId('resource_id')->constrained('users');
             $table->unsignedBigInteger('status');
             $table->boolean('approved')->default(false);
-            $table->foreignId('created_by')->constrained('users');
-            $table->foreignId('updated_by')->nullable()->constrained('users');
+            $table->bigInteger('created_by');
+            $table->bigInteger('updated_by')->nullable();
             $table->softDeletes();
             $table->timestamps();
         });

@@ -145,7 +145,7 @@ class TaskController extends Controller
                     break;
 
                 default:
-                    $tasks = Task::with('issues')->where('project_id', $request->query('pid'))->get();
+                    $tasks = Task::with('issues')->where('project_id', $request->query('pid'))->where('deleted_at',null)->get();
                     foreach ($tasks as $task) {
                         $task->team;
                     }
@@ -412,7 +412,7 @@ class TaskController extends Controller
                         break;
                     } else {
                         //if qa
-                        $unapprovedTask = Issue::where('task_id', $id)->where('created_by', auth()->user()->id)->where('approved', false)->where('status', 22)->get();
+                        $unapprovedTask = Issue::where('task_id', $id)->where('created_by', $request->myTag)->where('approved', false)->where('status', 22)->get();
                         if (count($unapprovedTask) > 0) {
                             return $this->error_response("Cant complete you have unapproved tasks!", 400);
                         }
@@ -420,7 +420,7 @@ class TaskController extends Controller
                         if ($myUnresolvedTask !== 0) {
                             return $this->error_response("Cant complete you have unresolved tasks!", 400);
                         }
-                        $unresolvedTask = Issue::where('task_id', $id)->where('created_by', auth()->user()->id)->where('status', 21)->where('deleted_at', null)->get();
+                        $unresolvedTask = Issue::where('task_id', $id)->where('created_by', $request->myTag)->where('status', 21)->where('deleted_at', null)->get();
                         if (count($unresolvedTask) > 0) {
                             // for ($i = $taskResource["sequence"] - 1; $i > 0; $i--) {
                             HResourcesTask::where('sequence',  $taskResource["sequence"] - 1)
@@ -452,34 +452,17 @@ class TaskController extends Controller
 
                     break;
 
-
-
-
-
-
                     //issue
                 case 13:
-                    // $unapprovedTask = Issue::where('task_id',$id)->where('created_by',auth()->user()->id)->where('approved',false)->get();
-                    // if(count($unapprovedTask)> 0){
-                    //     return $this->error_response("You have pending unapproved issues,cant create new Issue!",400);
-                    // }
-                    // for ($i = $taskResource["sequence"] - 1; $i > 0; $i--) {
-                    //     HResourcesTask::where('sequence', $i)
-                    //         ->where('task_id', $exist->id)
-                    //         ->update(["status" => DbVariablesDetail::variableType('task_status')->variableValue('pending')->first()->id]);
-                    // }
-
-                    // $taskResource["status"] = DbVariablesDetail::variableType('task_status')->variableValue('completed')->first()->id;
+                  
                     $exist["status"] = $request->status;
-                    // $taskResource["end_at"] = Carbon::now("Asia/Karachi")->toDateTimeString();
-                    // $taskResource["total_effort"] =  $this->calculate_effort($taskResource);
-                    $this->mark_issue($request->issues, $exist->id);
-                    // $taskResource->save();
+                  
+                    $this->mark_issue($request->issues, $exist->id,$request->myTag);
                     break;
 
                     //approve
                 case 16:
-                    $unapprovedTask = Issue::where('task_id', $id)->where('created_by', auth()->user()->id)->where('approved', false)->get();
+                    $unapprovedTask = Issue::where('task_id', $id)->where('created_by', $request->myTag)->where('approved', false)->get();
                     if (count($unapprovedTask) > 0) {
                         return $this->error_response("Cant complete you have unapproved tasks!", 400);
                     }
@@ -530,7 +513,7 @@ class TaskController extends Controller
      * @param  int $taskId
      * @return void
      */
-    protected function mark_issue($issues, $taskId)
+    protected function mark_issue($issues, $taskId,$myTag)
     {
 
         $errors = collect([]);
@@ -546,7 +529,7 @@ class TaskController extends Controller
                 // $newIssue["resource_id"] = $issue['resource_id'];
                 $newIssue['tag_id'] = $issue['tag_id'];
                 $newIssue['sequence_no'] = $issue['sequence_no'];
-                $newIssue["created_by"] = auth()->user()->id;
+                $newIssue["created_by"] = $myTag;
                 $saved = $newIssue->save();
                 if (!$saved) {
                     $errors->push([

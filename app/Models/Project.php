@@ -83,7 +83,7 @@ class Project extends Model
      */
     public function doc()
     {
-        return $this->belongsToMany(Doc::class, 'project_docs', 'project_id', 'doc_id');
+        return $this->belongsToMany(Doc::class, 'project_docs', 'project_id', 'doc_id')->wherePivot('deleted_at',null);
     }
 
         
@@ -113,6 +113,6 @@ class Project extends Model
      * @return void
      */
     public function tasks(){
-        return $this->hasMany(Task::class);
+        return $this->hasMany(Task::class)->where('deleted_at',null);
     }
 }

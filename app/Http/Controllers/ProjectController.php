@@ -330,12 +330,13 @@ class ProjectController extends Controller
     public function cost(Request $request, $id)
     {
 
-        $tasks = Project::find($id)->with('tasks')->first()->tasks;
+        $tasks = Project::where('id',$id)->where('deleted_at')->with('tasks')->first()->tasks;
         // dd($tasks);
         $overallEstimatedCost = 0;
         $overallTotalCost = 0;
         $costExceed = 0;
         $taskDetails = collect([]);
+        // return $tasks;
         foreach ($tasks as $task) {
             $task->team;
             
@@ -346,25 +347,31 @@ class ProjectController extends Controller
                 $resourceDetail = $resource["detail"];
                 $detail = Employee::where('user_id', $resource->id)->first();
                 $workingDays = (int)DbVariablesDetail::variableType('working_days')->first()->value;
-                $salaryPerHr = $detail["salary"] / $detail["working_hrs"] / $workingDays;
-                $estimatedCost = $salaryPerHr * $resourceDetail["estimated_effort"];
-                $totalCost = $resourceDetail["total_effort"] != null ? $salaryPerHr * $resourceDetail["total_effort"] : 0;
-                $overallEstimatedCost += $estimatedCost;
-                $overallTotalCost += $totalCost;
-                $costExceed += $totalCost > $estimatedCost ? abs($totalCost - $estimatedCost) : 0;
-                $taskDetail[] = [
-                    [
-                        "resource_id" => $resourceDetail["resource_id"],
-                        "estimatedCost" => $estimatedCost,
-                        "totalCost" => $totalCost,
-                        "costExceed" => $totalCost > $estimatedCost ? abs($totalCost - $estimatedCost) : 0
-                    ]
-                ];
+                $salaryPerHr = $this->calculate_salary_per_hr($detail["salary"] , $detail["working_hrs"] ,$workingDays);
+                if($salaryPerHr){
+                    $estimatedCost = $salaryPerHr * $resourceDetail["estimated_effort"];
+                    $totalCost = $resourceDetail["total_effort"] != null ? $salaryPerHr * $resourceDetail["total_effort"] : 0;
+                    $overallEstimatedCost += $estimatedCost;
+                    $overallTotalCost += $totalCost;
+                    $costExceed += $totalCost > $estimatedCost ? abs($totalCost - $estimatedCost) : 0;
+                    $taskDetail[] = [
+                        [
+                            "resource_id" => $resourceDetail["resource_id"],
+                            "estimatedCost" => $estimatedCost,
+                            "totalCost" => $totalCost,
+                            "costExceed" => $totalCost > $estimatedCost ? abs($totalCost - $estimatedCost) : 0
+                        ]
+                    ];
+                }
+             
                 // dd($salaryPerHr * $resourceDetail["estimated_effort"]);
             }
-            $taskDetails[] = [
+            $taskDetails->push([
                 $task->id => $taskDetail
-            ];
+            ]);
+            // $taskDetails[] = [
+            //     $task->id => $taskDetail
+            // ];
             $taskDetail = [];
         }
         // dd($overallTotalCost,$overallEstimatedCost,$costExceed);
@@ -373,5 +380,16 @@ class ProjectController extends Controller
             "totalCost" => $overallTotalCost, "exceededCost" => $costExceed,
             "taskDetails" => $taskDetails
         ], 200);
+    }
+
+    protected function calculate_salary_per_hr($salary,$workinghr,$workingDays){
+        if($salary==0){
+            return false;
+        }else if($workinghr == 0){
+            return false;
+        }else{
+           return ($salary / $workinghr) / $workingDays;
+        }
+
     }
 }

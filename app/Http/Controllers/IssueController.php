@@ -6,6 +6,7 @@ use App\Models\Issue;
 use Exception;
 use Illuminate\Http\Request;
 use App\Http\Traits\ResponseTrait;
+use App\Models\HResourcesTask;
 
 class IssueController extends Controller
 {
@@ -72,7 +73,8 @@ class IssueController extends Controller
                 "approved" => 'boolean'
             ]);
             $issueExist = Issue::find($id);
-            if (auth()->user()->id == $issueExist->created_by) {
+            
+            if ($request->approver == $issueExist->created_by) {
 
 
 
@@ -102,7 +104,7 @@ class IssueController extends Controller
     {
         
             $issueExist = Issue::find($id);
-            if (auth()->user()->id == $issueExist->created_by) {
+            // if (auth()->user()->id == $issueExist->created_by) {
                 if (!$issueExist) {
                     return $this->error_response('Not found', 404);
                 }
@@ -111,9 +113,10 @@ class IssueController extends Controller
                 } else {
                     return $this->error_response("Error in delete", 400);
                 }
-            } else {
-                return $this->error_response("Forbidden", 403);
-            }
+
+                // } else {
+                //     return $this->error_response("Forbidden", 403);
+                // }
 
          
     }
