@@ -44,10 +44,12 @@ use Illuminate\Support\Facades\Route;
 //login route
 Route::post('/login', [AuthController::class, 'login']);
 
+Route::get('/progress',[BasicController::class,'project_progresses']);
 //doc download
 Route::get('/doc/download/{id}', [DocController::class, 'download_file']);
-
 Route::middleware('auth:api')->group(function () {
+    Route::get('/free',[BasicController::class,'free_resources']);
+
     // Route::get('/hello',function(){
     //     return response()->json('hello');
     // });

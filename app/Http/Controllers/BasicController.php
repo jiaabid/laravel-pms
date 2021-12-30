@@ -254,4 +254,50 @@ class BasicController extends Controller
             return $this->error_response("Forbidden!", 403);
         }
     }
+
+    public function free_resources(){
+        $freeResources=[];
+        // $resources = HResourcesTask::where('deleted_at',null)->select('resource_id')->distinct()->get()->pluck('resource_id');
+        $roles = collect($this->get_child_roles(auth()->user()));
+        $roles->push(auth()->user()->role_id);
+        $users = auth()->user()->admin?User::whereIn('role_id', $roles)->get()->pluck('id'):User::whereIn('role_id', $roles)->where('dept_id', auth()->user()->dept_id)->get()->pluck('id');
+        // $users = User::whereIn('role_id', $roles)->get()->pluck('id');
+        
+        foreach($users as $resource){
+            $groupdata = HResourcesTask::where('deleted_at',null)->where('resource_id',$resource)->select(DB::raw('status,count(status) as count'))->groupBy('status')->get();
+        //    $tt[$resource]= $data;
+        //    return $tt;
+           foreach($groupdata as $data){
+               if($data->status !== 15 && $data->count>0){
+                   break;
+               }else{
+                   $freeResources[] = $resource;
+               }
+           }
+        };
+        // foreach($tt as $t){
+        //    return $t;
+           
+        // };
+        return $this->success_response(User::whereIn('id',$freeResources)->get(['id','name']),200);
+    }
+
+    public function project_progresses(){
+        $projects = Project::where('deleted_at',null)->with('tasks')->get();
+        $data = collect([]);
+        foreach($projects as $project){
+            $total = count($project->tasks);
+            $completed = $project->tasks->where('deleted_at',null)->where('status',15)->count();
+            $data->push(["id"=>$project->id,"name"=>$project->name,"total"=>$total,"completed"=>$completed]);
+        };
+        return $this->success_response($data,200);
+
+    }
+
+    public function resource_task(Request $request){
+        HResourcesTask::where('deleted_at',null)
+        ->where('resource_id',$request->resource_id)
+        ->whereBetween('start_date',[$request->from,$request->to])
+        ->get();
+    }
 }

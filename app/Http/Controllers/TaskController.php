@@ -417,11 +417,18 @@ class TaskController extends Controller
                         if (count($unresolvedTask) > 0) {
                             return $this->error_response("Cant complete you have unresolved tasks!", 400);
                         }
-                        HResourcesTask::where('sequence', $taskResource["sequence"] + 1)
+                        if(count(HResourcesTask::where('sequence', $taskResource["sequence"] + 1)
+                        ->where('task_id', $exist->id)->get())){
+                            HResourcesTask::where('sequence', $taskResource["sequence"] + 1)
                             ->where('task_id', $exist->id)
                             ->update(["status" => DbVariablesDetail::variableType('task_status')->variableValue('pending')->first()->id]);
+                            $exist["status"] = DbVariablesDetail::variableType('task_status')->variableValue('inReview')->first()->id;
+  
+                        }else{
+                        $exist["status"] = DbVariablesDetail::variableType('task_status')->variableValue('completed')->first()->id;
+
+                        }
                         $taskResource["status"] = $status->id;
-                        $exist["status"] = DbVariablesDetail::variableType('task_status')->variableValue('inReview')->first()->id;
                         $taskResource["end_at"] = Carbon::now("Asia/Karachi")->toDateTimeString();
                         $taskResource["total_effort"] =  $this->calculate_effort($taskResource);
                         $taskResource->save();
