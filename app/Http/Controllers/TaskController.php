@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use App\Http\Traits\ReusableTrait;
 use App\Http\Traits\ResponseTrait;
 use App\Models\Issue;
+use App\Models\Project;
 use Carbon\Carbon;
 use DateTime;
 use Illuminate\Support\Facades\DB;
@@ -118,7 +119,13 @@ class TaskController extends Controller
                     //tasks assign by me and assignTo me
                 case 18:
                     $pid = $request->query('pid');
-
+                    $allTask = Project::where('id',$request->query('pid'))->where('created_by',auth()->user()->id)->with('tasks')->first();
+                    if($allTask){
+                        $allTask = $allTask->tasks;
+                    }else{
+                        $allTask=[];
+                    }
+                    // return $allTask;
                     $assignByMe = Task::with('issues')->where('created_by', auth()->user()->id)->where('type', $id)->where('project_id', $pid)->where('deleted_at', null)->get();
                     $assignToMe = auth()->user()->assigned_task()->where('project_id', $pid)->get();
                     foreach ($assignByMe as $item) {
@@ -137,11 +144,19 @@ class TaskController extends Controller
                         }
                         $item['assignByMe'] = false;
                     }
+                    foreach($allTask as $item){
+                        $item->issues;
+                        $item->team;
+                        foreach ($item->team as $member) {
+                            $member->detail->tagId;
+                        } 
+                    }
                     // $payload["assignedToMe"] = $assignToMe;
                     // $payload["assignedByMe"] = $assignByMe;
                     $payload['tasks'] = collect([]);
                     $payload['tasks']->push(...$assignByMe);
                     $payload['tasks']->push(...$assignToMe);
+                    $payload['allTasks'] = $allTask;
                     break;
 
                 default:
@@ -172,7 +187,8 @@ class TaskController extends Controller
     public function show($id)
     {
 
-        $task = Task::where('id', $id)->with('team')->with('issues')->first();
+        $task = Task::where('id', $id)->with('team')->with('issues')->with('creator:id,name')->first();
+        // $task->creator;
         foreach ($task->team as $member) {
             $member->detail->tagId;
         }
@@ -482,7 +498,9 @@ class TaskController extends Controller
             }
             // return $exist;
             $saved = $exist->save();
+            DB::commit();
             $task = auth()->user()->assigned_task()->where('task_id', $exist->id)->where('project_id', $exist->project_id)->first();
+            $task->creator;
             $task->issues;
             $task->team;
             foreach ($task->team as $member) {
@@ -495,7 +513,7 @@ class TaskController extends Controller
             // foreach ($exist->team as $member) {
             //     $member->detail->tagId;
             // }
-            DB::commit();
+          
             if ($saved) {
                 return $this->success_response($task, 200);
             } else {
@@ -676,7 +694,7 @@ class TaskController extends Controller
         $item["pause"] = true;
         $item["end_at"] = Carbon::now("Asia/Karachi")->toDateTimeString();
         $item["total_effort"] =  $this->calculate_effort($item);
-        if ($item["total_effort"] > $item["estimated_effort"]) {
+        if ($item["total_effort"] >($item["estimated_effort"]/(60*60))) {
             $item["delay"] = true;
         }
         if ($item->save()) {
@@ -698,7 +716,7 @@ class TaskController extends Controller
         $item["start_at"] = Carbon::now("Asia/Karachi")->toDateTimeString();
 
         $item["total_effort"] = $this->calculate_effort($item);
-        if ($item["total_effort"] > $item["estimated_effort"]) {
+        if ($item["total_effort"] > ($item["estimated_effort"]/(60*60))) {
             $item["delay"] = true;
         }
         $item["end_at"] = null;
@@ -718,7 +736,7 @@ class TaskController extends Controller
     public function calculate_effort($item)
     {
         return $item["total_effort"] != null
-            ? abs($item["total_effort"] + abs(((strtotime($item["start_at"]) - strtotime($item["end_at"])) / 60 / 60)))
-            : abs(((strtotime($item["start_at"]) - strtotime($item["end_at"])) / 60 / 60));
+            ? abs($item["total_effort"] + abs(((strtotime($item["start_at"]) - strtotime($item["end_at"])) / (60 * 60))))
+            : abs(((strtotime($item["start_at"]) - strtotime($item["end_at"])) / (60 *60)));
     }
 }

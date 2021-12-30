@@ -115,4 +115,13 @@ class Project extends Model
     public function tasks(){
         return $this->hasMany(Task::class)->where('deleted_at',null);
     }
+    
+    /**
+     * creator
+     *
+     * @return void
+     */
+    public function creator(){
+        return $this->belongsTo(User::class,'created_by','id');
+    }
 }

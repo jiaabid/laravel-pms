@@ -100,5 +100,9 @@ class Task extends Model
     {
         return $this->hasMany(Issue::class)->where('issues.deleted_at',null);
     }
+
+    public function creator(){
+        return $this->belongsTo(User::class,'created_by','id');
+    }
    
 }

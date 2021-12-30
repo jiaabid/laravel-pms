@@ -151,6 +151,7 @@ class ProjectController extends Controller
                 ->with('human_resource')
                 ->with('nonhuman_resource')
                 ->with('tasks')
+                ->with('creator:id,name')
                 ->first();
         } else {
             $project = Project::where('id', $id)
@@ -234,6 +235,7 @@ class ProjectController extends Controller
             $project->human_resource;
             $project->nonhuman_resource;
             $project->tasks;
+            $project->creator;
             return $this->success_response($project, 200);
 
             // if (count($errorMesages) > 0) {
@@ -349,7 +351,7 @@ class ProjectController extends Controller
                 $workingDays = (int)DbVariablesDetail::variableType('working_days')->first()->value;
                 $salaryPerHr = $this->calculate_salary_per_hr($detail["salary"] , $detail["working_hrs"] ,$workingDays);
                 if($salaryPerHr){
-                    $estimatedCost = $salaryPerHr * $resourceDetail["estimated_effort"];
+                    $estimatedCost = $salaryPerHr * ($resourceDetail["estimated_effort"]/(60*60));
                     $totalCost = $resourceDetail["total_effort"] != null ? $salaryPerHr * $resourceDetail["total_effort"] : 0;
                     $overallEstimatedCost += $estimatedCost;
                     $overallTotalCost += $totalCost;
