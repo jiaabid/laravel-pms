@@ -293,7 +293,10 @@ class BasicController extends Controller
         return $this->success_response($data,200);
 
     }
-
+    public function resource_last_task(Request $request){
+        $lastTask= HResourcesTask::where('deleted_at',null)->where("resource_id",$request->resource_id)->max('end_date');
+        return $this->success_response($lastTask,200);
+    }
     public function resource_task(Request $request){
         HResourcesTask::where('deleted_at',null)
         ->where('resource_id',$request->resource_id)

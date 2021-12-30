@@ -43,7 +43,7 @@ use Illuminate\Support\Facades\Route;
 
 //login route
 Route::post('/login', [AuthController::class, 'login']);
-
+Route::post("/resource/lastTask",[BasicController::class,"resource_last_task"]);
 Route::get('/progress',[BasicController::class,'project_progresses']);
 //doc download
 Route::get('/doc/download/{id}', [DocController::class, 'download_file']);
