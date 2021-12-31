@@ -43,13 +43,16 @@ use Illuminate\Support\Facades\Route;
 
 //login route
 Route::post('/login', [AuthController::class, 'login']);
-Route::post("/resource/lastTask",[BasicController::class,"resource_last_task"]);
-Route::get('/progress',[BasicController::class,'project_progresses']);
+
 //doc download
 Route::get('/doc/download/{id}', [DocController::class, 'download_file']);
 Route::middleware('auth:api')->group(function () {
-    Route::get('/free',[BasicController::class,'free_resources']);
-
+    Route::get('/free', [BasicController::class, 'free_resources']);
+    Route::post("/resource/lastTask", [BasicController::class, "resource_last_task"]);
+    Route::get('/progress', [BasicController::class, 'project_progresses']);
+    Route::post('/data/depart', [BasicController::class, 'department_data']);
+    Route::get('/projectresource/{id}', [BasicController::class, 'project_resources']);
+    Route::post("/filter/task", [BasicController::class, "resource_task"]);
     // Route::get('/hello',function(){
     //     return response()->json('hello');
     // });
@@ -74,15 +77,15 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/task/{id}', [TaskController::class, 'my_tasks']);
 
     Route::resource('tasks', TaskController::class);
-    Route::post('tasks/hello', function(){
-        return 43; 
-     });
- 
-     Route::post('/tasks/status/{id}', [TaskController::class, 'change_status']);
-     Route::post('/tasks/my/status', [TaskController::class, 'my_task_change_status']);
-     Route::put('/tasks/my/{id}', [TaskController::class, 'update_mytask']);
+    Route::post('tasks/hello', function () {
+        return 43;
+    });
 
-   
+    Route::post('/tasks/status/{id}', [TaskController::class, 'change_status']);
+    Route::post('/tasks/my/status', [TaskController::class, 'my_task_change_status']);
+    Route::put('/tasks/my/{id}', [TaskController::class, 'update_mytask']);
+
+
     Route::post('tasks/action/{id}', [TaskController::class, 'task_action']);
     Route::post('tasks/resource/{id}', [TaskController::class, 'assign_resources']);
     Route::resource('resources', ResourceController::class);
@@ -96,6 +99,6 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/db/detail', [BasicController::class, 'details']);
     Route::get('/variables/detail/{id}', [BasicController::class, 'get_variable_values']);
     Route::get('/variables/status/{id}', [BasicController::class, 'get_status']);
-    Route::get('/stats/project',[BasicController::class,'get_project_stats']);
-    Route::get('/stats/task',[BasicController::class,'get_task_stats']);
+    Route::get('/stats/project', [BasicController::class, 'get_project_stats']);
+    Route::get('/stats/task', [BasicController::class, 'get_task_stats']);
 });

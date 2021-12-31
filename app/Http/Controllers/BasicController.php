@@ -11,6 +11,7 @@ use App\Models\TagStatus;
 use App\Models\Project;
 use App\Models\User;
 use App\Http\Traits\ReusableTrait;
+use App\Models\Department;
 use App\Models\HResourcesTask;
 use App\Models\Task;
 use Illuminate\Support\Facades\DB;
@@ -96,9 +97,9 @@ class BasicController extends Controller
                 ->select(DB::raw('status,count(*) as count'))
                 ->groupBy('status')
                 ->get();
-                // $tasks = Task::where('deleted_at', null)->where('type', 18)
-                //     ->where('status',11) 
-                // ->get();
+            // $tasks = Task::where('deleted_at', null)->where('type', 18)
+            //     ->where('status',11) 
+            // ->get();
             return $this->success_response($tasks, 200);
         } else {
             //assign by me tasks
@@ -255,52 +256,85 @@ class BasicController extends Controller
         }
     }
 
-    public function free_resources(){
-        $freeResources=[];
+    public function free_resources()
+    {
+        $freeResources = [];
         // $resources = HResourcesTask::where('deleted_at',null)->select('resource_id')->distinct()->get()->pluck('resource_id');
         $roles = collect($this->get_child_roles(auth()->user()));
         $roles->push(auth()->user()->role_id);
-        $users = auth()->user()->admin?User::whereIn('role_id', $roles)->get()->pluck('id'):User::whereIn('role_id', $roles)->where('dept_id', auth()->user()->dept_id)->get()->pluck('id');
+        $users = auth()->user()->admin ? User::whereIn('role_id', $roles)->get()->pluck('id') : User::whereIn('role_id', $roles)->where('dept_id', auth()->user()->dept_id)->get()->pluck('id');
         // $users = User::whereIn('role_id', $roles)->get()->pluck('id');
-        
-        foreach($users as $resource){
-            $groupdata = HResourcesTask::where('deleted_at',null)->where('resource_id',$resource)->select(DB::raw('status,count(status) as count'))->groupBy('status')->get();
-        //    $tt[$resource]= $data;
-        //    return $tt;
-           foreach($groupdata as $data){
-               if($data->status !== 15 && $data->count>0){
-                   break;
-               }else{
-                   $freeResources[] = $resource;
-               }
-           }
+
+        foreach ($users as $resource) {
+            $groupdata = HResourcesTask::where('deleted_at', null)->where('resource_id', $resource)->select(DB::raw('status,count(status) as count'))->groupBy('status')->get();
+            //    $tt[$resource]= $data;
+            //    return $tt;
+            foreach ($groupdata as $data) {
+                if ($data->status !== 15 && $data->count > 0) {
+                    break;
+                } else {
+                    $freeResources[] = $resource;
+                }
+            }
         };
         // foreach($tt as $t){
         //    return $t;
-           
+
         // };
-        return $this->success_response(User::whereIn('id',$freeResources)->get(['id','name']),200);
+        return $this->success_response(User::whereIn('id', $freeResources)->get(['id', 'name']), 200);
     }
 
-    public function project_progresses(){
-        $projects = Project::where('deleted_at',null)->with('tasks')->get();
+    public function project_progresses()
+    {
+        $projects = Project::where('deleted_at', null)->with('tasks')->get();
         $data = collect([]);
-        foreach($projects as $project){
+        foreach ($projects as $project) {
             $total = count($project->tasks);
-            $completed = $project->tasks->where('deleted_at',null)->where('status',15)->count();
-            $data->push(["id"=>$project->id,"name"=>$project->name,"total"=>$total,"completed"=>$completed]);
+            $completed = $project->tasks->where('deleted_at', null)->where('status', 15)->count();
+            $data->push(["id" => $project->id, "name" => $project->name, "total" => $total, "completed" => $completed]);
         };
-        return $this->success_response($data,200);
+        return $this->success_response($data, 200);
+    }
+    public function resource_last_task(Request $request)
+    {
+        $lastTask = HResourcesTask::where('deleted_at', null)->where("resource_id", $request->resource_id)->max('end_date');
+        return $this->success_response($lastTask, 200);
+    }
+    public function resource_task(Request $request)
+    {
+        $tasks=[];
+        if ($request->resource_id !== null) {
+            //with resource id
+            $tasks = Task::with('team')->whereHas('team', function ($query) use ($request) {
+                return $query->where('resource_id', $request->resource_id)
+                    ->whereBetween('start_date', [$request->date[0], $request->date[1]]);
+            })->get();
+        }
+        else if($request->project_id !== null){
+            $tasks = Task::with('team')->where('project_id',$request->project_id)->whereBetween('start_date', [$request->date[0], $request->date[1]])->get();
+        }else{
+            $users = Department::where('id',$request->dept_id)->with('user')->first();
+            $userIDs = $users->user->pluck('id');
+            // return $userIDs;
+            $tasks = Task::with('team')->whereHas('team', function ($query) use ($userIDs) {
+                return $query->whereIn('resource_id', $userIDs);
+            })->whereBetween('start_date', [$request->date[0], $request->date[1]])->get();
 
+        }
+
+        return $this->success_response($tasks,200);
     }
-    public function resource_last_task(Request $request){
-        $lastTask= HResourcesTask::where('deleted_at',null)->where("resource_id",$request->resource_id)->max('end_date');
-        return $this->success_response($lastTask,200);
+    public function department_data(Request $request)
+    {
+        if ($request->mode == 'user') {
+            $departUsers = Department::where('id', $request->dept_id)->with('user')->first();
+            return $this->success_response($departUsers->user, 200);
+        }
     }
-    public function resource_task(Request $request){
-        HResourcesTask::where('deleted_at',null)
-        ->where('resource_id',$request->resource_id)
-        ->whereBetween('start_date',[$request->from,$request->to])
-        ->get();
+    public function project_resources($id)
+    {
+        $project = Project::where('id', $id)->where('deleted_at', null)->with('human_resource')
+            ->first();
+        return $this->success_response($project->human_resource, 200);
     }
 }
