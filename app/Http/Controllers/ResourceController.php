@@ -21,7 +21,7 @@ class ResourceController extends Controller
     public function index()
     {
         
-            if (auth()->user()->can('retrieve department')) {
+            if (auth()->user()->can('retrieve project')) {
                 $resources = NonHumanResources::where('deleted_at',NULL)->get();
                
                 return $this->success_response($resources, 200);
@@ -69,7 +69,7 @@ class ResourceController extends Controller
     {
 
         
-            if (auth()->user()->can('retrieve department')) {
+            if (auth()->user()->can('retrieve project')) {
                 $resource = NonHumanResources::find($id);
                 if ($resource) {
                     return $this->success_response($resource, 200);

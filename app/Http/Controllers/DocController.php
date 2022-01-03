@@ -89,6 +89,7 @@ class DocController extends Controller
                         ->with('human_resource')
                         ->with('nonhuman_resource')
                         ->with('tasks')
+                        ->with('creator:id,name')
                         ->first();
                     if ($res) {
                         return $this->success_response($projects, 201);

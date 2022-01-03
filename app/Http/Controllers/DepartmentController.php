@@ -34,7 +34,7 @@ class DepartmentController extends Controller
 
             return $this->success_response($departs, 200);
         } else {
-            return $this->success_response(auth()->user()->department, 200);
+            return $this->success_response([auth()->user()->department], 200);
         }
     }
 

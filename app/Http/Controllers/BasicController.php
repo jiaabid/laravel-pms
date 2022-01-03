@@ -200,13 +200,16 @@ class BasicController extends Controller
             $pendingProjects = 0;
             $lateProjects = 0;
 
-            $lateProjects = auth()->user()->projects->where('deleted_at', null)->where('late', 0)->count();
+            $lateProjects = auth()->user()->projects->where('deleted_at', null)->where('late', 1)->count();
             foreach (auth()->user()->projects->where('deleted_at', null) as $project) {
                 if ($project->status == 6) {
                     $completedProjects++;
-                } else if ($project->late) {
-                    $lateProjects++;
-                } else {
+                } 
+                // else if ($project->late == true) {
+                //     $lateProjects++;
+                // }
+                
+                else {
                     $pendingProjects++;
                 }
             };
