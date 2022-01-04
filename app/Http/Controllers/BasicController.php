@@ -366,10 +366,14 @@ class BasicController extends Controller
     {
         try {
             foreach ($request->statuses as $status) {
-                $tagStatus = new  TagStatus();
-                $tagStatus['status_id'] = $status;
-                $tagStatus['tag_id'] = $request->tag;
-                $tagStatus->save();
+                $oldStatus = TagStatus::where('tag_id',$request->tag)->where('status_id',$status)->first();
+                if(!$oldStatus){
+                    $tagStatus = new  TagStatus();
+                    $tagStatus['status_id'] = $status;
+                    $tagStatus['tag_id'] = $request->tag;
+                    $tagStatus->save();
+                }
+                
             };
             return $this->success_response("Assigned!", 200);
         } catch (Exception $e) {
