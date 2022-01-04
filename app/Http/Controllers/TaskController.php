@@ -14,6 +14,7 @@ use App\Http\Traits\ReusableTrait;
 use App\Http\Traits\ResponseTrait;
 use App\Models\Issue;
 use App\Models\Project;
+use App\Models\TagStatus;
 use Carbon\Carbon;
 use DateTime;
 use Illuminate\Support\Facades\DB;
@@ -412,7 +413,8 @@ class TaskController extends Controller
                     //complete
                 case 15:
                     //if dev
-                    if ($taskResource->tag_id == 7) {
+                    // if ($taskResource->tag_id == 7) {
+                        if (!TagStatus::where('tag_id',$taskResource->tag_id )->where('status_id',13)->first()) {
                         $unresolvedTask = Issue::where('task_id', $id)->where('tag_id', $taskResource->tag_id)->where('status', 21)->get();
                         if (count($unresolvedTask) > 0) {
                             return $this->error_response("Cant complete you have unresolved tasks!", 400);

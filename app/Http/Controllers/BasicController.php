@@ -204,11 +204,11 @@ class BasicController extends Controller
             foreach (auth()->user()->projects->where('deleted_at', null) as $project) {
                 if ($project->status == 6) {
                     $completedProjects++;
-                } 
+                }
                 // else if ($project->late == true) {
                 //     $lateProjects++;
                 // }
-                
+
                 else {
                     $pendingProjects++;
                 }
@@ -305,27 +305,25 @@ class BasicController extends Controller
     }
     public function resource_task(Request $request)
     {
-        $tasks=[];
+        $tasks = [];
         if ($request->resource_id !== null) {
             //with resource id
             $tasks = Task::with('team')->whereHas('team', function ($query) use ($request) {
                 return $query->where('resource_id', $request->resource_id)
                     ->whereBetween('start_date', [$request->date[0], $request->date[1]]);
             })->get();
-        }
-        else if($request->project_id !== null){
-            $tasks = Task::with('team')->where('project_id',$request->project_id)->whereBetween('start_date', [$request->date[0], $request->date[1]])->get();
-        }else{
-            $users = Department::where('id',$request->dept_id)->with('user')->first();
+        } else if ($request->project_id !== null) {
+            $tasks = Task::with('team')->where('project_id', $request->project_id)->whereBetween('start_date', [$request->date[0], $request->date[1]])->get();
+        } else {
+            $users = Department::where('id', $request->dept_id)->with('user')->first();
             $userIDs = $users->user->pluck('id');
             // return $userIDs;
             $tasks = Task::with('team')->whereHas('team', function ($query) use ($userIDs) {
                 return $query->whereIn('resource_id', $userIDs);
             })->whereBetween('start_date', [$request->date[0], $request->date[1]])->get();
-
         }
 
-        return $this->success_response($tasks,200);
+        return $this->success_response($tasks, 200);
     }
     public function department_data(Request $request)
     {
@@ -339,5 +337,43 @@ class BasicController extends Controller
         $project = Project::where('id', $id)->where('deleted_at', null)->with('human_resource')
             ->first();
         return $this->success_response($project->human_resource, 200);
+    }
+
+    public function add_tag(Request $request)
+    {
+        $exist = DbVariablesDetail::where('value', $request->name)->first();
+
+        if (!$exist) {
+            $this->validate($request, [
+                'name' => 'required'
+            ]);
+            $newVariable = new DbVariablesDetail();
+            $newVariable['value'] = $request->name;
+            $newVariable['variable_id'] = $request->vid;
+            $saved = $newVariable->save();
+            // dd($newVariable);
+            if ($saved) {
+                return $this->success_response($newVariable, 201);
+            } else {
+                return $this->error_response("Error in adding tag!", 400);
+            }
+        } else {
+            return $this->error_response("Already Exist", 400);
+        }
+    }
+
+    public function assign_status_to_tag(Request $request)
+    {
+        try {
+            foreach ($request->statuses as $status) {
+                $tagStatus = new  TagStatus();
+                $tagStatus['status_id'] = $status;
+                $tagStatus['tag_id'] = $request->tag;
+                $tagStatus->save();
+            };
+            return $this->success_response("Assigned!", 200);
+        } catch (Exception $e) {
+            return $this->error_response($e->getMessage(), 500);
+        }
     }
 }

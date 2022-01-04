@@ -77,9 +77,7 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/task/{id}', [TaskController::class, 'my_tasks']);
 
     Route::resource('tasks', TaskController::class);
-    Route::post('tasks/hello', function () {
-        return 43;
-    });
+    
 
     Route::post('/tasks/status/{id}', [TaskController::class, 'change_status']);
     Route::post('/tasks/my/status', [TaskController::class, 'my_task_change_status']);
@@ -101,4 +99,6 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/variables/status/{id}', [BasicController::class, 'get_status']);
     Route::get('/stats/project', [BasicController::class, 'get_project_stats']);
     Route::get('/stats/task', [BasicController::class, 'get_task_stats']);
+    Route::post("/tag",[BasicController::class,'add_tag']);
+    Route::post("/tag/assign",[BasicController::class,'assign_status_to_tag']);
 });
