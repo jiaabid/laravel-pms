@@ -24,7 +24,7 @@ date_default_timezone_set('Asia/Karachi');
 
 class TaskController extends Controller
 {
-    use ResponseTrait;
+    use ResponseTrait, ReusableTrait;
     private $responseBody;
 
 
@@ -120,13 +120,27 @@ class TaskController extends Controller
                     //tasks assign by me and assignTo me
                 case 18:
                     $pid = $request->query('pid');
-                    $allTask = Project::where('id',$request->query('pid'))->where('created_by',auth()->user()->id)->with('tasks')->first();
-                    if($allTask){
-                        $allTask = $allTask->tasks;
-                    }else{
-                        $allTask=[];
+                    // $allTask = Project::where('id', $request->query('pid'))->where('created_by', auth()->user()->id)->with('tasks')->first();
+                    // if ($allTask) {
+                    //     $allTask = $allTask->tasks;
+                    // } else {
+                    //     $allTask = [];
+                    // }
+                    $roles = collect($this->get_child_roles(auth()->user()));
+
+                    $childUsers = User::whereIn('role_id', $roles)->get()->pluck('id');
+                    $childUsers->push(auth()->user()->id);
+                    $allTask = Task::with('team')->whereHas('team', function ($query) use ($childUsers) {
+                        return $query->whereIn('resource_id', $childUsers);
+                    })->with('issues')->get();
+                    foreach ($allTask as $item) {
+
+                        $item->team;
+                        foreach ($item->team as $member) {
+                            $member->detail->tagId;
+                        }
                     }
-                    // return $allTask;
+                    // return $hirarchalTask;
                     $assignByMe = Task::with('issues')->where('created_by', auth()->user()->id)->where('type', $id)->where('project_id', $pid)->where('deleted_at', null)->get();
                     $assignToMe = auth()->user()->assigned_task()->where('project_id', $pid)->get();
                     foreach ($assignByMe as $item) {
@@ -145,12 +159,12 @@ class TaskController extends Controller
                         }
                         $item['assignByMe'] = false;
                     }
-                    foreach($allTask as $item){
+                    foreach ($allTask as $item) {
                         $item->issues;
                         $item->team;
                         foreach ($item->team as $member) {
                             $member->detail->tagId;
-                        } 
+                        }
                     }
                     // $payload["assignedToMe"] = $assignToMe;
                     // $payload["assignedByMe"] = $assignByMe;
@@ -161,7 +175,7 @@ class TaskController extends Controller
                     break;
 
                 default:
-                    $tasks = Task::with('issues')->where('project_id', $request->query('pid'))->where('deleted_at',null)->get();
+                    $tasks = Task::with('issues')->where('project_id', $request->query('pid'))->where('deleted_at', null)->get();
                     foreach ($tasks as $task) {
                         $task->team;
                     }
@@ -414,21 +428,19 @@ class TaskController extends Controller
                 case 15:
                     //if dev
                     // if ($taskResource->tag_id == 7) {
-                        if (!TagStatus::where('tag_id',$taskResource->tag_id )->where('status_id',13)->first()) {
+                    if (!TagStatus::where('tag_id', $taskResource->tag_id)->where('status_id', 13)->first()) {
                         $unresolvedTask = Issue::where('task_id', $id)->where('tag_id', $taskResource->tag_id)->where('status', 21)->get();
                         if (count($unresolvedTask) > 0) {
                             return $this->error_response("Cant complete you have unresolved tasks!", 400);
                         }
-                        if(count(HResourcesTask::where('sequence', $taskResource["sequence"] + 1)
-                        ->where('task_id', $exist->id)->get())){
+                        if (count(HResourcesTask::where('sequence', $taskResource["sequence"] + 1)
+                            ->where('task_id', $exist->id)->get())) {
                             HResourcesTask::where('sequence', $taskResource["sequence"] + 1)
-                            ->where('task_id', $exist->id)
-                            ->update(["status" => DbVariablesDetail::variableType('task_status')->variableValue('pending')->first()->id]);
+                                ->where('task_id', $exist->id)
+                                ->update(["status" => DbVariablesDetail::variableType('task_status')->variableValue('pending')->first()->id]);
                             $exist["status"] = DbVariablesDetail::variableType('task_status')->variableValue('inReview')->first()->id;
-  
-                        }else{
-                        $exist["status"] = DbVariablesDetail::variableType('task_status')->variableValue('completed')->first()->id;
-
+                        } else {
+                            $exist["status"] = DbVariablesDetail::variableType('task_status')->variableValue('completed')->first()->id;
                         }
                         $taskResource["status"] = $status->id;
                         $taskResource["end_at"] = Carbon::now("Asia/Karachi")->toDateTimeString();
@@ -463,7 +475,6 @@ class TaskController extends Controller
                             } else {
                                 $exist["status"] = DbVariablesDetail::variableType('task_status')->variableValue('completed')->first()->id;
                             }
-                          
                         }
                         $taskResource["status"] = DbVariablesDetail::variableType('task_status')->variableValue('completed')->first()->id;
                         $taskResource["status"] = $status->id;
@@ -479,10 +490,10 @@ class TaskController extends Controller
 
                     //issue
                 case 13:
-                  
+
                     $exist["status"] = $request->status;
-                  
-                    $this->mark_issue($request->issues, $exist->id,$request->myTag);
+
+                    $this->mark_issue($request->issues, $exist->id, $request->myTag);
                     break;
 
                     //approve
@@ -522,7 +533,7 @@ class TaskController extends Controller
             // foreach ($exist->team as $member) {
             //     $member->detail->tagId;
             // }
-          
+
             if ($saved) {
                 return $this->success_response($task, 200);
             } else {
@@ -540,7 +551,7 @@ class TaskController extends Controller
      * @param  int $taskId
      * @return void
      */
-    protected function mark_issue($issues, $taskId,$myTag)
+    protected function mark_issue($issues, $taskId, $myTag)
     {
 
         $errors = collect([]);
@@ -703,7 +714,7 @@ class TaskController extends Controller
         $item["pause"] = true;
         $item["end_at"] = Carbon::now("Asia/Karachi")->toDateTimeString();
         $item["total_effort"] =  $this->calculate_effort($item);
-        if ($item["total_effort"] >($item["estimated_effort"]/(60*60))) {
+        if ($item["total_effort"] > ($item["estimated_effort"] / (60 * 60))) {
             $item["delay"] = true;
         }
         if ($item->save()) {
@@ -725,7 +736,7 @@ class TaskController extends Controller
         $item["start_at"] = Carbon::now("Asia/Karachi")->toDateTimeString();
 
         $item["total_effort"] = $this->calculate_effort($item);
-        if ($item["total_effort"] > ($item["estimated_effort"]/(60*60))) {
+        if ($item["total_effort"] > ($item["estimated_effort"] / (60 * 60))) {
             $item["delay"] = true;
         }
         $item["end_at"] = null;
@@ -746,6 +757,6 @@ class TaskController extends Controller
     {
         return $item["total_effort"] != null
             ? abs($item["total_effort"] + abs(((strtotime($item["start_at"]) - strtotime($item["end_at"])) / (60 * 60))))
-            : abs(((strtotime($item["start_at"]) - strtotime($item["end_at"])) / (60 *60)));
+            : abs(((strtotime($item["start_at"]) - strtotime($item["end_at"])) / (60 * 60)));
     }
 }
