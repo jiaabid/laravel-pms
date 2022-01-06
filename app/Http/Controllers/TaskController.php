@@ -735,10 +735,10 @@ class TaskController extends Controller
         $item["pause"] = false;
         $item["start_at"] = Carbon::now("Asia/Karachi")->toDateTimeString();
 
-        $item["total_effort"] = $this->calculate_effort($item);
-        if ($item["total_effort"] > ($item["estimated_effort"] / (60 * 60))) {
-            $item["delay"] = true;
-        }
+        // $item["total_effort"] = $this->calculate_effort($item);
+        // if ($item["total_effort"] > ($item["estimated_effort"] / (60 * 60))) {
+        //     $item["delay"] = true;
+        // }
         $item["end_at"] = null;
         if ($item->save()) {
             return true;
