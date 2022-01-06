@@ -272,13 +272,18 @@ class BasicController extends Controller
             $groupdata = HResourcesTask::where('deleted_at', null)->where('resource_id', $resource)->select(DB::raw('status,count(status) as count'))->groupBy('status')->get();
             //    $tt[$resource]= $data;
             //    return $tt;
-            foreach ($groupdata as $data) {
-                if ($data->status !== 15 && $data->count > 0) {
-                    break;
-                } else {
-                    $freeResources[] = $resource;
+            if(count($groupdata)>0){
+                foreach ($groupdata as $data) {
+                    if ($data->status !== 15 && $data->count > 0) {
+                        break;
+                    } else {
+                        $freeResources[] = $resource;
+                    }
                 }
+            }else{
+                $freeResources[] = $resource;
             }
+         
         };
         // foreach($tt as $t){
         //    return $t;

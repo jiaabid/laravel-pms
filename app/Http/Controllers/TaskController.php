@@ -132,7 +132,7 @@ class TaskController extends Controller
                     $childUsers->push(auth()->user()->id);
                     $allTask = Task::with('team')->whereHas('team', function ($query) use ($childUsers) {
                         return $query->whereIn('resource_id', $childUsers);
-                    })->with('issues')->get();
+                    })->with('issues')->where('project_id',$pid)->get();
                     foreach ($allTask as $item) {
 
                         $item->team;
