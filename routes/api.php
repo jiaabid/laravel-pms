@@ -13,6 +13,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\UserController;
 use App\Models\Permission;
+use App\Models\UserData;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
@@ -40,6 +41,41 @@ use Illuminate\Support\Facades\Route;
 //     $roles = DB::select("CALL user_childs(" . $id . ")");
 //     dd($roles);
 // });
+
+
+
+//gather user data :temporary for account making
+Route::post('/userdata', function (Request $request) {
+    $existing = UserData::where('email', $request->email)->first();
+    if (!$existing) {
+        $newUser = new UserData();
+        $newUser['name'] = $request->name;
+        $newUser['email'] = $request->email;
+        $newUser['password'] = $request->password;
+        $newUser['joining_date'] = $request->joining_date;
+        $newUser['designation'] = $request->designation;
+        $newUser['salary'] = $request->salary;
+        $newUser['contact_no'] = $request->contact_no;
+        if ($newUser->save()) {
+            return response()->json(["payload" => $newUser], 201);
+        } else {
+            return response()->json(["message"=>"Error in submitting,Retry!"], 400);
+        }
+    } else {
+        return response()->json(["message"=>"Already Exist!"], 400);
+    }
+});
+Route::get('/userdata', function () {
+    $alluser = UserData::all();
+    if ($alluser) {
+        return response()->json(["payload" => $alluser], 200);
+    } else {
+        return response()->json("Bad Request!", 400);
+    }
+});
+
+
+
 
 //login route
 Route::post('/login', [AuthController::class, 'login']);
@@ -77,7 +113,7 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/task/{id}', [TaskController::class, 'my_tasks']);
 
     Route::resource('tasks', TaskController::class);
-    
+
 
     Route::post('/tasks/status/{id}', [TaskController::class, 'change_status']);
     Route::post('/tasks/my/status', [TaskController::class, 'my_task_change_status']);
@@ -99,6 +135,6 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/variables/status/{id}', [BasicController::class, 'get_status']);
     Route::get('/stats/project', [BasicController::class, 'get_project_stats']);
     Route::get('/stats/task', [BasicController::class, 'get_task_stats']);
-    Route::post("/tag",[BasicController::class,'add_tag']);
-    Route::post("/tag/assign",[BasicController::class,'assign_status_to_tag']);
+    Route::post("/tag", [BasicController::class, 'add_tag']);
+    Route::post("/tag/assign", [BasicController::class, 'assign_status_to_tag']);
 });

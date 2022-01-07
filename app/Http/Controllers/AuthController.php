@@ -25,7 +25,7 @@ class AuthController extends Controller
 
         // if (Auth::guard('web')->attempt($req->only('email', 'password'))) {
           
-            $user = User::where('email', $req->email)->with('role:id,name')->with('department:id,name')->first();
+            $user = User::where('email', $req->email)->with('detail')->with('role:id,name')->with('department:id,name')->first();
             // dd(Hash::check($req->password, $user->password));
             // return Hash::check($req->password, $user->password);
             if (!$user) {
