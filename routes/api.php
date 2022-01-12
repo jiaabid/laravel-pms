@@ -59,10 +59,10 @@ Route::post('/userdata', function (Request $request) {
         if ($newUser->save()) {
             return response()->json(["payload" => $newUser], 201);
         } else {
-            return response()->json(["message"=>"Error in submitting,Retry!"], 400);
+            return response()->json(["message" => "Error in submitting,Retry!"], 400);
         }
     } else {
-        return response()->json(["message"=>"Already Exist!"], 400);
+        return response()->json(["message" => "Already Exist!"], 400);
     }
 });
 Route::get('/userdata', function () {
@@ -96,7 +96,7 @@ Route::middleware('auth:api')->group(function () {
 
     Route::resource('/department', DepartmentController::class);
     // Route::get('/roles', [RoleController::class, 'get_roles']);
-
+    Route::post("/changepassword/{id}", [UserController::class, 'change_password']);
     Route::resource('/role', RoleController::class);
     Route::resource('/permission', PermissionController::class);
     Route::get('/my/permission/{id}', [PermissionController::class, 'role_permissions']);

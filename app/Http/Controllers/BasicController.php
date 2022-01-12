@@ -93,14 +93,30 @@ class BasicController extends Controller
     public function get_task_stats()
     {
         if (auth()->user()->admin) {
-            $tasks = Task::where('deleted_at', null)->where('type', 18)
-                ->select(DB::raw('status,count(*) as count'))
-                ->groupBy('status')
+            // $tasks = Task::where('deleted_at', null)->where('type', 18)
+            //     // ->select(DB::raw('status,CAST(count(*) AS UNSIGNED )as count'))
+            //     ->selectRaw('status,CAST(count(*) as SIGNED) as count')
+            //     ->groupBy('status')
+            //     ->get();
+                $tasks = Task::where('deleted_at', null)->where('type', 18)
+                // ->select(DB::raw('status,CAST(count(*) AS UNSIGNED )as count'))
+                
                 ->get();
+              $tasks=  $tasks->groupBy('status')
+                ->map
+                ->count();
+                $taskStats = collect([]);
+                $keys = $tasks->keys();
+                foreach($keys as $key){
+                   $taskStats->push([
+                       "status"=>$key,
+                       "count"=>$tasks[$key]
+                   ]);
+                };
             // $tasks = Task::where('deleted_at', null)->where('type', 18)
             //     ->where('status',11) 
             // ->get();
-            return $this->success_response($tasks, 200);
+            return $this->success_response($taskStats, 200);
         } else {
             //assign by me tasks
             $completed = 0;
@@ -325,7 +341,8 @@ class BasicController extends Controller
             // return $userIDs;
             $tasks = Task::with('team')->whereHas('team', function ($query) use ($userIDs) {
                 return $query->whereIn('resource_id', $userIDs);
-            })->whereBetween('start_date', [$request->date[0], $request->date[1]])->get();
+            })->whereBetween('start_date', [$request->date[0], $request->date[1]])
+            ->get();
         }
 
         return $this->success_response($tasks, 200);

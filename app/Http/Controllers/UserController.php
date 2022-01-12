@@ -184,14 +184,17 @@ class UserController extends Controller
         if (auth()->user()->can('edit user')) {
 
             $this->validate($request, [
-                'oldpassowrd' => "required",
+                'oldpassword' => "required",
                 'password' => "required|same:c_password",
                 'c_password' => "required"
             ]);
             if (Hash::check($request->oldpassword, auth()->user()->password)) {
-                $user =  User::where('id', auth()->user()->id)
-                    ->update(['password', Hash::make($request->password)]);
-                return $this->success_response($user, 200);
+                $existing = User::where('id', auth()->user()->id)->first();
+                $existing['password'] = Hash::make($request->password);
+                $existing->save();
+                // $user =  User::where('id', auth()->user()->id)
+                //     ->update(['password', Hash::make($request->password)]);
+                return $this->success_response($existing, 200);
             } else {
                 return $this->error_response("Wrong password!", 400);
             }
