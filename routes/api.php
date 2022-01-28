@@ -85,7 +85,7 @@ Route::get('/doc/download/{id}', [DocController::class, 'download_file']);
 Route::middleware('auth:api')->group(function () {
     Route::get('/free', [BasicController::class, 'free_resources']);
     Route::post("/resource/lastTask", [BasicController::class, "resource_last_task"]);
-    Route::get('/progress', [BasicController::class, 'project_progresses']);
+    Route::get('/prodepartgress', [BasicController::class, 'project_progresses']);
     Route::post('/data/depart', [BasicController::class, 'department_data']);
     Route::get('/projectresource/{id}', [BasicController::class, 'project_resources']);
     Route::post("/filter/task", [BasicController::class, "resource_task"]);
@@ -96,7 +96,7 @@ Route::middleware('auth:api')->group(function () {
 
     Route::resource('/department', DepartmentController::class);
     // Route::get('/roles', [RoleController::class, 'get_roles']);
-    Route::post("/changepassword/{id}", [UserController::class, 'change_password']);
+    Route::post("/changepassword", [UserController::class, 'change_password']);
     Route::resource('/role', RoleController::class);
     Route::resource('/permission', PermissionController::class);
     Route::get('/my/permission/{id}', [PermissionController::class, 'role_permissions']);

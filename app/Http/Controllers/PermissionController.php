@@ -122,7 +122,11 @@ class PermissionController extends Controller
             ]);
 
             $permission = Permission::find($id);
-            $permission->fill($request->all());
+            if($permission->created_by == null){
+                return $this->error_response("Forbidden", 403);
+            }
+            // $permission['name'] = $request->name;
+            // $permission->fill($request->all());
             if ($permission->save()) {
                 return $this->success_response($permission, 200);
             } else {
@@ -144,6 +148,9 @@ class PermissionController extends Controller
 
         if (auth()->user()->can('delete permission')) {
             $exist = Permission::find($id);
+            if($exist->created_by == null){
+                return $this->error_response("Forbidden", 403);
+            }
             if (!$exist) {
                 return $this->error_response("Not found", 404);
             }

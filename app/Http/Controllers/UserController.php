@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Traits\ReusableTrait;
 use App\Http\Traits\ResponseTrait;
+use Illuminate\Support\Facades\Mail;
 
 class UserController extends Controller
 {
@@ -68,7 +69,7 @@ class UserController extends Controller
             //     // $users = User::whereIn('role_id', $roles)->whereIn('id', $childUsers)->with('role:id,name')->with('department:id,name')->with('detail')->paginate(12);
             // }
             $users = auth()->user()->admin ? User::whereIn('role_id', $roles)->with('role:id,name')->with('department:id,name')->with('detail')->get() :
-            User::whereIn('role_id', $roles)->where('dept_id', auth()->user()->dept_id)->with('role:id,name')->with('department:id,name')->with('detail')->get();
+                User::whereIn('role_id', $roles)->where('dept_id', auth()->user()->dept_id)->with('role:id,name')->with('department:id,name')->with('detail')->get();
             // $users = User::whereIn('role_id', $roles)->with('role:id,name')->with('department:id,name')->with('detail')->get();
             if ($users) {
                 return $this->success_response($users, 200);
@@ -99,7 +100,10 @@ class UserController extends Controller
                 'role_id' => 'required',
                 'dept_id' => 'required_if:admin,==,false'
             ]);
-
+          $exist = User::where('deleted_at',null)->where('email',$request->email)->first();
+          if($exist){
+              return $this->error_response("Email already occupied!",400);
+          }
             DB::beginTransaction();
             $user = new User();
             $user = $user->fill($request->all());
@@ -111,6 +115,22 @@ class UserController extends Controller
             DB::commit();
             $user->role;
             $user->department;
+            $data = [
+                'to' => 'wajiha@outcastsolutions.us',
+                'msg' => 'Account is successfully created!',
+                'email' => $user->email,
+                'password' => $request->password
+            ];
+
+            //send email as the account is created
+            Mail::send([], [], function ($message) use ($data) {
+                $message->to($data['email'])
+                    ->subject('Project Management System Account')
+                    ->from('test@outcastsolutions.us')
+                    ->setBody('<html><h6>Your account on Project Management System has been setup successfully!</h6><p>Redirect to the link below to login.</p><p><a href="https://management.outcastsolutions.us/">project management system</a></p><br><p>Credentials:<br><b>Email:</b> ' .
+                        $data['email'] .
+                        '</p><p><b>Password:</b>' . $data['password'] . '</p></html>', 'text/html');
+            });
             // $tsuccessen = $user->createTsuccessen('pmsTsuccessen')->accessTsuccessen;
             return $this->success_response($user, 201);
         } else {
@@ -160,8 +180,12 @@ class UserController extends Controller
             if (!$user) {
                 return $this->error_response("Not found", 404);
             }
+            $user->roles()->detach();
+            // $user->removeRole($user->role_id);
             $user->fill($request->only('name', 'email', 'phone_number', 'role_id', 'dept_id'));
-            if ($user->save()) {
+            $user->assignRole($request->role_id);
+            $saved = $user->save();
+            if ($saved) {
                 return $this->success_response($user, 200);
             } else {
                 return $this->error_response("Error in updating", 400);
@@ -178,10 +202,10 @@ class UserController extends Controller
      * @return \Illuminate\Http\Response
      */
 
-    public function change_password(Request $request, $id)
+    public function change_password(Request $request)
     {
 
-        if (auth()->user()->can('edit user')) {
+        if (auth()->user()->can('retrieve user')) {
 
             $this->validate($request, [
                 'oldpassword' => "required",

@@ -55,7 +55,9 @@ class Task extends Model
      * @var string
      */
     protected $table = 'tasks';
-    
+    protected $casts=[
+        'delay'=>'boolean'
+    ];
     //relations
     
     /**

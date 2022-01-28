@@ -47,7 +47,9 @@ class Project extends Model
      */
     protected $table = "projects";
 
-
+protected $casts =[
+    'late'=>'boolean'
+];
 
     //relations
     

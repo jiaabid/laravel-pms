@@ -98,21 +98,21 @@ class BasicController extends Controller
             //     ->selectRaw('status,CAST(count(*) as SIGNED) as count')
             //     ->groupBy('status')
             //     ->get();
-                $tasks = Task::where('deleted_at', null)->where('type', 18)
+            $tasks = Task::where('deleted_at', null)->where('type', 18)
                 // ->select(DB::raw('status,CAST(count(*) AS UNSIGNED )as count'))
-                
+
                 ->get();
-              $tasks=  $tasks->groupBy('status')
+            $tasks =  $tasks->groupBy('status')
                 ->map
                 ->count();
-                $taskStats = collect([]);
-                $keys = $tasks->keys();
-                foreach($keys as $key){
-                   $taskStats->push([
-                       "status"=>$key,
-                       "count"=>$tasks[$key]
-                   ]);
-                };
+            $taskStats = collect([]);
+            $keys = $tasks->keys();
+            foreach ($keys as $key) {
+                $taskStats->push([
+                    "status" => $key,
+                    "count" => $tasks[$key]
+                ]);
+            };
             // $tasks = Task::where('deleted_at', null)->where('type', 18)
             //     ->where('status',11) 
             // ->get();
@@ -288,7 +288,7 @@ class BasicController extends Controller
             $groupdata = HResourcesTask::where('deleted_at', null)->where('resource_id', $resource)->select(DB::raw('status,count(status) as count'))->groupBy('status')->get();
             //    $tt[$resource]= $data;
             //    return $tt;
-            if(count($groupdata)>0){
+            if (count($groupdata) > 0) {
                 foreach ($groupdata as $data) {
                     if ($data->status !== 15 && $data->count > 0) {
                         break;
@@ -296,10 +296,9 @@ class BasicController extends Controller
                         $freeResources[] = $resource;
                     }
                 }
-            }else{
+            } else {
                 $freeResources[] = $resource;
             }
-         
         };
         // foreach($tt as $t){
         //    return $t;
@@ -327,22 +326,64 @@ class BasicController extends Controller
     public function resource_task(Request $request)
     {
         $tasks = [];
-        if ($request->resource_id !== null) {
+        if ($request->resource_id !== null && $request->project_id !== null ) {
             //with resource id
-            $tasks = Task::with('team')->whereHas('team', function ($query) use ($request) {
-                return $query->where('resource_id', $request->resource_id)
-                    ->whereBetween('start_date', [$request->date[0], $request->date[1]]);
-            })->get();
-        } else if ($request->project_id !== null) {
-            $tasks = Task::with('team')->where('project_id', $request->project_id)->whereBetween('start_date', [$request->date[0], $request->date[1]])->get();
+            $tasks = $request->date !== null ? Task::with('team')->whereHas('team', function ($query) use ($request) {
+                return $query->where('resource_id', $request->resource_id);
+            })->where('project_id', $request->project_id)->where(function ($query) use ($request) {
+                return $query->whereBetween('start_date', [$request->date[0], $request->date[1]])
+                    ->orWhereBetween('end_date', [$request->date[0], $request->date[1]]);
+            })->get() :
+                Task::with('team')->whereHas('team', function ($query) use ($request) {
+                    return $query->where('resource_id', $request->resource_id);
+                })->where('project_id', $request->project_id)->get();
+           
+        }
+        else if ($request->resource_id !== null ) {
+            //with resource id
+            $tasks = $request->date !== null ? Task::with('team')->whereHas('team', function ($query) use ($request) {
+                return $query->where('resource_id', $request->resource_id);
+            })->where(function ($query) use ($request) {
+                return $query->whereBetween('start_date', [$request->date[0], $request->date[1]])
+                    ->orWhereBetween('end_date', [$request->date[0], $request->date[1]]);
+            })->get() :
+                Task::with('team')->whereHas('team', function ($query) use ($request) {
+                    return $query->where('resource_id', $request->resource_id);
+                })->get();
+           
+        }
+         else if ($request->project_id !== null) {
+            $tasks =$request->date !== null ? Task::with('team')->where('project_id', $request->project_id)
+                ->where(function ($query) use ($request) {
+                    return $query->whereBetween('start_date', [$request->date[0], $request->date[1]])
+                        ->orWhereBetween('end_date', [$request->date[0], $request->date[1]]);
+                })->get():
+                Task::with('team')->where('project_id', $request->project_id)->get();
+
+            // whereBetween('start_date', [$request->date[0], $request->date[1]])->get();
         } else {
-            $users = Department::where('id', $request->dept_id)->with('user')->first();
-            $userIDs = $users->user->pluck('id');
+            if(!auth()->user()->dept_id){
+                $users = Department::where('id', $request->dept_id)->with('user')->first();
+                $userIDs = $users->user->pluck('id');
+            }else{
+                $roles = collect($this->get_child_roles(auth()->user()));
+                // $roles->push(auth()->user()->role_id);
+                $userIDs =  User::whereIn('role_id', $roles)->get()->pluck('id') ;
+            }
+            
             // return $userIDs;
-            $tasks = Task::with('team')->whereHas('team', function ($query) use ($userIDs) {
+            $tasks = $request->date !== null ?Task::with('team')->whereHas('team', function ($query) use ($userIDs) {
                 return $query->whereIn('resource_id', $userIDs);
-            })->whereBetween('start_date', [$request->date[0], $request->date[1]])
-            ->get();
+            })->where(function ($query) use ($request) {
+                return $query->whereBetween('start_date', [$request->date[0], $request->date[1]])
+                    ->orWhereBetween('end_date', [$request->date[0], $request->date[1]]);
+            })->get():
+            Task::with('team')->whereHas('team', function ($query) use ($userIDs) {
+                return $query->whereIn('resource_id', $userIDs);
+            })->get();
+
+            // ->whereBetween('start_date', [$request->date[0], $request->date[1]])
+            //     ->get();
         }
 
         return $this->success_response($tasks, 200);
@@ -388,14 +429,13 @@ class BasicController extends Controller
     {
         try {
             foreach ($request->statuses as $status) {
-                $oldStatus = TagStatus::where('tag_id',$request->tag)->where('status_id',$status)->first();
-                if(!$oldStatus){
+                $oldStatus = TagStatus::where('tag_id', $request->tag)->where('status_id', $status)->first();
+                if (!$oldStatus) {
                     $tagStatus = new  TagStatus();
                     $tagStatus['status_id'] = $status;
                     $tagStatus['tag_id'] = $request->tag;
                     $tagStatus->save();
                 }
-                
             };
             return $this->success_response("Assigned!", 200);
         } catch (Exception $e) {

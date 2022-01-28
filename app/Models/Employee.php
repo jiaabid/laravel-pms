@@ -26,6 +26,9 @@ class Employee extends Model
         "user_id"
     ];
     
+    protected $casts=[
+        'break'=>'boolean'
+    ];
     /**
      * table
      *

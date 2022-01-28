@@ -40,6 +40,9 @@ class Issue extends Model
         'approved'
     ];
     
+    protected $casts=[
+ 'approved'=>'boolean'
+    ];
     /**
      * table
      *

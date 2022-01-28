@@ -444,7 +444,12 @@ class TaskController extends Controller
                         }
                         $taskResource["status"] = $status->id;
                         $taskResource["end_at"] = Carbon::now("Asia/Karachi")->toDateTimeString();
-                        $taskResource["total_effort"] =  $this->calculate_effort($taskResource);
+                        if($taskResource['start_at'] == null){
+                            $taskResource["total_effort"] = 0;   
+                        }else{
+                            $taskResource["total_effort"] =  $this->calculate_effort($taskResource);
+
+                        }
                         $taskResource->save();
                         break;
                     } else {
@@ -480,7 +485,12 @@ class TaskController extends Controller
                         $taskResource["status"] = $status->id;
 
                         $taskResource["end_at"] = Carbon::now("Asia/Karachi")->toDateTimeString();
-                        $taskResource["total_effort"] =  $this->calculate_effort($taskResource);
+                        if($taskResource['start_at'] == null){
+                            $taskResource["total_effort"] = 0;   
+                        }else{
+                            $taskResource["total_effort"] =  $this->calculate_effort($taskResource);
+
+                        }
                         $taskResource->save();
                         break;
                     }
@@ -512,6 +522,31 @@ class TaskController extends Controller
                     }
                     $taskResource->save();
                     break;
+                    //block the task
+                    case 26:
+                        $exist["status"] = $status->id;
+                        $taskResource["status"] = $status->id;
+
+                        $taskResource["end_at"] = Carbon::now("Asia/Karachi")->toDateTimeString();
+                        if($taskResource['start_at'] == null){
+                            $taskResource["total_effort"] = 0;   
+                        }else{
+                            $taskResource["total_effort"] =  $this->calculate_effort($taskResource);
+
+                        }
+                        $taskResource["block"] = true;
+                        $taskResource["block_at"] = Carbon::now("Asia/Karachi")->toDateTimeString();
+                        $taskResource->save();
+                        break;
+                         //unblock the task
+                    case 27:
+                        $exist["status"] = DbVariablesDetail::variableType('task_status')->variableValue('inProgress')->first()->id;;
+                        $taskResource["status"] = DbVariablesDetail::variableType('task_status')->variableValue('pending')->first()->id;;
+
+                        $taskResource["block"] = false;
+                        $taskResource["unblock_at"] = Carbon::now("Asia/Karachi")->toDateTimeString();
+                        $taskResource->save();
+                        break;
                 default:
 
                     break;

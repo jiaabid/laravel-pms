@@ -357,12 +357,12 @@ class ProjectController extends Controller
                     $overallTotalCost += $totalCost;
                     $costExceed += $totalCost > $estimatedCost ? abs($totalCost - $estimatedCost) : 0;
                     $taskDetail[] = [
-                        [
+                        // [
                             "resource_id" => $resourceDetail["resource_id"],
                             "estimatedCost" => $estimatedCost,
                             "totalCost" => $totalCost,
                             "costExceed" => $totalCost > $estimatedCost ? abs($totalCost - $estimatedCost) : 0
-                        ]
+                        // ]
                     ];
                 }
              
